@@ -1,0 +1,384 @@
+{
+  "name": "git-graph-plus",
+  "displayName": "Git Graph+",
+  "description": "A modern, full-featured Git GUI for VS Code",
+  "version": "0.1.0",
+  "publisher": "the0807",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/the0807/git-graph-plus"
+  },
+  "license": "Apache-2.0",
+  "icon": "resources/icon-marketplace.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "SCM Providers"
+  ],
+  "activationEvents": [
+    "workspaceContains:.git"
+  ],
+  "l10n": "./l10n",
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "gitGraphPlus.open",
+        "title": "%command.open%",
+        "icon": "$(git-merge)"
+      },
+      {
+        "command": "gitGraphPlus.refresh",
+        "title": "%command.refresh%",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "gitGraphPlus.fetch",
+        "title": "%command.fetch%",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "gitGraphPlus.pull",
+        "title": "%command.pull%",
+        "icon": "$(repo-pull)"
+      },
+      {
+        "command": "gitGraphPlus.push",
+        "title": "%command.push%",
+        "icon": "$(repo-push)"
+      },
+      {
+        "command": "gitGraphPlus.checkoutBranch",
+        "title": "Checkout Branch"
+      },
+      {
+        "command": "gitGraphPlus.createBranch",
+        "title": "%command.createBranch%",
+        "icon": "$(add)"
+      },
+      {
+        "command": "gitGraphPlus.stashSave",
+        "title": "%command.stashSave%",
+        "icon": "$(archive)"
+      },
+      {
+        "command": "gitGraphPlus.createTag",
+        "title": "%command.createTag%",
+        "icon": "$(tag)"
+      },
+      {
+        "command": "gitGraphPlus.pushTag",
+        "title": "%command.pushTag%",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "gitGraphPlus.pushAllTags",
+        "title": "%command.pushAllTags%",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "gitGraphPlus.deleteRemoteTag",
+        "title": "%command.deleteRemoteTag%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "gitGraphPlus.deleteBranch",
+        "title": "%command.deleteBranch%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "gitGraphPlus.renameBranch",
+        "title": "%command.renameBranch%",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "gitGraphPlus.deleteTag",
+        "title": "%command.deleteTag%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "gitGraphPlus.mergeBranch",
+        "title": "%command.mergeBranch%",
+        "icon": "$(git-merge)"
+      },
+      {
+        "command": "gitGraphPlus.showRemoteBranchMenu",
+        "title": "%command.checkoutRemoteBranch%",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "gitGraphPlus.stashApply",
+        "title": "%command.stashApply%",
+        "icon": "$(check)"
+      },
+      {
+        "command": "gitGraphPlus.stashPop",
+        "title": "%command.stashPop%",
+        "icon": "$(check-all)"
+      },
+      {
+        "command": "gitGraphPlus.stashDrop",
+        "title": "%command.stashDrop%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "gitGraphPlus.removeWorktree",
+        "title": "%command.removeWorktree%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "gitGraphPlus.addWorktree",
+        "title": "%command.addWorktree%",
+        "icon": "$(add)"
+      },
+      {
+        "command": "gitGraphPlus.pruneWorktrees",
+        "title": "%command.pruneWorktrees%",
+        "icon": "$(clear-all)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "git-graph-plus",
+          "title": "Git Graph+",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "git-graph-plus": [
+        {
+          "id": "gitGraphPlus.branches",
+          "name": "Branches"
+        },
+        {
+          "id": "gitGraphPlus.remotes",
+          "name": "Remotes"
+        },
+        {
+          "id": "gitGraphPlus.tags",
+          "name": "Tags"
+        },
+        {
+          "id": "gitGraphPlus.stashes",
+          "name": "Stashes"
+        },
+        {
+          "id": "gitGraphPlus.worktrees",
+          "name": "Worktrees"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "gitGraphPlus.branches",
+        "contents": "No git repository found.\n[Open Folder](command:vscode.openFolder)"
+      }
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "gitGraphPlus.open",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "gitGraphPlus.open",
+          "when": "view =~ /^gitGraphPlus/",
+          "group": "navigation@1"
+        },
+        {
+          "command": "gitGraphPlus.refresh",
+          "when": "view =~ /^gitGraphPlus/",
+          "group": "navigation@2"
+        },
+        {
+          "command": "gitGraphPlus.fetch",
+          "when": "view =~ /^gitGraphPlus/",
+          "group": "navigation@3"
+        },
+        {
+          "command": "gitGraphPlus.pushAllTags",
+          "when": "view == gitGraphPlus.tags",
+          "group": "navigation@4"
+        },
+        {
+          "command": "gitGraphPlus.addWorktree",
+          "when": "view == gitGraphPlus.worktrees",
+          "group": "navigation@4"
+        },
+        {
+          "command": "gitGraphPlus.pruneWorktrees",
+          "when": "view == gitGraphPlus.worktrees",
+          "group": "navigation@5"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "gitGraphPlus.createBranch",
+          "when": "view == gitGraphPlus.branches",
+          "group": "inline"
+        },
+        {
+          "command": "gitGraphPlus.checkoutBranch",
+          "when": "view == gitGraphPlus.branches && viewItem == branch",
+          "group": "1_branch@1"
+        },
+        {
+          "command": "gitGraphPlus.mergeBranch",
+          "when": "view == gitGraphPlus.branches && viewItem == branch",
+          "group": "1_branch@2"
+        },
+        {
+          "command": "gitGraphPlus.renameBranch",
+          "when": "view == gitGraphPlus.branches && viewItem == branch",
+          "group": "1_branch@3"
+        },
+        {
+          "command": "gitGraphPlus.deleteBranch",
+          "when": "view == gitGraphPlus.branches && viewItem == branch",
+          "group": "2_danger@1"
+        },
+        {
+          "command": "gitGraphPlus.showRemoteBranchMenu",
+          "when": "view == gitGraphPlus.remotes && viewItem == remote-branch",
+          "group": "1_branch@1"
+        },
+        {
+          "command": "gitGraphPlus.checkoutBranch",
+          "when": "view == gitGraphPlus.tags && viewItem == tag",
+          "group": "0_checkout@1"
+        },
+        {
+          "command": "gitGraphPlus.pushTag",
+          "when": "view == gitGraphPlus.tags && viewItem == tag",
+          "group": "1_push@1"
+        },
+        {
+          "command": "gitGraphPlus.pushAllTags",
+          "when": "view == gitGraphPlus.tags && viewItem == tag",
+          "group": "1_push@2"
+        },
+        {
+          "command": "gitGraphPlus.deleteRemoteTag",
+          "when": "view == gitGraphPlus.tags && viewItem == tag",
+          "group": "2_danger@1"
+        },
+        {
+          "command": "gitGraphPlus.deleteTag",
+          "when": "view == gitGraphPlus.tags && viewItem == tag",
+          "group": "2_danger@2"
+        },
+        {
+          "command": "gitGraphPlus.stashApply",
+          "when": "view == gitGraphPlus.stashes && viewItem == stash",
+          "group": "1_stash@1"
+        },
+        {
+          "command": "gitGraphPlus.stashPop",
+          "when": "view == gitGraphPlus.stashes && viewItem == stash",
+          "group": "1_stash@2"
+        },
+        {
+          "command": "gitGraphPlus.stashDrop",
+          "when": "view == gitGraphPlus.stashes && viewItem == stash",
+          "group": "2_danger@1"
+        },
+        {
+          "command": "gitGraphPlus.removeWorktree",
+          "when": "view == gitGraphPlus.worktrees && viewItem == worktree",
+          "group": "2_danger@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Git Graph+",
+      "properties": {
+        "gitGraphPlus.maxCommits": {
+          "type": "number",
+          "default": 1000,
+          "description": "Maximum number of commits to load initially"
+        },
+        "gitGraphPlus.defaultView": {
+          "type": "string",
+          "enum": [
+            "graph",
+            "log"
+          ],
+          "default": "graph",
+          "description": "Default view when opening Git Graph+"
+        },
+        "gitGraphPlus.graphRowHeight": {
+          "type": "number",
+          "default": 28,
+          "description": "Height of each row in the commit graph (pixels)"
+        },
+        "gitGraphPlus.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically refresh when repository changes are detected"
+        },
+        "gitGraphPlus.showRemoteBranches": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show remote branches in the sidebar"
+        },
+        "gitGraphPlus.confirmForcePush": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show confirmation dialog before force pushing"
+        },
+        "gitGraphPlus.autoFetch": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically fetch from remotes periodically"
+        },
+        "gitGraphPlus.autoFetchInterval": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 60,
+          "description": "Auto fetch interval in minutes"
+        },
+        "gitGraphPlus.locale": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "ko"
+          ],
+          "default": "auto",
+          "description": "UI language (auto = follow VS Code language setting)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build:extension": "node esbuild.config.mjs",
+    "build:webview": "cd webview-ui && npm run build",
+    "build": "npm run build:extension && npm run build:webview",
+    "watch:extension": "node esbuild.config.mjs --watch",
+    "watch:webview": "cd webview-ui && npm run dev",
+    "dev": "concurrently \"npm:watch:*\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "package": "vsce package",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "concurrently": "^9.0.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.45"
+  }
+}

@@ -1,0 +1,150 @@
+:root {
+  /* Text */
+  --text-primary: var(--vscode-foreground);
+  --text-secondary: var(--vscode-descriptionForeground);
+  --text-link: var(--vscode-textLink-foreground);
+  --text-disabled: var(--vscode-disabledForeground);
+
+  /* Backgrounds */
+  --bg-primary: var(--vscode-editor-background);
+  --bg-secondary: var(--vscode-sideBar-background);
+  --bg-hover: var(--vscode-list-hoverBackground);
+  --bg-selected: var(--vscode-list-activeSelectionBackground);
+  --text-selected: var(--vscode-list-activeSelectionForeground);
+
+  /* Borders */
+  --border-color: var(--vscode-panel-border, rgba(128, 128, 128, 0.35));
+
+  /* Inputs */
+  --input-bg: var(--vscode-input-background);
+  --input-fg: var(--vscode-input-foreground);
+  --input-border: var(--vscode-input-border);
+
+  /* Buttons */
+  --button-bg: var(--vscode-button-background);
+  --button-fg: var(--vscode-button-foreground);
+  --button-hover-bg: var(--vscode-button-hoverBackground);
+  --button-secondary-bg: var(--vscode-button-secondaryBackground);
+  --button-secondary-fg: var(--vscode-button-secondaryForeground);
+
+  /* Scrollbar */
+  --scrollbar-bg: var(--vscode-scrollbarSlider-background);
+  --scrollbar-hover-bg: var(--vscode-scrollbarSlider-hoverBackground);
+
+  /* Extension-specific */
+  --row-height: 32px;
+  --lane-width: 14px;
+  --bottom-panel-height: 250px;
+  --graph-node-radius: 4px;
+  --toolbar-height: 40px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
+  font-size: var(--vscode-font-size, 13px);
+  line-height: 1.4;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#app {
+  height: 100%;
+  width: 100%;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-bg);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover-bg);
+}
+
+/* Utility */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Base button */
+button {
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-fg);
+  border: none;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  border-radius: 3px;
+  transition: background 0.1s, opacity 0.1s;
+}
+
+button:hover {
+  background: var(--button-hover-bg);
+  color: var(--button-fg);
+}
+
+button:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, #007fd4);
+  outline-offset: 1px;
+}
+
+button.primary {
+  background: var(--button-bg);
+  color: var(--button-fg);
+}
+
+button.primary:hover {
+  opacity: 0.9;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(128, 128, 128, 0.3);
+  border-top-color: var(--text-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Pulse animation for loading states */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}

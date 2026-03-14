@@ -1,0 +1,12 @@
+node_modules/
+dist/
+webview-ui/dist/
+webview-ui/node_modules/
+*.vsix
+.vscode/
+.vscode-test/
+out/
+
+docs
+.superpowers
+test-repo/
