@@ -236,7 +236,7 @@
                   if (r.type === 'remote-branch' && r.name === 'HEAD') return false;
                   return true;
                 }).sort((a, b) => {
-                  const order = { head: 0, branch: 1, 'remote-branch': 2, tag: 3 };
+                  const order: Record<string, number> = { head: 0, branch: 1, 'remote-branch': 2, tag: 3, stash: 4 };
                   const typeOrder = (order[a.type] ?? 4) - (order[b.type] ?? 4);
                   if (typeOrder !== 0) return typeOrder;
                   const aName = a.type === 'remote-branch' ? `${a.remote}/${a.name}` : a.name;
