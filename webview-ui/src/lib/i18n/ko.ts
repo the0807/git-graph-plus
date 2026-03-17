@@ -46,10 +46,14 @@ export const ko: Record<string, string> = {
 
   // Create branch modal
   'createBranch.title': '브랜치 생성',
-  'createBranch.name': '브랜치 이름',
+  'createBranch.desc': '새 브랜치 생성',
+  'createBranch.createAt': '브랜치 생성 위치:',
+  'createBranch.name': '브랜치 이름:',
+  'createBranch.namePlaceholder': '브랜치 이름 입력',
   'createBranch.startPoint': '시작 지점 (선택 사항)',
   'createBranch.checkout': '생성 후 checkout',
   'createBranch.create': '생성',
+  'createBranch.createAndCheckout': '생성 및 Checkout',
 
   // Rename branch modal
   'renameBranch.title': '브랜치 이름 변경',
@@ -71,10 +75,16 @@ export const ko: Record<string, string> = {
 
   // Create tag modal
   'createTag.title': '태그 생성',
-  'createTag.name': '태그 이름',
-  'createTag.message': '메시지 (선택 사항, annotated 태그 생성)',
+  'createTag.desc': 'Annotated 태그 생성',
+  'createTag.createAt': '태그 생성 위치:',
+  'createTag.name': '태그 이름:',
+  'createTag.namePlaceholder': '태그 이름 입력',
+  'createTag.message': '메시지:',
+  'createTag.messagePlaceholder': '선택 사항',
   'createTag.target': '대상 (선택 사항, 기본값 HEAD)',
+  'createTag.pushToRemotes': '모든 remote에 push',
   'createTag.create': '생성',
+  'createTag.createAndPush': '생성 및 Push',
 
   // Graph
   'graph.loading': 'Commit 로딩 중',

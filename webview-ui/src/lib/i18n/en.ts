@@ -46,10 +46,14 @@ export const en: Record<string, string> = {
 
   // Create branch modal
   'createBranch.title': 'Create Branch',
-  'createBranch.name': 'Branch name',
+  'createBranch.desc': 'Create new branch',
+  'createBranch.createAt': 'Create branch at:',
+  'createBranch.name': 'Branch name:',
+  'createBranch.namePlaceholder': 'Enter Branch Name',
   'createBranch.startPoint': 'Start point (optional)',
-  'createBranch.checkout': 'Checkout after creation',
+  'createBranch.checkout': 'Check out after create',
   'createBranch.create': 'Create',
+  'createBranch.createAndCheckout': 'Create and Checkout',
 
   // Rename branch modal
   'renameBranch.title': 'Rename Branch',
@@ -71,10 +75,16 @@ export const en: Record<string, string> = {
 
   // Create tag modal
   'createTag.title': 'Create Tag',
-  'createTag.name': 'Tag name',
-  'createTag.message': 'Message (optional, creates annotated tag)',
+  'createTag.desc': 'Create annotated tag',
+  'createTag.createAt': 'Create tag at:',
+  'createTag.name': 'Tag name:',
+  'createTag.namePlaceholder': 'Enter Tag Name',
+  'createTag.message': 'Message:',
+  'createTag.messagePlaceholder': 'optional',
   'createTag.target': 'Target (optional, defaults to HEAD)',
+  'createTag.pushToRemotes': 'Push to all remotes',
   'createTag.create': 'Create',
+  'createTag.createAndPush': 'Create and Push',
 
   // Graph
   'graph.loading': 'Loading commits',

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.2 (2026-03-18)
+
+### Bug Fixes
+- Fix context menu "Create Tag" sending empty tag name (exit 128 error)
+- Fix context menu "Create Branch" sending empty branch name
+
+### Improvements
+- Add Fork-style Create Tag modal with commit info, textarea message, and "Push to all remotes" option
+- Add Fork-style Create Branch modal with commit info, and "Check out after create" option
+- Dynamic button labels: "Create and Push" / "Create and Checkout" based on options
+
 ## 0.1.1 (2026-03-17)
 
 ### Changes

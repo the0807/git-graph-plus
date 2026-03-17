@@ -101,6 +101,19 @@
   let showCheckoutCommitModal = $state(false);
   let checkoutCommitHash = $state('');
 
+  let showCreateTagModal = $state(false);
+  let createTagRef = $state('');
+  let createTagSubject = $state('');
+  let createTagName = $state('');
+  let createTagMessage = $state('');
+  let createTagPush = $state(false);
+
+  let showCreateBranchModal = $state(false);
+  let createBranchStartPoint = $state('');
+  let createBranchSubject = $state('');
+  let createBranchName = $state('');
+  let createBranchCheckout = $state(true);
+
   let isSearchActive = $derived(searchResults !== null);
 
   let displayCommits = $derived(searchResults?.commits ?? commitStore.commits);
@@ -296,17 +309,11 @@
     items.push(
       {
         label: t('graph.createBranchHere'),
-        action: () => vscode.postMessage({
-          type: 'createBranch',
-          payload: { name: '', startPoint: commit.hash, checkout: false },
-        }),
+        action: () => { createBranchStartPoint = commit.hash; createBranchSubject = commit.subject; createBranchName = ''; createBranchCheckout = true; showCreateBranchModal = true; },
       },
       {
         label: t('graph.newTag'),
-        action: () => vscode.postMessage({
-          type: 'createTag',
-          payload: { name: '', ref: commit.hash },
-        }),
+        action: () => { createTagRef = commit.hash; createTagSubject = commit.subject; createTagName = ''; createTagMessage = ''; createTagPush = false; showCreateTagModal = true; },
       },
     );
 
@@ -625,7 +632,7 @@
     x={contextMenu.x}
     y={contextMenu.y}
     items={contextMenu.items}
-    onClose={() => { contextMenu = null; if (!showMergeModal && !showRebaseModal && !showCherryPickModal && !showRevertModal && !showResetModal && !showDeleteTagModal && !showDeleteBranchModal) contextMenuHash = null; }}
+    onClose={() => { contextMenu = null; if (!showMergeModal && !showRebaseModal && !showCherryPickModal && !showRevertModal && !showResetModal && !showDeleteTagModal && !showDeleteBranchModal && !showCreateTagModal && !showCreateBranchModal) contextMenuHash = null; }}
   />
 {/if}
 
@@ -772,6 +779,66 @@
     <div class="form-actions">
       <button onclick={() => { showDeleteTagModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
       <button class="danger-btn" onclick={() => { showDeleteTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); }}>{t('sidebar.delete')}</button>
+    </div>
+  </Modal>
+{/if}
+
+{#if showCreateTagModal}
+  <Modal title={t('createTag.title')} onClose={() => { showCreateTagModal = false; contextMenuHash = null; }}>
+    <p class="modal-desc">{t('createTag.desc')}</p>
+    <div class="fork-form">
+      <div class="fork-row">
+        <span class="fork-label">{t('createTag.createAt')}</span>
+        <span class="fork-value"><i class="codicon codicon-git-commit"></i> {createTagRef.substring(0, 7)} {createTagSubject}</span>
+      </div>
+      <div class="fork-row">
+        <label class="fork-label" for="ctx-tag-name">{t('createTag.name')}</label>
+        <!-- svelte-ignore a11y_autofocus -->
+        <input id="ctx-tag-name" type="text" class="fork-input" bind:value={createTagName} placeholder={t('createTag.namePlaceholder')} autofocus onkeydown={(e) => { if (e.key === 'Enter' && createTagName.trim()) { showCreateTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createTag', payload: { name: createTagName.trim(), ref: createTagRef, message: createTagMessage.trim() || undefined } }); if (createTagPush) vscode.postMessage({ type: 'pushTag', payload: { name: createTagName.trim() } }); } }} />
+      </div>
+      <div class="fork-row fork-row-top">
+        <label class="fork-label" for="ctx-tag-msg">{t('createTag.message')}</label>
+        <textarea id="ctx-tag-msg" class="fork-textarea" bind:value={createTagMessage} placeholder={t('createTag.messagePlaceholder')} rows="4"></textarea>
+      </div>
+      <div class="fork-row">
+        <span class="fork-label"></span>
+        <label class="checkbox-label">
+          <input type="checkbox" bind:checked={createTagPush} />
+          <span>{t('createTag.pushToRemotes')}</span>
+        </label>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { showCreateTagModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => { showCreateTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createTag', payload: { name: createTagName.trim(), ref: createTagRef, message: createTagMessage.trim() || undefined } }); if (createTagPush) vscode.postMessage({ type: 'pushTag', payload: { name: createTagName.trim() } }); }} disabled={!createTagName.trim()}>{createTagPush ? t('createTag.createAndPush') : t('createTag.create')}</button>
+    </div>
+  </Modal>
+{/if}
+
+{#if showCreateBranchModal}
+  <Modal title={t('createBranch.title')} onClose={() => { showCreateBranchModal = false; contextMenuHash = null; }}>
+    <p class="modal-desc">{t('createBranch.desc')}</p>
+    <div class="fork-form">
+      <div class="fork-row">
+        <span class="fork-label">{t('createBranch.createAt')}</span>
+        <span class="fork-value"><i class="codicon codicon-git-commit"></i> {createBranchStartPoint.substring(0, 7)} {createBranchSubject}</span>
+      </div>
+      <div class="fork-row">
+        <label class="fork-label" for="ctx-branch-name">{t('createBranch.name')}</label>
+        <!-- svelte-ignore a11y_autofocus -->
+        <input id="ctx-branch-name" type="text" class="fork-input" bind:value={createBranchName} placeholder={t('createBranch.namePlaceholder')} autofocus onkeydown={(e) => { if (e.key === 'Enter' && createBranchName.trim()) { showCreateBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createBranch', payload: { name: createBranchName.trim(), startPoint: createBranchStartPoint, checkout: createBranchCheckout } }); } }} />
+      </div>
+      <div class="fork-row">
+        <span class="fork-label"></span>
+        <label class="checkbox-label">
+          <input type="checkbox" bind:checked={createBranchCheckout} />
+          <span>{t('createBranch.checkout')}</span>
+        </label>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { showCreateBranchModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => { showCreateBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createBranch', payload: { name: createBranchName.trim(), startPoint: createBranchStartPoint, checkout: createBranchCheckout } }); }} disabled={!createBranchName.trim()}>{createBranchCheckout ? t('createBranch.createAndCheckout') : t('createBranch.create')}</button>
     </div>
   </Modal>
 {/if}
@@ -1139,5 +1206,61 @@
   .danger-btn {
     background: var(--vscode-errorForeground, #f44336) !important;
     color: #fff !important;
+  }
+
+  /* ---- Fork-style form layout ---- */
+  .fork-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .fork-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .fork-row-top {
+    align-items: flex-start;
+  }
+
+  .fork-label {
+    min-width: 120px;
+    text-align: right;
+    color: var(--vscode-descriptionForeground);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .fork-value {
+    font-size: 12px;
+    color: var(--vscode-foreground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fork-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .fork-textarea {
+    flex: 1;
+    min-width: 0;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 6px 8px;
+    background: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border, transparent);
+    border-radius: 2px;
+  }
+
+  .fork-textarea:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
   }
 </style>
