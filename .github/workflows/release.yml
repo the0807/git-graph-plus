@@ -6,7 +6,26 @@ on:
       - 'v*'
 
 jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    outputs:
+      on-main: ${{ steps.check.outputs.on-main }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: check
+        run: |
+          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref }})
+          if git merge-base --is-ancestor "$TAG_COMMIT" origin/main; then
+            echo "on-main=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "on-main=false" >> "$GITHUB_OUTPUT"
+          fi
+
   publish:
+    needs: check-branch
+    if: needs.check-branch.outputs.on-main == 'true'
     runs-on: ubuntu-latest
 
     steps:
