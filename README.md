@@ -1,10 +1,14 @@
 # Git Graph+
 
+[![Install from VS Code Marketplace](https://img.shields.io/badge/Install-VS%20Code%20Marketplace-blue.svg)](https://marketplace.visualstudio.com/items?itemName=the0807.git-graph-plus)
+
 [한국어](README.ko.md)
 
 A modern, full-featured Git GUI for VS Code. Visualize your commit history, manage branches, and perform advanced git operations without leaving your editor.
 
 > Staging and committing use VS Code's built-in Source Control. Git Graph+ focuses on everything else.
+
+![Git Graph+ Demo](resources/git-graph-plus.gif)
 
 ## Features
 
