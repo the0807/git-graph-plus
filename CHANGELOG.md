@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1 (2026-03-17)
+
+### Changes
+- Rename display name to "Git Graph Plus"
+- Add marketplace categories and keywords
+- Add .vscodeignore for optimized package size
+- Add CI/CD workflows (build/test on push, release on tag)
+- Add demo GIF and marketplace badge to README
+- Restrict release workflow to main branch only
+
 ## 0.1.0 (2026-03-17)
 
 ### Features

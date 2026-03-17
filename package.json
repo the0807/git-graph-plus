@@ -2,7 +2,7 @@
   "name": "git-graph-plus",
   "displayName": "Git Graph Plus",
   "description": "A modern, full-featured Git GUI for VS Code",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "the0807",
   "repository": {
     "type": "git",
@@ -14,7 +14,20 @@
     "vscode": "^1.85.0"
   },
   "categories": [
-    "SCM Providers"
+    "SCM Providers",
+    "Visualization"
+  ],
+  "keywords": [
+    "git",
+    "graph",
+    "branch",
+    "commit",
+    "history",
+    "visualization",
+    "merge",
+    "rebase",
+    "stash",
+    "gui"
   ],
   "activationEvents": [
     "workspaceContains:.git"
