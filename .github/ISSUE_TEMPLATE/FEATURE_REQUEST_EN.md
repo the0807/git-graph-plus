@@ -34,6 +34,6 @@ Check all that apply.
 
 Describe any alternative solutions you have considered, or reference any related tools or extensions.
 
-## 5. Additional Context
+## 5. Additional Context (optional)
 
-Attach any mockups, screenshots, or relevant materials.
+Add any mockups, screenshots, or other relevant materials.

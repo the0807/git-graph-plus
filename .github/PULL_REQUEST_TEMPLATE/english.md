@@ -6,6 +6,7 @@ Provide a brief description of the changes introduced in this PR.
 
 ## 2. Related Issue
 
+<!-- If there is no related issue, write "N/A". -->
 - Closes #issue_number
 
 ## 3. Changes
