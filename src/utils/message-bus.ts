@@ -60,6 +60,7 @@ export type WebviewMessage =
   | { type: 'copyToClipboard'; payload: { text: string } }
   | { type: 'saveCommitPatch'; payload: { hash: string } }
   | { type: 'compareToWorking'; payload: { hash: string } }
+  | { type: 'compareCommits'; payload: { ref1: string; ref2: string } }
   | { type: 'getImageAtRef'; payload: { ref: string; path: string } };
 
 // Messages from Extension → Webview

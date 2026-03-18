@@ -14,6 +14,7 @@
   let { startPoint: initialStartPoint, subject, editableStartPoint = false, onClose, onCreate }: Props = $props();
   let name = $state('');
   let message = $state('');
+  // svelte-ignore state_referenced_locally
   let startPoint = $state(initialStartPoint);
   let push = $state(false);
   let nameInput: HTMLInputElement | undefined = $state();
@@ -37,9 +38,10 @@
   {/if}
   {#if editableStartPoint}
     <div class="modal-form-group">
-      <label class="modal-field-label">{t('createTag.target')}</label>
+      <label class="modal-field-label" for="create-tag-target">{t('createTag.target')}</label>
       <input
         class="modal-input"
+        id="create-tag-target"
         type="text"
         bind:value={startPoint}
         placeholder="HEAD"
@@ -47,9 +49,10 @@
     </div>
   {/if}
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('createTag.name')}</label>
+    <label class="modal-field-label" for="create-tag-name">{t('createTag.name')}</label>
     <input
       class="modal-input"
+      id="create-tag-name"
       type="text"
       bind:this={nameInput}
       bind:value={name}
@@ -58,9 +61,10 @@
     />
   </div>
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('createTag.message')}</label>
+    <label class="modal-field-label" for="create-tag-message">{t('createTag.message')}</label>
     <textarea
       class="modal-textarea"
+      id="create-tag-message"
       bind:value={message}
       placeholder={t('createTag.messagePlaceholder')}
       rows="4"

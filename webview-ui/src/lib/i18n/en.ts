@@ -106,7 +106,7 @@ export const en: Record<string, string> = {
   'graph.compareWith': 'Compare with {hash}',
   'graph.cancelCompare': 'Cancel Compare',
   'graph.selectForCompare': 'Select for Compare',
-  'graph.comparingFrom': 'Comparing from {hash} — right-click another commit',
+  'graph.comparingFrom': 'Click a commit to compare with',
   'graph.newTag': 'New Tag',
   'graph.mergeInto': "Merge into '{branch}'",
   'graph.rebaseTo': "Rebase '{branch}' to Here",

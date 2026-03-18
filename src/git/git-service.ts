@@ -274,6 +274,17 @@ export class GitService {
     return parseDiff(raw);
   }
 
+  async diffFiles(ref1: string, ref2?: string): Promise<Array<{ path: string; status: string }>> {
+    const args = ['diff', '--name-status'];
+    args.push(ref1);
+    if (ref2) args.push(ref2);
+    const raw = await this.exec(args);
+    return raw.trim().split('\n').filter(Boolean).map(line => {
+      const [status, ...rest] = line.split('\t');
+      return { path: rest.join('\t'), status: status[0] };
+    });
+  }
+
   async diffStat(ref1: string, ref2?: string): Promise<string> {
     const args = ['diff', '--stat', ref1];
     if (ref2) { args.push(ref2); }

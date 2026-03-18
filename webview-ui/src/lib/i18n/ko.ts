@@ -106,7 +106,7 @@ export const ko: Record<string, string> = {
   'graph.compareWith': '{hash}와 비교',
   'graph.cancelCompare': '비교 취소',
   'graph.selectForCompare': '비교 대상 선택',
-  'graph.comparingFrom': '{hash}에서 비교 중 — 다른 commit을 우클릭하세요',
+  'graph.comparingFrom': '비교할 commit을 클릭하세요',
   'graph.newTag': '새 태그 생성',
   'graph.mergeInto': "'{branch}'에 merge",
   'graph.rebaseTo': "'{branch}'을(를) 여기로 rebase",

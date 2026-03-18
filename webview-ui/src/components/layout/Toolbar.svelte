@@ -182,8 +182,8 @@
   <Modal title={t('fetch.title')} onClose={() => { showFetchConfirm = false; }}>
     <p class="modal-desc">{t('fetch.desc')}</p>
     <div class="modal-form-group">
-      <label class="modal-field-label">{t('fetch.remote')}</label>
-      <select class="modal-select" bind:value={fetchRemote}>
+      <label class="modal-field-label" for="fetch-remote">{t('fetch.remote')}</label>
+      <select class="modal-select" id="fetch-remote" bind:value={fetchRemote}>
         <option value="">{t('fetch.allRemotes')}</option>
         {#each branchStore.remotes as remote}
           <option value={remote.name}>{remote.name}</option>

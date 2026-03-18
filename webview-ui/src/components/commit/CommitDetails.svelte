@@ -10,7 +10,7 @@
   import ImageDiff from '../common/ImageDiff.svelte';
 
   interface Props {
-    commit: Commit;
+    commit?: Commit;
   }
 
   let { commit }: Props = $props();
@@ -27,11 +27,12 @@
   let selectedFile = $state<string | null>(null);
   let selectedDiff = $derived(diffs.find(d => d.file === selectedFile));
   let diffMode = $state<'inline' | 'side-by-side'>('inline');
-  let activeTab = $state<'commit' | 'changes'>('commit');
+  // svelte-ignore state_referenced_locally
+  let activeTab = $state<'commit' | 'changes'>(commit ? 'commit' : 'changes');
 
   // Request commit diff when commit changes
   $effect(() => {
-    if (commit.hash) {
+    if (commit?.hash) {
       files = [];
       diffs = [];
       selectedFile = null;
@@ -189,16 +190,18 @@
 <div class="commit-details">
   <!-- Top tabs -->
   <div class="top-tabs">
-    <button class="top-tab" class:active={activeTab === 'commit'} onclick={() => { activeTab = 'commit'; }}>
-      {t('details.commit')}
-    </button>
+    {#if commit}
+      <button class="top-tab" class:active={activeTab === 'commit'} onclick={() => { activeTab = 'commit'; }}>
+        {t('details.commit')}
+      </button>
+    {/if}
     <button class="top-tab" class:active={activeTab === 'changes'} onclick={() => { activeTab = 'changes'; }}>
       {t('details.changes')} <span class="tab-count">{files.length}</span>
     </button>
   </div>
 
   <!-- Commit tab -->
-  {#if activeTab === 'commit'}
+  {#if activeTab === 'commit' && commit}
     <div class="commit-tab-content">
       <div class="info-section">
         <div class="info-columns">
@@ -298,7 +301,7 @@
                   class:selected={selectedFile === node.path}
                   style="padding-left: {8 + depth * 16}px;"
                   onclick={() => { selectedFile = selectedFile === node.path ? null : node.path; }}
-                  ondblclick={() => vscode.postMessage({ type: 'openDiff', payload: { file: node.path, commitHash: commit.hash } })}
+                  ondblclick={() => { if (commit) vscode.postMessage({ type: 'openDiff', payload: { file: node.path, commitHash: commit.hash } }); }}
                   title="Double-click to open in editor"
                 >
                   <i class="codicon codicon-file"></i>
@@ -344,7 +347,7 @@
           </div>
 
           {#if selectedDiff.isBinary && selectedDiff.isImage}
-            <ImageDiff file={selectedDiff.file} staged={false} commitHash={commit.hash} />
+            <ImageDiff file={selectedDiff.file} staged={false} commitHash={commit?.hash ?? ''} />
           {:else if selectedDiff.isBinary}
             <div class="diff-empty">{t('details.binaryFile')}</div>
           {:else if diffMode === 'inline'}

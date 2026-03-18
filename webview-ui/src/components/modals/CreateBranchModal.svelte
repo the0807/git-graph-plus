@@ -13,6 +13,7 @@
 
   let { startPoint: initialStartPoint, subject, editableStartPoint = false, onClose, onCreate }: Props = $props();
   let name = $state('');
+  // svelte-ignore state_referenced_locally
   let startPoint = $state(initialStartPoint);
   let checkout = $state(true);
   let nameInput: HTMLInputElement | undefined = $state();
@@ -36,9 +37,10 @@
   {/if}
   {#if editableStartPoint}
     <div class="modal-form-group">
-      <label class="modal-field-label">{t('createBranch.startPoint')}</label>
+      <label class="modal-field-label" for="create-branch-start-point">{t('createBranch.startPoint')}</label>
       <input
         class="modal-input"
+        id="create-branch-start-point"
         type="text"
         bind:value={startPoint}
         placeholder="HEAD"
@@ -47,9 +49,10 @@
     </div>
   {/if}
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('createBranch.name')}</label>
+    <label class="modal-field-label" for="create-branch-name">{t('createBranch.name')}</label>
     <input
       class="modal-input"
+      id="create-branch-name"
       type="text"
       bind:this={nameInput}
       bind:value={name}

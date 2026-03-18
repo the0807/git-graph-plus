@@ -24,9 +24,10 @@
 
 <Modal title={t('addRemote.title')} {onClose}>
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('addRemote.name')}</label>
+    <label class="modal-field-label" for="add-remote-name">{t('addRemote.name')}</label>
     <input
       class="modal-input"
+      id="add-remote-name"
       type="text"
       bind:this={nameInput}
       bind:value={name}
@@ -34,9 +35,10 @@
     />
   </div>
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('addRemote.url')}</label>
+    <label class="modal-field-label" for="add-remote-url">{t('addRemote.url')}</label>
     <input
       class="modal-input"
+      id="add-remote-url"
       type="text"
       bind:value={url}
       placeholder="https://github.com/..."

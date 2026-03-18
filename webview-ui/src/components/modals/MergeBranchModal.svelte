@@ -26,7 +26,7 @@
     <span class="modal-pill modal-pill--target">{target}</span>
   </div>
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('merge.mergeType')}</label>
+    <span class="modal-field-label">{t('merge.mergeType')}</span>
     <ColorSelect
       options={[
         { value: 'default', label: t('merge.default'), color: '#4caf50' },

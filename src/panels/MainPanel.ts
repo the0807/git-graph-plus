@@ -454,8 +454,19 @@ export class MainPanel {
           break;
         }
         case 'compareToWorking': {
-          const diffs = await this.gitService.diffCommitToWorking(message.payload.hash);
-          this.panel.webview.postMessage({ type: 'diffData', payload: diffs });
+          const [workingDiffs, workingFiles] = await Promise.all([
+            this.gitService.diffCommitToWorking(message.payload.hash),
+            this.gitService.diffFiles(message.payload.hash),
+          ]);
+          this.panel.webview.postMessage({ type: 'commitDiffData', payload: { diffs: workingDiffs, files: workingFiles } });
+          break;
+        }
+        case 'compareCommits': {
+          const [compareDiffs, compareFiles] = await Promise.all([
+            this.gitService.diffCommits(message.payload.ref1, message.payload.ref2),
+            this.gitService.diffFiles(message.payload.ref1, message.payload.ref2),
+          ]);
+          this.panel.webview.postMessage({ type: 'commitDiffData', payload: { diffs: compareDiffs, files: compareFiles } });
           break;
         }
         // --- File tree at commit ---

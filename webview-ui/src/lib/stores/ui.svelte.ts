@@ -1,5 +1,6 @@
 class UiStore {
   selectedCommitHash = $state<string | null>(null);
+  comparing = $state(false);
   viewMode = $state<'graph' | 'log' | 'stats'>('graph');
   bottomPanelHeight = $state(250);
   showBottomPanel = $state(true);
@@ -11,6 +12,7 @@ class UiStore {
 
   selectCommit(hash: string | null) {
     this.selectedCommitHash = hash;
+    this.comparing = false;
     if (hash) {
       this.showBottomPanel = true;
     }

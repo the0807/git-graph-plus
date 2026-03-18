@@ -11,6 +11,7 @@
   }
 
   let { remoteName, defaultLocalName, onClose, onCheckout }: Props = $props();
+  // svelte-ignore state_referenced_locally
   let localName = $state(defaultLocalName);
   let nameInput: HTMLInputElement | undefined = $state();
 
@@ -30,9 +31,10 @@
     <span>{remoteName}</span>
   </div>
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('checkoutRemote.localName')}</label>
+    <label class="modal-field-label" for="checkout-local-name">{t('checkoutRemote.localName')}</label>
     <input
       class="modal-input"
+      id="checkout-local-name"
       type="text"
       bind:this={nameInput}
       bind:value={localName}

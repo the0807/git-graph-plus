@@ -76,6 +76,13 @@
       vscode.postMessage({ type: 'getLog', payload: { limit: 1000 } });
       vscode.postMessage({ type: 'getBranches' });
     }
+
+    if (e.key === 'Escape' && uiStore.showBottomPanel && (uiStore.selectedCommitHash || uiStore.comparing)) {
+      e.preventDefault();
+      uiStore.selectedCommitHash = null;
+      uiStore.comparing = false;
+      uiStore.showBottomPanel = false;
+    }
   }
 
   function handleSearchResults(data: CommitGraphData | null) {
@@ -121,7 +128,7 @@
       <div class="graph-area">
         <CommitGraph {searchResults} />
       </div>
-      {#if uiStore.showBottomPanel && uiStore.selectedCommitHash}
+      {#if uiStore.showBottomPanel && (uiStore.selectedCommitHash || uiStore.comparing)}
         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
         <div
           class="resize-handle-h"

@@ -14,6 +14,8 @@
 <div class="bottom-panel">
   {#if commit}
     <CommitDetails {commit} />
+  {:else if uiStore.comparing}
+    <CommitDetails />
   {:else}
     <div class="empty">{t('details.selectCommit')}</div>
   {/if}

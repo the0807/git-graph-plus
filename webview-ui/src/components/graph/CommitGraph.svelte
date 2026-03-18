@@ -397,14 +397,20 @@
     items.push({ separator: true, label: '', action: () => {} });
     items.push({
       label: t('graph.compareToLocal'),
-      action: () => vscode.postMessage({ type: 'compareToWorking', payload: { hash: commit.hash } }),
+      action: () => {
+        uiStore.comparing = true;
+        uiStore.showBottomPanel = true;
+        vscode.postMessage({ type: 'compareToWorking', payload: { hash: commit.hash } });
+      },
     });
 
     if (compareBase) {
       items.push({
         label: t('graph.compareWith', { hash: compareBase.substring(0, 7) }),
         action: () => {
-          vscode.postMessage({ type: 'getDiff', payload: { ref1: compareBase, ref2: commit.hash } });
+          uiStore.comparing = true;
+          uiStore.showBottomPanel = true;
+          vscode.postMessage({ type: 'compareCommits', payload: { ref1: compareBase!, ref2: commit.hash } });
           compareBase = null;
         },
       });
@@ -538,8 +544,18 @@
             class="commit-row"
             class:selected={uiStore.selectedCommitHash === commit.hash}
             class:highlighted={contextMenuHash === commit.hash}
+            class:compare-mode={compareBase !== null && compareBase !== commit.hash}
             style="height: {ROW_HEIGHT}px;"
-            onclick={() => selectCommit(commit.hash)}
+            onclick={() => {
+              if (compareBase && compareBase !== commit.hash) {
+                uiStore.comparing = true;
+                uiStore.showBottomPanel = true;
+                vscode.postMessage({ type: 'compareCommits', payload: { ref1: compareBase, ref2: commit.hash } });
+                compareBase = null;
+              } else {
+                selectCommit(commit.hash);
+              }
+            }}
             ondblclick={() => {
               const localRef = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
               if (localRef) {
@@ -651,8 +667,12 @@
 
 {#if compareBase}
   <div class="compare-indicator">
-    {t('graph.comparingFrom', { hash: compareBase.substring(0, 7) })}
-    <button onclick={() => { compareBase = null; }}>{t('common.cancel')}</button>
+    <i class="codicon codicon-git-compare"></i>
+    <span class="compare-label">{t('graph.comparingFrom')}</span>
+    <span class="compare-hash">{compareBase.substring(0, 7)}</span>
+    <button class="compare-cancel" aria-label="Cancel compare" onclick={() => { compareBase = null; }}>
+      <i class="codicon codicon-close"></i>
+    </button>
   </div>
 {/if}
 
@@ -893,6 +913,14 @@
     background: var(--bg-hover);
   }
 
+  .commit-row.compare-mode {
+    cursor: pointer;
+  }
+
+  .commit-row.compare-mode:hover {
+    background: rgba(99, 176, 244, 0.08);
+  }
+
   .commit-row.selected {
     background: var(--bg-selected);
     color: var(--text-selected);
@@ -1053,21 +1081,46 @@
     bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--vscode-badge-background, #4d4d4d);
-    color: var(--vscode-badge-foreground, #fff);
-    padding: 8px 16px;
+    background: rgba(99, 176, 244, 0.15);
+    border: 1px solid rgba(99, 176, 244, 0.4);
+    color: #63b0f4;
+    padding: 6px 14px;
     border-radius: 20px;
     font-size: 12px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     z-index: 100;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
   }
 
-  .compare-indicator button {
+  .compare-label {
+    color: var(--text-secondary);
     font-size: 11px;
-    padding: 3px 10px;
+  }
+
+  .compare-hash {
+    font-family: monospace;
+    font-weight: 600;
+    color: #63b0f4;
+  }
+
+  .compare-cancel {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    padding: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  .compare-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
   }
 
   /* ---- Modal styles ---- */
