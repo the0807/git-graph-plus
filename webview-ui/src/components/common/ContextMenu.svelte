@@ -39,17 +39,20 @@
     };
   });
 
-  // Keep menu within viewport
-  let adjustedX = $derived.by(() => {
-    if (!menuEl) return x;
-    const maxX = window.innerWidth - 200;
-    return Math.min(x, maxX);
-  });
+  // Keep menu within viewport using actual rendered size
+  // svelte-ignore state_referenced_locally
+  let adjustedX = $state(x);
+  // svelte-ignore state_referenced_locally
+  let adjustedY = $state(y);
 
-  let adjustedY = $derived.by(() => {
-    if (!menuEl) return y;
-    const maxY = window.innerHeight - items.length * 28 - 10;
-    return Math.min(y, maxY);
+  $effect(() => {
+    if (menuEl) {
+      const rect = menuEl.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      adjustedX = x + rect.width > vw ? Math.max(0, vw - rect.width - 4) : x;
+      adjustedY = y + rect.height > vh ? Math.max(0, vh - rect.height - 4) : y;
+    }
   });
 </script>
 

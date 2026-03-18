@@ -12,23 +12,55 @@
 
   const vscode = getVsCodeApi();
 
-  let entries = $state<LogEntry[]>([]);
+  // User-facing git actions (filter out internal queries)
+  const ACTION_PATTERNS = [
+    'merge', 'rebase', 'cherry-pick', 'revert', 'reset',
+    'checkout', 'branch -', 'tag ', 'push', 'pull', 'fetch',
+    'stash', 'commit', 'remote add', 'remote remove',
+  ];
+
+  let allEntries = $state<LogEntry[]>([]);
+  let showAll = $state(false);
   let autoRefresh = $state(true);
+
+  function isUserAction(cmd: string): boolean {
+    return ACTION_PATTERNS.some(p => cmd.includes(p));
+  }
+
+  let displayEntries = $derived(
+    showAll ? allEntries : allEntries.filter(e => isUserAction(e.command))
+  );
 
   function refresh() {
     vscode.postMessage({ type: 'getActivityLog' });
   }
 
+  function formatTime(timestamp: string): string {
+    return new Date(timestamp).toLocaleTimeString();
+  }
+
+  function formatDuration(ms: number): string {
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+  }
+
+  function friendlyCommand(cmd: string): string {
+    // Strip "git " prefix and long format strings
+    let friendly = cmd.replace(/^git\s+/, '');
+    // Truncate --format=... args
+    friendly = friendly.replace(/--format=[^\s]+/g, '--format=…');
+    return friendly;
+  }
+
   onMount(() => {
     function handleMessage(event: MessageEvent) {
       if (event.data.type === 'activityLogData') {
-        entries = event.data.payload;
+        allEntries = event.data.payload;
       }
     }
     window.addEventListener('message', handleMessage);
     refresh();
 
-    // Auto-refresh every 2 seconds when visible
     const interval = setInterval(() => {
       if (autoRefresh) { refresh(); }
     }, 2000);
@@ -38,33 +70,38 @@
       clearInterval(interval);
     };
   });
-
-  function formatTime(timestamp: string): string {
-    return new Date(timestamp).toLocaleTimeString();
-  }
 </script>
 
 <div class="activity-log">
   <div class="log-header">
     <span>{t('activityLog.title')}</span>
     <div class="log-actions">
-      <label class="auto-label">
+      <label class="log-toggle">
+        <input type="checkbox" bind:checked={showAll} />
+        <span>{t('activityLog.showAll')}</span>
+      </label>
+      <label class="log-toggle">
         <input type="checkbox" bind:checked={autoRefresh} />
         <span>{t('activityLog.auto')}</span>
       </label>
-      <button onclick={refresh}>{t('activityLog.refresh')}</button>
+      <button class="log-refresh" onclick={refresh} title={t('activityLog.refresh')}>
+        <i class="codicon codicon-refresh"></i>
+      </button>
     </div>
   </div>
   <div class="log-list">
-    {#each entries as entry}
+    {#each displayEntries as entry, i}
       <div class="log-entry" class:failed={!entry.success}>
-        <span class="log-status"><i class="codicon" class:codicon-pass-filled={entry.success} class:codicon-error={!entry.success}></i></span>
-        <span class="log-command truncate">{entry.command}</span>
-        <span class="log-duration">{entry.duration}ms</span>
+        <span class="log-index">{displayEntries.length - i}</span>
+        <span class="log-status">
+          <i class="codicon" class:codicon-pass-filled={entry.success} class:codicon-error={!entry.success}></i>
+        </span>
+        <span class="log-command truncate" title={entry.command}>{friendlyCommand(entry.command)}</span>
+        <span class="log-duration">{formatDuration(entry.duration)}</span>
         <span class="log-time">{formatTime(entry.timestamp)}</span>
       </div>
     {/each}
-    {#if entries.length === 0}
+    {#if displayEntries.length === 0}
       <div class="log-empty">{t('activityLog.empty')}</div>
     {/if}
   </div>
@@ -95,10 +132,10 @@
   .log-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
 
-  .auto-label {
+  .log-toggle {
     display: flex;
     align-items: center;
     gap: 3px;
@@ -109,21 +146,33 @@
     cursor: pointer;
   }
 
-  .auto-label input { margin: 0; }
+  .log-toggle input { margin: 0; }
+
+  .log-refresh {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 2px;
+    font-size: 12px;
+  }
+
+  .log-refresh:hover {
+    color: var(--text-primary);
+  }
 
   .log-list {
     flex: 1;
     overflow-y: auto;
-    font-family: var(--vscode-editor-font-family, monospace);
     font-size: 11px;
   }
 
   .log-entry {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 3px 10px;
-    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+    gap: 6px;
+    padding: 4px 10px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.08);
   }
 
   .log-entry:hover {
@@ -134,8 +183,17 @@
     color: var(--vscode-errorForeground, #f44336);
   }
 
+  .log-index {
+    width: 24px;
+    flex-shrink: 0;
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 10px;
+    opacity: 0.5;
+  }
+
   .log-status {
-    width: 12px;
+    width: 14px;
     flex-shrink: 0;
     text-align: center;
   }
@@ -147,13 +205,15 @@
   .log-command {
     flex: 1;
     min-width: 0;
+    font-family: var(--vscode-editor-font-family, monospace);
   }
 
   .log-duration {
     flex-shrink: 0;
     opacity: 0.5;
-    width: 50px;
+    width: 45px;
     text-align: right;
+    font-size: 10px;
   }
 
   .log-time {
@@ -161,12 +221,12 @@
     opacity: 0.4;
     width: 70px;
     text-align: right;
+    font-size: 10px;
   }
 
   .log-empty {
     padding: 20px;
     text-align: center;
     color: var(--text-secondary);
-    font-family: inherit;
   }
 </style>

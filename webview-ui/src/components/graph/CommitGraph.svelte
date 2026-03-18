@@ -786,8 +786,9 @@
 {#if showDeleteTagModal}
   <DeleteTagModal
     tagName={deleteTagName}
+    hasRemote={branchStore.remotes.length > 0}
     onClose={() => { showDeleteTagModal = false; contextMenuHash = null; }}
-    onDelete={() => { showDeleteTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); }}
+    onDelete={(deleteRemote) => { showDeleteTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); if (deleteRemote) vscode.postMessage({ type: 'deleteRemoteTag', payload: { name: deleteTagName } }); }}
   />
 {/if}
 

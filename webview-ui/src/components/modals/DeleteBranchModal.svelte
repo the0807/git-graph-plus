@@ -17,13 +17,10 @@
 </script>
 
 <Modal title={t('deleteBranch.title')} {onClose}>
-  <p class="modal-desc">{t('deleteBranch.confirm', { name: branchName })}</p>
-  <div class="modal-context-card">
-    <span class="modal-pill modal-pill--danger">{branchName}</span>
-  </div>
+  <p class="modal-desc">{@html t('deleteBranch.confirm', { name: `<span class="modal-pill modal-pill--danger">${branchName}</span>` })}</p>
   <div class="modal-form-group">
-    <label class="modal-checkbox">
-      <input type="checkbox" bind:checked={force} style="accent-color: #f44336;" />
+    <label class="modal-checkbox modal-checkbox--danger">
+      <input type="checkbox" bind:checked={force} />
       <span>{t('deleteBranch.force')}</span>
     </label>
   </div>

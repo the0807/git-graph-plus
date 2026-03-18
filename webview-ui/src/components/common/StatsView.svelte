@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { getVsCodeApi } from '../../lib/vscode-api';
+  import { getGravatarUrl } from '../../lib/utils/gravatar';
   import { t } from '../../lib/i18n/index.svelte';
 
-  interface AuthorStat { author: string; count: number; }
+  interface AuthorStat { author: string; email: string; count: number; }
   interface HourStat { weekday: number; hour: number; count: number; }
 
   const vscode = getVsCodeApi();
@@ -28,7 +29,7 @@
   });
 
   function getHeatColor(count: number): string {
-    if (count === 0) return 'rgba(128,128,128,0.1)';
+    if (count === 0) return 'rgba(128,128,128,0.08)';
     const intensity = Math.min(count / maxHeatCount, 1);
     return `rgba(99, 176, 244, ${0.15 + intensity * 0.85})`;
   }
@@ -38,50 +39,71 @@
   }
 
   let totalCommits = $derived(byAuthor.reduce((sum, a) => sum + a.count, 0));
+  let maxCount = $derived(byAuthor[0]?.count || 1);
 </script>
 
 <div class="stats-view">
   {#if loading}
     <div class="loading"><span class="spinner"></span> {t('stats.loading')}</div>
   {:else}
+    <!-- Contributors -->
     <div class="stats-section">
-      <h3 class="stats-title">{t('stats.contributors', { count: byAuthor.length })}</h3>
+      <div class="section-header">
+        <h3 class="stats-title">{t('stats.contributors', { count: byAuthor.length })}</h3>
+        <span class="stats-subtitle">{totalCommits} commits</span>
+      </div>
       <div class="author-list">
         {#each byAuthor as author, i}
           <div class="author-row">
             <span class="author-rank">#{i + 1}</span>
-            <span class="author-name truncate">{author.author}</span>
-            <div class="author-bar-container">
-              <div class="author-bar" style="width: {(author.count / (byAuthor[0]?.count || 1)) * 100}%"></div>
+            <img class="author-avatar" src={getGravatarUrl(author.email, 24)} alt="" loading="lazy" />
+            <div class="author-info">
+              <span class="author-name truncate">{author.author}</span>
+              <div class="author-bar-container">
+                <div class="author-bar" style="width: {(author.count / maxCount) * 100}%"></div>
+              </div>
             </div>
             <span class="author-count">{author.count}</span>
+            <span class="author-percent">{((author.count / totalCommits) * 100).toFixed(0)}%</span>
           </div>
         {/each}
       </div>
     </div>
 
+    <!-- Heatmap -->
     <div class="stats-section">
-      <h3 class="stats-title">{t('stats.commitsByDayHour', { count: totalCommits })}</h3>
-      <div class="heatmap">
-        <div class="heatmap-header">
-          <div class="heatmap-label"></div>
-          {#each Array(24) as _, h}
-            <div class="heatmap-hour">{h}</div>
-          {/each}
-        </div>
-        {#each Array(7) as _, d}
-          <div class="heatmap-row">
-            <div class="heatmap-label">{WEEKDAYS[d]}</div>
+      <div class="section-header">
+        <h3 class="stats-title">{t('stats.commitsByDayHour', { count: totalCommits })}</h3>
+      </div>
+      <div class="heatmap-container">
+        <div class="heatmap">
+          <div class="heatmap-header">
+            <div class="heatmap-label"></div>
             {#each Array(24) as _, h}
-              {@const count = getHeatCount(d, h)}
-              <div
-                class="heatmap-cell"
-                style="background: {getHeatColor(count)}"
-                title="{WEEKDAYS[d]} {h}:00 — {count} commits"
-              ></div>
+              <div class="heatmap-hour">{h.toString().padStart(2, '0')}</div>
             {/each}
           </div>
-        {/each}
+          {#each Array(7) as _, d}
+            <div class="heatmap-row">
+              <div class="heatmap-label">{WEEKDAYS[d]}</div>
+              {#each Array(24) as _, h}
+                {@const count = getHeatCount(d, h)}
+                <div
+                  class="heatmap-cell"
+                  style="background: {getHeatColor(count)}"
+                  title="{WEEKDAYS[d]} {h.toString().padStart(2, '0')}:00 — {count} commits"
+                ></div>
+              {/each}
+            </div>
+          {/each}
+        </div>
+        <div class="heatmap-legend">
+          <span class="heatmap-legend-label">{t('stats.less')}</span>
+          {#each [0, 0.25, 0.5, 0.75, 1] as intensity}
+            <div class="heatmap-legend-cell" style="background: {intensity === 0 ? 'rgba(128,128,128,0.08)' : `rgba(99, 176, 244, ${0.15 + intensity * 0.85})`}"></div>
+          {/each}
+          <span class="heatmap-legend-label">{t('stats.more')}</span>
+        </div>
       </div>
     </div>
   {/if}
@@ -91,7 +113,7 @@
   .stats-view {
     height: 100%;
     overflow-y: auto;
-    padding: 16px;
+    padding: 20px;
   }
 
   .loading {
@@ -104,20 +126,33 @@
   }
 
   .stats-section {
-    margin-bottom: 24px;
+    margin-bottom: 28px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
   .stats-title {
     font-size: 13px;
     font-weight: 600;
-    margin-bottom: 10px;
     color: var(--text-primary);
+    margin: 0;
   }
 
+  .stats-subtitle {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* ---- Contributors ---- */
   .author-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
 
   .author-row {
@@ -125,49 +160,85 @@
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    padding: 3px 0;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
+
+  .author-row:hover {
+    background: var(--bg-hover);
   }
 
   .author-rank {
-    width: 28px;
+    width: 24px;
     color: var(--text-secondary);
-    font-size: 11px;
+    font-size: 10px;
     text-align: right;
     flex-shrink: 0;
+    opacity: 0.6;
+  }
+
+  .author-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .author-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
   }
 
   .author-name {
-    width: 140px;
-    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--text-primary);
   }
 
   .author-bar-container {
-    flex: 1;
-    height: 8px;
+    height: 4px;
     background: rgba(128, 128, 128, 0.1);
-    border-radius: 4px;
+    border-radius: 2px;
     overflow: hidden;
   }
 
   .author-bar {
     height: 100%;
     background: #63b0f4;
-    border-radius: 4px;
+    border-radius: 2px;
     transition: width 0.3s;
   }
 
   .author-count {
-    width: 45px;
+    width: 40px;
     text-align: right;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: 11px;
     flex-shrink: 0;
+    font-weight: 600;
     font-family: var(--vscode-editor-font-family, monospace);
   }
 
-  /* Heatmap */
-  .heatmap {
+  .author-percent {
+    width: 32px;
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  /* ---- Heatmap ---- */
+  .heatmap-container {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .heatmap {
+    display: inline-flex;
     flex-direction: column;
     gap: 2px;
   }
@@ -179,24 +250,52 @@
   }
 
   .heatmap-label {
-    width: 32px;
+    width: 36px;
     font-size: 10px;
     color: var(--text-secondary);
     text-align: right;
     flex-shrink: 0;
+    padding-right: 4px;
   }
 
   .heatmap-hour {
-    width: 18px;
+    width: 22px;
     font-size: 9px;
     color: var(--text-secondary);
     text-align: center;
+    opacity: 0.6;
   }
 
   .heatmap-cell {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     border-radius: 3px;
     cursor: default;
+    transition: transform 0.1s;
+  }
+
+  .heatmap-cell:hover {
+    transform: scale(1.2);
+    outline: 1px solid var(--text-secondary);
+    z-index: 1;
+  }
+
+  .heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding-left: 40px;
+  }
+
+  .heatmap-legend-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    padding: 0 4px;
+  }
+
+  .heatmap-legend-cell {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
   }
 </style>

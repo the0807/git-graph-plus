@@ -5,23 +5,30 @@
 
   interface Props {
     tagName: string;
+    hasRemote?: boolean;
     onClose: () => void;
-    onDelete: () => void;
+    onDelete: (deleteRemote: boolean) => void;
   }
 
-  let { tagName, onClose, onDelete }: Props = $props();
+  let { tagName, hasRemote = false, onClose, onDelete }: Props = $props();
+  let deleteRemote = $state(false);
   let deleteBtn: HTMLButtonElement | undefined = $state();
 
   onMount(() => { deleteBtn?.focus(); });
 </script>
 
 <Modal title={t('deleteTag.title')} {onClose}>
-  <p class="modal-desc">{t('deleteTag.confirm', { name: tagName })}</p>
-  <div class="modal-context-card">
-    <span class="modal-pill modal-pill--tag">{tagName}</span>
-  </div>
+  <p class="modal-desc">{@html t('deleteTag.confirm', { name: `<span class="modal-pill modal-pill--tag">${tagName}</span>` })}</p>
+  {#if hasRemote}
+    <div class="modal-form-group">
+      <label class="modal-checkbox modal-checkbox--danger">
+        <input type="checkbox" bind:checked={deleteRemote} />
+        <span>{t('deleteTag.deleteRemote')}</span>
+      </label>
+    </div>
+  {/if}
   <div class="form-actions">
     <button onclick={onClose}>{t('common.cancel')}</button>
-    <button class="danger-btn" bind:this={deleteBtn} onclick={onDelete}>{t('sidebar.delete')}</button>
+    <button class="danger-btn" bind:this={deleteBtn} onclick={() => onDelete(deleteRemote)}>{t('sidebar.delete')}</button>
   </div>
 </Modal>

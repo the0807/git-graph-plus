@@ -218,6 +218,45 @@
     cursor: pointer;
   }
 
+  :global(.modal-checkbox input[type="checkbox"]) {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--text-secondary);
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  :global(.modal-checkbox input[type="checkbox"]:focus) {
+    outline: none;
+    border-color: var(--vscode-focusBorder, #007fd4);
+  }
+
+  :global(.modal-checkbox input[type="checkbox"]:checked) {
+    background: var(--vscode-button-background, #0078d4);
+    border-color: var(--vscode-button-background, #0078d4);
+  }
+
+  :global(.modal-checkbox input[type="checkbox"]:checked::after) {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  :global(.modal-checkbox--danger input[type="checkbox"]:checked) {
+    background: #f44336;
+    border-color: #f44336;
+  }
+
   :global(.modal-warning) {
     display: flex;
     align-items: center;
@@ -238,5 +277,25 @@
 
   :global(.modal-form-group) {
     margin-bottom: 12px;
+  }
+
+  :global(.form-actions) {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  :global(.modal-form-group + .form-actions) {
+    margin-top: 12px;
+  }
+
+  :global(.modal-form-group:last-of-type) {
+    margin-bottom: 0;
+  }
+
+  :global(.danger-btn) {
+    background: var(--vscode-errorForeground, #f44336) !important;
+    color: #fff !important;
   }
 </style>

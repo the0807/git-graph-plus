@@ -824,13 +824,13 @@ export class GitService {
 
   // --- Statistics ---
 
-  async statsCommitsByAuthor(): Promise<Array<{ author: string; count: number }>> {
-    const raw = await this.exec(['shortlog', '-sn', '--all', '--no-merges']);
+  async statsCommitsByAuthor(): Promise<Array<{ author: string; email: string; count: number }>> {
+    const raw = await this.exec(['shortlog', '-sne', '--all', '--no-merges']);
     if (!raw.trim()) { return []; }
     return raw.trim().split('\n').filter(Boolean).map(line => {
-      const match = line.match(/^\s*(\d+)\s+(.+)$/);
-      if (!match) { return { author: line.trim(), count: 0 }; }
-      return { author: match[2].trim(), count: parseInt(match[1], 10) };
+      const match = line.match(/^\s*(\d+)\s+(.+?)\s+<(.+?)>$/);
+      if (!match) { return { author: line.trim(), email: '', count: 0 }; }
+      return { author: match[2].trim(), email: match[3].trim(), count: parseInt(match[1], 10) };
     });
   }
 

@@ -508,8 +508,9 @@
 {#if showDeleteTagModal}
   <DeleteTagModal
     tagName={deleteTagName}
+    hasRemote={branchStore.remotes.length > 0}
     onClose={() => { showDeleteTagModal = false; }}
-    onDelete={() => { showDeleteTagModal = false; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); }}
+    onDelete={(deleteRemote) => { showDeleteTagModal = false; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); if (deleteRemote) vscode.postMessage({ type: 'deleteRemoteTag', payload: { name: deleteTagName } }); }}
   />
 {/if}
 
@@ -527,10 +528,7 @@
 <!-- Delete Remote Tag Confirmation -->
 {#if showDeleteRemoteTagModal}
   <Modal title={t('deleteRemoteTag.title')} onClose={() => { showDeleteRemoteTagModal = false; }}>
-    <p class="modal-desc">{t('deleteRemoteTag.confirm', { name: deleteRemoteTagName })}</p>
-    <div class="modal-context-card">
-      <span class="modal-pill modal-pill--danger">{deleteRemoteTagName}</span>
-    </div>
+    <p class="modal-desc">{@html t('deleteRemoteTag.confirm', { name: `<span class="modal-pill modal-pill--danger">${deleteRemoteTagName}</span>` })}</p>
     <div class="form-actions">
       <button onclick={() => { showDeleteRemoteTagModal = false; }}>{t('common.cancel')}</button>
       <button class="danger-btn" onclick={() => { showDeleteRemoteTagModal = false; vscode.postMessage({ type: 'deleteRemoteTag', payload: { name: deleteRemoteTagName } }); }}>{t('sidebar.delete')}</button>

@@ -165,6 +165,7 @@ export const ko: Record<string, string> = {
   // Activity log
   'activityLog.title': '활동 로그',
   'activityLog.auto': '자동',
+  'activityLog.showAll': '전체',
   'activityLog.refresh': '새로고침',
   'activityLog.empty': '실행된 명령이 없습니다',
 
@@ -172,6 +173,8 @@ export const ko: Record<string, string> = {
   'stats.contributors': '기여자 ({count})',
   'stats.commitsByDayHour': '요일 및 시간별 Commit ({count}개 총)',
   'stats.loading': '통계 로딩 중',
+  'stats.less': '적음',
+  'stats.more': '많음',
 
   // Checkout remote branch modal
   'checkoutRemote.title': '리모트 브랜치 Checkout',
@@ -266,6 +269,7 @@ export const ko: Record<string, string> = {
   // Delete tag confirmation
   'deleteTag.title': '태그 삭제',
   'deleteTag.confirm': '태그 "{name}"을(를) 삭제하시겠습니까?',
+  'deleteTag.deleteRemote': '리모트에서도 삭제',
 
   // Delete remote tag confirmation
   'deleteRemoteTag.title': '리모트 태그 삭제',

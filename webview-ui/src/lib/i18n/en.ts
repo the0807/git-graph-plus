@@ -165,6 +165,7 @@ export const en: Record<string, string> = {
   // Activity log
   'activityLog.title': 'Activity Log',
   'activityLog.auto': 'Auto',
+  'activityLog.showAll': 'All',
   'activityLog.refresh': 'Refresh',
   'activityLog.empty': 'No commands executed yet',
 
@@ -172,6 +173,8 @@ export const en: Record<string, string> = {
   'stats.contributors': 'Contributors ({count})',
   'stats.commitsByDayHour': 'Commits by Day & Hour ({count} total)',
   'stats.loading': 'Loading statistics',
+  'stats.less': 'Less',
+  'stats.more': 'More',
 
   // Checkout remote branch modal
   'checkoutRemote.title': 'Checkout Remote Branch',
@@ -266,6 +269,7 @@ export const en: Record<string, string> = {
   // Delete tag confirmation
   'deleteTag.title': 'Delete Tag',
   'deleteTag.confirm': 'Are you sure you want to delete tag "{name}"?',
+  'deleteTag.deleteRemote': 'Also delete from remote',
 
   // Delete remote tag confirmation
   'deleteRemoteTag.title': 'Delete Remote Tag',

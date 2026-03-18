@@ -81,7 +81,7 @@ export type ExtensionMessage =
   | { type: 'error'; payload: { message: string; command?: string } }
   | { type: 'operationComplete'; payload: { operation: string; success: boolean } }
   | { type: 'bisectResult'; payload: { message: string } }
-  | { type: 'statsData'; payload: { byAuthor: Array<{ author: string; count: number }>; byWeekdayHour: Array<{ weekday: number; hour: number; count: number }> } }
+  | { type: 'statsData'; payload: { byAuthor: Array<{ author: string; email: string; count: number }>; byWeekdayHour: Array<{ weekday: number; hour: number; count: number }> } }
   | { type: 'lsTreeData'; payload: { ref: string; path?: string; entries: Array<{ mode: string; type: 'blob' | 'tree'; hash: string; name: string }> } }
   | { type: 'prCreated'; payload: { url: string } }
   | { type: 'submoduleData'; payload: Array<{ hash: string; path: string; status: string }> }

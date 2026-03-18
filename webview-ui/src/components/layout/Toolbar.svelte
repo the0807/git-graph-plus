@@ -210,7 +210,7 @@
       <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
     <div class="modal-form-group">
-      <label class="modal-checkbox">
+      <label class="modal-checkbox modal-checkbox--danger">
         <input type="checkbox" bind:checked={forcePush} />
         <span>{t('push.forcePushOption')}</span>
       </label>
