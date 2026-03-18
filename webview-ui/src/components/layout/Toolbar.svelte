@@ -5,7 +5,7 @@
   import { uiStore } from '../../lib/stores/ui.svelte';
   import { t } from '../../lib/i18n/index.svelte';
   import Modal from '../common/Modal.svelte';
-  import ColorSelect from '../common/ColorSelect.svelte';
+  import AddRemoteModal from '../modals/AddRemoteModal.svelte';
 
   const vscode = getVsCodeApi();
 
@@ -19,8 +19,6 @@
   let pullRebase = $state(false);
   let pullStash = $state(false);
   let showAddRemote = $state(false);
-  let newRemoteName = $state('');
-  let newRemoteUrl = $state('');
 
   function refresh() {
     operating = 'refresh';
@@ -65,16 +63,6 @@
     operating = 'push';
     showPushConfirm = false;
     vscode.postMessage({ type: 'push', payload: { force: forcePush, setUpstream: true } });
-  }
-
-  function handleAddRemote() {
-    const name = newRemoteName.trim();
-    const url = newRemoteUrl.trim();
-    if (!name || !url) return;
-    vscode.postMessage({ type: 'addRemote', payload: { name, url } });
-    showAddRemote = false;
-    newRemoteName = '';
-    newRemoteUrl = '';
   }
 
   function switchRepo(repoPath: string) {
@@ -191,104 +179,82 @@
 </div>
 
 {#if showFetchConfirm}
-  <Modal title="Fetch" onClose={() => { showFetchConfirm = false; }}>
+  <Modal title={t('fetch.title')} onClose={() => { showFetchConfirm = false; }}>
     <p class="modal-desc">{t('fetch.desc')}</p>
-    <div class="info-rows">
-      <div class="info-row">
-        <span class="info-label">Remote:</span>
-        <span class="info-value">
-          <select class="modal-select" bind:value={fetchRemote}>
-            <option value="">{t('fetch.allRemotes')}</option>
-            {#each branchStore.remotes as remote}
-              <option value={remote.name}>{remote.name}</option>
-            {/each}
-          </select>
-        </span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Options:</span>
-        <span class="info-value option-checks">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={fetchPrune} />
-            <span>{t('fetch.prune')}</span>
-          </label>
-        </span>
-      </div>
+    <div class="modal-form-group">
+      <label class="modal-field-label">{t('fetch.remote')}</label>
+      <select class="modal-select" bind:value={fetchRemote}>
+        <option value="">{t('fetch.allRemotes')}</option>
+        {#each branchStore.remotes as remote}
+          <option value={remote.name}>{remote.name}</option>
+        {/each}
+      </select>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={fetchPrune} />
+        <span>{t('fetch.prune')}</span>
+      </label>
     </div>
     <div class="form-actions">
       <button onclick={() => { showFetchConfirm = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={confirmFetch}>Fetch</button>
+      <button class="primary" onclick={confirmFetch}>{t('fetch.fetch')}</button>
     </div>
   </Modal>
 {/if}
 
 {#if showPushConfirm}
-  <Modal title="Push" onClose={() => { showPushConfirm = false; }}>
-    <p class="modal-desc">Push local commits to the remote repository.</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Branch:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-      <div class="info-row">
-        <span class="info-label">Options:</span>
-        <span class="info-value">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={forcePush} />
-            <span>Force push (--force-with-lease)</span>
-          </label>
-        </span>
-      </div>
+  <Modal title={t('push.title')} onClose={() => { showPushConfirm = false; }}>
+    <p class="modal-desc">{t('push.desc')}</p>
+    <div class="modal-context-card">
+      <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={forcePush} />
+        <span>{t('push.forcePushOption')}</span>
+      </label>
     </div>
     {#if forcePush}
-      <p class="warning-text">{t('push.forceWarning')}</p>
+      <p class="modal-warning" role="alert">{t('push.forceWarning')}</p>
     {/if}
     <div class="form-actions">
       <button onclick={() => { showPushConfirm = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={confirmPush}>Push</button>
+      <button class="primary" onclick={confirmPush}>{t('push.push')}</button>
     </div>
   </Modal>
 {/if}
 
 {#if showPullConfirm}
-  <Modal title="Pull" onClose={() => { showPullConfirm = false; }}>
-    <p class="modal-desc">Pull changes from the remote repository.</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Branch:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-      <div class="info-row">
-        <span class="info-label">Options:</span>
-        <span class="info-value option-checks">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={pullRebase} />
-            <span>Rebase instead of merge</span>
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={pullStash} />
-            <span>Stash and reapply local changes</span>
-          </label>
-        </span>
-      </div>
+  <Modal title={t('pull.title')} onClose={() => { showPullConfirm = false; }}>
+    <p class="modal-desc">{t('pull.desc')}</p>
+    <div class="modal-context-card">
+      <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={pullRebase} />
+        <span>{t('pull.rebase')}</span>
+      </label>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={pullStash} />
+        <span>{t('pull.stash')}</span>
+      </label>
     </div>
     <div class="form-actions">
       <button onclick={() => { showPullConfirm = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={confirmPull}>Pull</button>
+      <button class="primary" onclick={confirmPull}>{t('pull.pull')}</button>
     </div>
   </Modal>
 {/if}
 
-<!-- Add Remote Modal -->
 {#if showAddRemote}
-  <Modal title={t('addRemote.title')} onClose={() => { showAddRemote = false; }}>
-    <div class="form-group">
-      <label for="remote-name">{t('addRemote.name')}</label>
-      <input id="remote-name" type="text" bind:value={newRemoteName} placeholder="upstream" />
-    </div>
-    <div class="form-group">
-      <label for="remote-url">{t('addRemote.url')}</label>
-      <input id="remote-url" type="text" bind:value={newRemoteUrl} placeholder="https://github.com/..." onkeydown={(e) => { if (e.key === 'Enter') handleAddRemote(); }} />
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showAddRemote = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={handleAddRemote} disabled={!newRemoteName.trim() || !newRemoteUrl.trim()}>{t('addRemote.add')}</button>
-    </div>
-  </Modal>
+  <AddRemoteModal
+    onClose={() => { showAddRemote = false; }}
+    onAdd={(name, url) => { showAddRemote = false; vscode.postMessage({ type: 'addRemote', payload: { name, url } }); }}
+  />
 {/if}
 
 <style>
@@ -429,48 +395,6 @@
     background: var(--border-color);
   }
 
-  /* Modal form styles */
-  .form-group {
-    margin-bottom: 12px;
-  }
-
-  .form-group label {
-    display: block;
-    font-size: 12px;
-    margin-bottom: 4px;
-    color: var(--text-secondary);
-  }
-
-  .form-group input[type="text"] {
-    width: 100%;
-    padding: 5px 8px;
-    background: var(--input-bg);
-    color: var(--input-fg);
-    border: 1px solid var(--input-border, var(--border-color));
-    border-radius: 3px;
-    font-size: 12px;
-    font-family: inherit;
-    outline: none;
-  }
-
-  .form-group input[type="text"]:focus {
-    border-color: var(--vscode-focusBorder, #007fd4);
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    font-size: 12px;
-  }
-
-  .warning-text {
-    font-size: 11px;
-    color: var(--vscode-errorForeground, #f44336);
-    margin-bottom: 8px;
-  }
-
   .form-actions {
     display: flex;
     justify-content: flex-end;
@@ -478,14 +402,9 @@
     margin-top: 16px;
   }
 
-  .modal-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
-  .info-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
-  .info-row { display: flex; align-items: center; gap: 12px; font-size: 13px; }
-  .info-label { width: 90px; flex-shrink: 0; font-weight: 600; color: var(--text-secondary); }
-  .info-value { display: flex; align-items: center; gap: 5px; min-width: 0; }
   .modal-select {
-    flex: 1;
-    padding: 4px 8px;
+    width: 100%;
+    padding: 5px 8px;
     background: var(--input-bg);
     color: var(--input-fg);
     border: 1px solid var(--input-border, var(--border-color));

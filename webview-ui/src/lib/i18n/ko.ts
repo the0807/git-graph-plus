@@ -183,20 +183,80 @@ export const ko: Record<string, string> = {
   // Checkout commit modal
   'checkoutCommit.title': 'Commit Checkout',
   'checkoutCommit.desc': 'commit {hash}을(를) detached HEAD 상태로 checkout합니다. 어떤 브랜치에도 속하지 않게 됩니다.',
+  'checkoutCommit.checkout': 'Checkout',
+
+  // Checkout branch modal (pull after checkout)
+  'checkoutBranch.title': '브랜치 Checkout',
+  'checkoutBranch.desc': '이 브랜치는 리모트보다 {count}개의 commit이 뒤처져 있습니다. Checkout 후 pull 하시겠습니까?',
+  'checkoutBranch.behind': '{count} 뒤처짐',
+  'checkoutBranch.checkoutOnly': 'Checkout만',
+  'checkoutBranch.checkoutAndPull': 'Checkout & Pull',
 
   // Fetch modal
+  'fetch.title': 'Fetch',
   'fetch.desc': '리모트 저장소에서 최신 변경 사항을 가져옵니다.',
+  'fetch.remote': '리모트',
   'fetch.allRemotes': '모든 리모트',
   'fetch.prune': '삭제된 리모트 브랜치 정리 (--prune)',
+  'fetch.fetch': 'Fetch',
+
+  // Push modal (inline)
+  'push.desc': '로컬 commit을 리모트 저장소에 push합니다.',
+  'push.forcePushOption': 'Force push (--force-with-lease)',
+
+  // Pull modal
+  'pull.title': 'Pull',
+  'pull.desc': '리모트 저장소에서 변경 사항을 pull합니다.',
+  'pull.rebase': 'Merge 대신 rebase',
+  'pull.stash': '로컬 변경 사항을 stash 후 재적용',
+  'pull.pull': 'Pull',
 
   // Cherry-pick modal
+  'cherryPick.title': 'Commit Cherry-pick',
+  'cherryPick.desc': '선택한 commit을 현재 브랜치에 적용합니다.',
   'cherryPick.noCommit': 'Commit 없이 변경 사항만 적용 (--no-commit)',
+  'cherryPick.cherryPick': 'Cherry-pick',
 
   // Revert modal
+  'revert.title': 'Commit Revert',
+  'revert.desc': '선택한 commit의 변경 사항을 되돌리는 새 commit을 생성합니다.',
   'revert.noCommit': 'Commit 없이 변경 사항만 적용 (--no-commit)',
+  'revert.revert': 'Revert',
+
+  // Merge modal
+  'merge.title': 'Merge Branch',
+  'merge.desc': '선택한 브랜치를 현재 브랜치에 merge합니다.',
+  'merge.mergeType': 'Merge 유형:',
+  'merge.default': '기본 — 가능하면 fast-forward',
+  'merge.noFf': 'No Fast-forward — 항상 merge commit 생성',
+  'merge.ffOnly': 'Fast-forward Only — 불가능하면 실패',
+  'merge.squash': 'Squash — 모든 commit을 하나로 합침',
+  'merge.squashWarning': '원본 commit이 히스토리에 보존되지 않습니다.',
+  'merge.merge': 'Merge',
 
   // Rebase modal
+  'rebaseBranch.title': 'Rebase Branch',
+  'rebaseBranch.desc': '현재 브랜치를 선택한 브랜치 위에 rebase합니다. Commit 히스토리가 재작성됩니다.',
+  'rebaseBranch.rebase': 'Rebase',
   'rebase.autostash': 'Rebase 전 자동 stash (--autostash)',
+
+  // Reset modal
+  'reset.modalTitle': '브랜치를 리비전으로 Reset',
+  'reset.desc': '브랜치 헤드를 선택한 리비전으로 이동합니다.',
+  'reset.branch': '브랜치:',
+  'reset.moveTo': '이동 대상:',
+  'reset.resetType': 'Reset 유형:',
+  'reset.softOption': 'Soft — 모든 변경 사항을 staged 상태로 유지',
+  'reset.mixedOption': 'Mixed — 모든 변경 사항을 unstaged 상태로 유지',
+  'reset.hardOption': 'Hard — 모든 변경 사항 삭제',
+  'reset.hardWarning': '커밋되지 않은 모든 변경 사항이 영구적으로 손실됩니다.',
+  'reset.resetBtn': 'Reset',
+
+  // Common labels
+  'common.commit': '커밋:',
+  'common.onto': '대상:',
+  'common.branch': '브랜치:',
+  'common.options': '옵션:',
 
   // Delete branch confirmation
   'deleteBranch.title': '브랜치 삭제',

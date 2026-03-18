@@ -183,20 +183,80 @@ export const en: Record<string, string> = {
   // Checkout commit modal
   'checkoutCommit.title': 'Checkout Commit',
   'checkoutCommit.desc': 'This will checkout commit {hash} in detached HEAD state. You will not be on any branch.',
+  'checkoutCommit.checkout': 'Checkout',
+
+  // Checkout branch modal (pull after checkout)
+  'checkoutBranch.title': 'Checkout Branch',
+  'checkoutBranch.desc': 'This branch is {count} commit(s) behind the remote. Pull after checkout?',
+  'checkoutBranch.behind': '{count} behind',
+  'checkoutBranch.checkoutOnly': 'Checkout Only',
+  'checkoutBranch.checkoutAndPull': 'Checkout & Pull',
 
   // Fetch modal
+  'fetch.title': 'Fetch',
   'fetch.desc': 'Fetch latest changes from remote repository.',
+  'fetch.remote': 'Remote',
   'fetch.allRemotes': 'All remotes',
   'fetch.prune': 'Prune deleted remote branches (--prune)',
+  'fetch.fetch': 'Fetch',
+
+  // Push modal (inline)
+  'push.desc': 'Push local commits to the remote repository.',
+  'push.forcePushOption': 'Force push (--force-with-lease)',
+
+  // Pull modal
+  'pull.title': 'Pull',
+  'pull.desc': 'Pull changes from the remote repository.',
+  'pull.rebase': 'Rebase instead of merge',
+  'pull.stash': 'Stash and reapply local changes',
+  'pull.pull': 'Pull',
 
   // Cherry-pick modal
+  'cherryPick.title': 'Cherry-pick Commit',
+  'cherryPick.desc': 'Apply the selected commit onto the current branch.',
   'cherryPick.noCommit': 'Apply changes without committing (--no-commit)',
+  'cherryPick.cherryPick': 'Cherry-pick',
 
   // Revert modal
+  'revert.title': 'Revert Commit',
+  'revert.desc': 'Create a new commit that undoes the changes of the selected commit.',
   'revert.noCommit': 'Apply changes without committing (--no-commit)',
+  'revert.revert': 'Revert',
+
+  // Merge modal
+  'merge.title': 'Merge Branch',
+  'merge.desc': 'Merge the selected branch into the current branch.',
+  'merge.mergeType': 'Merge Type:',
+  'merge.default': 'Default — Fast-forward if possible',
+  'merge.noFf': 'No Fast-forward — Always create merge commit',
+  'merge.ffOnly': 'Fast-forward Only — Fail if not possible',
+  'merge.squash': 'Squash — Combine all commits into one',
+  'merge.squashWarning': 'Original commits will not be preserved in the history.',
+  'merge.merge': 'Merge',
 
   // Rebase modal
+  'rebaseBranch.title': 'Rebase Branch',
+  'rebaseBranch.desc': 'Rebase the current branch onto the selected branch. This will rewrite commit history.',
+  'rebaseBranch.rebase': 'Rebase',
   'rebase.autostash': 'Auto-stash before rebase (--autostash)',
+
+  // Reset modal
+  'reset.modalTitle': 'Reset Branch to Revision',
+  'reset.desc': 'Move the branch head to the selected revision.',
+  'reset.branch': 'Branch:',
+  'reset.moveTo': 'Move to:',
+  'reset.resetType': 'Reset Type:',
+  'reset.softOption': 'Soft — Keep all changes staged',
+  'reset.mixedOption': 'Mixed — Keep all changes unstaged',
+  'reset.hardOption': 'Hard — Discard all changes',
+  'reset.hardWarning': 'All uncommitted changes will be permanently lost.',
+  'reset.resetBtn': 'Reset',
+
+  // Common labels
+  'common.commit': 'Commit:',
+  'common.onto': 'Onto:',
+  'common.branch': 'Branch:',
+  'common.options': 'Options:',
 
   // Delete branch confirmation
   'deleteBranch.title': 'Delete Branch',

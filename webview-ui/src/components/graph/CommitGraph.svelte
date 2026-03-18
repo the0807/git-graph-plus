@@ -9,6 +9,14 @@
   import InteractiveRebase from '../rebase/InteractiveRebase.svelte';
   import Modal from '../common/Modal.svelte';
   import ColorSelect from '../common/ColorSelect.svelte';
+  import DeleteTagModal from '../modals/DeleteTagModal.svelte';
+  import DeleteBranchModal from '../modals/DeleteBranchModal.svelte';
+  import PullAfterCheckoutModal from '../modals/PullAfterCheckoutModal.svelte';
+  import CheckoutRemoteModal from '../modals/CheckoutRemoteModal.svelte';
+  import MergeBranchModal from '../modals/MergeBranchModal.svelte';
+  import RebaseBranchModal from '../modals/RebaseBranchModal.svelte';
+  import CreateBranchModal from '../modals/CreateBranchModal.svelte';
+  import CreateTagModal from '../modals/CreateTagModal.svelte';
   import type { Commit, CommitGraphData } from '../../lib/types';
 
   const COLOR_PALETTE = [
@@ -73,11 +81,9 @@
   // Confirmation modals
   let showMergeModal = $state(false);
   let mergeTarget = $state('');
-  let mergeMode = $state<'default' | 'no-ff' | 'ff-only' | 'squash'>('default');
 
   let showRebaseModal = $state(false);
   let rebaseTarget = $state('');
-  let rebaseAutostash = $state(false);
 
   let showCherryPickModal = $state(false);
   let cherryPickTarget = $state('');
@@ -92,7 +98,6 @@
 
   let showDeleteBranchModal = $state(false);
   let deleteBranchName = $state('');
-  let deleteBranchForce = $state(false);
 
   let showCheckoutRemoteModal = $state(false);
   let checkoutRemoteName = $state('');
@@ -104,15 +109,10 @@
   let showCreateTagModal = $state(false);
   let createTagRef = $state('');
   let createTagSubject = $state('');
-  let createTagName = $state('');
-  let createTagMessage = $state('');
-  let createTagPush = $state(false);
 
   let showCreateBranchModal = $state(false);
   let createBranchStartPoint = $state('');
   let createBranchSubject = $state('');
-  let createBranchName = $state('');
-  let createBranchCheckout = $state(true);
 
   let showPullAfterCheckoutModal = $state(false);
   let pullAfterCheckoutRef = $state('');
@@ -238,12 +238,12 @@
           action: () => {},
           children: [
             {
-              label: 'Checkout',
+              label: t('sidebar.checkout'),
               action: () => doCheckout(branchName),
             },
             {
               label: t('graph.mergeInto', { branch: currentBranch }),
-              action: () => { mergeTarget = branchName; mergeMode = 'default'; showMergeModal = true; },
+              action: () => { mergeTarget = branchName; showMergeModal = true; },
             },
             { separator: true, label: '', action: () => {} },
             {
@@ -252,7 +252,7 @@
             },
             {
               label: t('graph.deleteBranch'),
-              action: () => { deleteBranchName = branchName; deleteBranchForce = false; showDeleteBranchModal = true; },
+              action: () => { deleteBranchName = branchName; showDeleteBranchModal = true; },
               danger: true,
             },
             { separator: true, label: '', action: () => {} },
@@ -269,12 +269,12 @@
           action: () => {},
           children: [
             {
-              label: 'Checkout',
+              label: t('sidebar.checkout'),
               action: () => doCheckoutRemote(fullName, ref.name),
             },
             {
               label: t('graph.mergeInto', { branch: currentBranch }),
-              action: () => { mergeTarget = fullName; mergeMode = 'default'; showMergeModal = true; },
+              action: () => { mergeTarget = fullName; showMergeModal = true; },
             },
             { separator: true, label: '', action: () => {} },
             {
@@ -289,7 +289,7 @@
           action: () => {},
           children: [
             {
-              label: 'Checkout',
+              label: t('sidebar.checkout'),
               action: () => vscode.postMessage({ type: 'checkout', payload: { ref: ref.name } }),
             },
             {
@@ -338,11 +338,11 @@
     items.push(
       {
         label: t('graph.createBranchHere'),
-        action: () => { createBranchStartPoint = commit.hash; createBranchSubject = commit.subject; createBranchName = ''; createBranchCheckout = true; showCreateBranchModal = true; },
+        action: () => { createBranchStartPoint = commit.hash; createBranchSubject = commit.subject; showCreateBranchModal = true; },
       },
       {
         label: t('graph.newTag'),
-        action: () => { createTagRef = commit.hash; createTagSubject = commit.subject; createTagName = ''; createTagMessage = ''; createTagPush = false; showCreateTagModal = true; },
+        action: () => { createTagRef = commit.hash; createTagSubject = commit.subject; showCreateTagModal = true; },
       },
     );
 
@@ -351,7 +351,7 @@
       { separator: true, label: '', action: () => {} },
       {
         label: t('graph.mergeInto', { branch: currentBranch }),
-        action: () => { mergeTarget = commit.hash; mergeMode = 'default'; showMergeModal = true; },
+        action: () => { mergeTarget = commit.hash; showMergeModal = true; },
       },
       {
         label: t('graph.rebaseTo', { branch: currentBranch }),
@@ -368,7 +368,7 @@
       { separator: true, label: '', action: () => {} },
       {
         label: t('graph.resetBranchToHere', { branch: currentBranch }),
-        action: () => { resetTarget = commit.hash; showResetModal = true; },
+        action: () => { resetTarget = commit.hash; resetMode = 'mixed'; showResetModal = true; },
       },
     );
 
@@ -381,11 +381,11 @@
       },
       {
         label: t('graph.cherryPickCommit'),
-        action: () => { cherryPickTarget = commit.hash; showCherryPickModal = true; },
+        action: () => { cherryPickTarget = commit.hash; cherryPickNoCommit = false; showCherryPickModal = true; },
       },
       {
         label: t('graph.revertCommit'),
-        action: () => { revertTarget = commit.hash; showRevertModal = true; },
+        action: () => { revertTarget = commit.hash; revertNoCommit = false; showRevertModal = true; },
       },
       {
         label: t('graph.savePatch'),
@@ -673,286 +673,153 @@
 {/if}
 
 {#if showResetModal}
-  <Modal title="Reset Branch to Revision" onClose={() => { showResetModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">Move the branch head to the selected revision.</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Branch:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-      <div class="info-row"><span class="info-label">Move to:</span><span class="info-value"><i class="codicon codicon-git-commit"></i> {resetTarget.substring(0, 7)}</span></div>
-      <div class="info-row">
-        <span class="info-label">Reset Type:</span>
-        <span class="info-value">
-          <ColorSelect
-            options={[
-              { value: 'soft', label: 'Soft — Keep all changes staged', color: '#4caf50' },
-              { value: 'mixed', label: 'Mixed — Keep all changes unstaged', color: '#ff9800' },
-              { value: 'hard', label: 'Hard — Discard all changes', color: '#f44336', warning: 'All uncommitted changes will be permanently lost.' },
-            ]}
-            value={resetMode}
-            onChange={(v) => { resetMode = v as typeof resetMode; }}
-          />
-        </span>
+  <Modal title={t('reset.modalTitle')} onClose={() => { showResetModal = false; contextMenuHash = null; }}>
+    <p class="modal-desc">{t('reset.desc')}</p>
+    <div class="modal-field-row"><span class="modal-field-label">{t('reset.branch')}</span><span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span></div>
+    <div class="modal-field-row"><span class="modal-field-label">{t('reset.moveTo')}</span><span class="modal-hash">{resetTarget.substring(0, 7)}</span></div>
+      <div class="modal-form-group">
+        <div class="modal-field-label">{t('reset.resetType')}</div>
+        <ColorSelect
+          options={[
+            { value: 'soft', label: t('reset.softOption'), color: '#4caf50' },
+            { value: 'mixed', label: t('reset.mixedOption'), color: '#ff9800' },
+            { value: 'hard', label: t('reset.hardOption'), color: '#f44336', warning: t('reset.hardWarning') },
+          ]}
+          value={resetMode}
+          onChange={(v) => { resetMode = v as typeof resetMode; }}
+        />
       </div>
-    </div>
     <div class="form-actions">
       <button onclick={() => { showResetModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
       <button class="primary" onclick={() => {
           vscode.postMessage({ type: 'reset', payload: { ref: resetTarget, mode: resetMode } });
           showResetModal = false;
           contextMenuHash = null;
-        }}>Reset</button>
+        }}>{t('reset.resetBtn')}</button>
     </div>
   </Modal>
 {/if}
 
 {#if showMergeModal}
-  <Modal title="Merge Branch" onClose={() => { showMergeModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">Merge the selected branch into the current branch.</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Source:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {mergeTarget}</span></div>
-      <div class="info-row"><span class="info-label">Into:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-      <div class="info-row">
-        <span class="info-label">Merge Type:</span>
-        <span class="info-value">
-          <ColorSelect
-            options={[
-              { value: 'default', label: 'Default — Fast-forward if possible', color: '#4caf50' },
-              { value: 'no-ff', label: 'No Fast-forward — Always create merge commit', color: '#2196f3' },
-              { value: 'ff-only', label: 'Fast-forward Only — Fail if not possible', color: '#ff9800' },
-              { value: 'squash', label: 'Squash — Combine all commits into one', color: '#9c27b0', warning: 'Original commits will not be preserved in the history.' },
-            ]}
-            value={mergeMode}
-            onChange={(v) => { mergeMode = v as typeof mergeMode; }}
-          />
-        </span>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showMergeModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showMergeModal = false; contextMenuHash = null; vscode.postMessage({ type: 'merge', payload: { branch: mergeTarget, noFf: mergeMode === 'no-ff', ffOnly: mergeMode === 'ff-only', squash: mergeMode === 'squash' } }); }}>Merge</button>
-    </div>
-  </Modal>
+  <MergeBranchModal
+    source={mergeTarget}
+    target={branchStore.currentBranch?.name ?? 'current branch'}
+    onClose={() => { showMergeModal = false; contextMenuHash = null; }}
+    onMerge={(options) => { showMergeModal = false; contextMenuHash = null; vscode.postMessage({ type: 'merge', payload: { branch: mergeTarget, ...options } }); }}
+  />
 {/if}
 
 {#if showRebaseModal}
-  <Modal title="Rebase Branch" onClose={() => { showRebaseModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">Rebase the current branch onto the selected revision. This will rewrite commit history.</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Branch:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-      <div class="info-row"><span class="info-label">Onto:</span><span class="info-value"><i class="codicon codicon-git-commit"></i> {rebaseTarget.substring(0, 7)}</span></div>
-      <div class="info-row">
-        <span class="info-label">Options:</span>
-        <span class="info-value">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={rebaseAutostash} />
-            <span>{t('rebase.autostash')}</span>
-          </label>
-        </span>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showRebaseModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showRebaseModal = false; contextMenuHash = null; vscode.postMessage({ type: 'rebase', payload: { onto: rebaseTarget, autostash: rebaseAutostash } }); }}>Rebase</button>
-    </div>
-  </Modal>
+  <RebaseBranchModal
+    branch={branchStore.currentBranch?.name ?? 'current branch'}
+    onto={rebaseTarget}
+    onClose={() => { showRebaseModal = false; contextMenuHash = null; }}
+    onRebase={(options) => { showRebaseModal = false; contextMenuHash = null; vscode.postMessage({ type: 'rebase', payload: { onto: rebaseTarget, autostash: options.autostash } }); }}
+  />
 {/if}
 
 {#if showCherryPickModal}
-  <Modal title="Cherry-pick Commit" onClose={() => { showCherryPickModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">Apply the selected commit onto the current branch.</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Commit:</span><span class="info-value"><i class="codicon codicon-git-commit"></i> {cherryPickTarget.substring(0, 7)}</span></div>
-      <div class="info-row"><span class="info-label">Onto:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-      <div class="info-row">
-        <span class="info-label">Options:</span>
-        <span class="info-value">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={cherryPickNoCommit} />
-            <span>{t('cherryPick.noCommit')}</span>
-          </label>
-        </span>
-      </div>
+  <Modal title={t('cherryPick.title')} onClose={() => { showCherryPickModal = false; contextMenuHash = null; }}>
+    <p class="modal-desc">{t('cherryPick.desc')}</p>
+    <div class="modal-field-row"><span class="modal-field-label">{t('common.commit')}</span><span class="modal-hash">{cherryPickTarget.substring(0, 7)}</span></div>
+    <div class="modal-field-row"><span class="modal-field-label">{t('common.onto')}</span><span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span></div>
+    <div class="modal-field-row">
+        <span class="modal-field-label">{t('common.options')}</span>
+        <label class="modal-checkbox">
+          <input type="checkbox" bind:checked={cherryPickNoCommit} />
+          <span>{t('cherryPick.noCommit')}</span>
+        </label>
     </div>
     <div class="form-actions">
       <button onclick={() => { showCherryPickModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showCherryPickModal = false; contextMenuHash = null; vscode.postMessage({ type: 'cherryPick', payload: { commit: cherryPickTarget, noCommit: cherryPickNoCommit } }); }}>Cherry-pick</button>
+      <button class="primary" onclick={() => { showCherryPickModal = false; contextMenuHash = null; vscode.postMessage({ type: 'cherryPick', payload: { commit: cherryPickTarget, noCommit: cherryPickNoCommit } }); }}>{t('cherryPick.cherryPick')}</button>
     </div>
   </Modal>
 {/if}
 
 {#if showRevertModal}
-  <Modal title="Revert Commit" onClose={() => { showRevertModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">Create a new commit that undoes the changes of the selected commit.</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Commit:</span><span class="info-value"><i class="codicon codicon-git-commit"></i> {revertTarget.substring(0, 7)}</span></div>
-      <div class="info-row"><span class="info-label">Branch:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-      <div class="info-row">
-        <span class="info-label">Options:</span>
-        <span class="info-value">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={revertNoCommit} />
-            <span>{t('revert.noCommit')}</span>
-          </label>
-        </span>
-      </div>
+  <Modal title={t('revert.title')} onClose={() => { showRevertModal = false; contextMenuHash = null; }}>
+    <p class="modal-desc">{t('revert.desc')}</p>
+    <div class="modal-field-row"><span class="modal-field-label">{t('common.commit')}</span><span class="modal-hash">{revertTarget.substring(0, 7)}</span></div>
+    <div class="modal-field-row"><span class="modal-field-label">{t('common.branch')}</span><span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span></div>
+    <div class="modal-field-row">
+        <span class="modal-field-label">{t('common.options')}</span>
+        <label class="modal-checkbox">
+          <input type="checkbox" bind:checked={revertNoCommit} />
+          <span>{t('revert.noCommit')}</span>
+        </label>
     </div>
     <div class="form-actions">
       <button onclick={() => { showRevertModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showRevertModal = false; contextMenuHash = null; vscode.postMessage({ type: 'revert', payload: { commit: revertTarget, noCommit: revertNoCommit } }); }}>Revert</button>
+      <button class="primary" onclick={() => { showRevertModal = false; contextMenuHash = null; vscode.postMessage({ type: 'revert', payload: { commit: revertTarget, noCommit: revertNoCommit } }); }}>{t('revert.revert')}</button>
     </div>
   </Modal>
 {/if}
 
 {#if showDeleteTagModal}
-  <Modal title={t('deleteTag.title')} onClose={() => { showDeleteTagModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">{t('deleteTag.confirm', { name: deleteTagName })}</p>
-    <div class="form-actions">
-      <button onclick={() => { showDeleteTagModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="danger-btn" onclick={() => { showDeleteTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); }}>{t('sidebar.delete')}</button>
-    </div>
-  </Modal>
+  <DeleteTagModal
+    tagName={deleteTagName}
+    onClose={() => { showDeleteTagModal = false; contextMenuHash = null; }}
+    onDelete={() => { showDeleteTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); }}
+  />
 {/if}
 
 {#if showCreateTagModal}
-  <Modal title={t('createTag.title')} onClose={() => { showCreateTagModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">{t('createTag.desc')}</p>
-    <div class="fork-form">
-      <div class="fork-row">
-        <span class="fork-label">{t('createTag.createAt')}</span>
-        <span class="fork-value"><i class="codicon codicon-git-commit"></i> {createTagRef.substring(0, 7)} {createTagSubject}</span>
-      </div>
-      <div class="fork-row">
-        <label class="fork-label" for="ctx-tag-name">{t('createTag.name')}</label>
-        <!-- svelte-ignore a11y_autofocus -->
-        <input id="ctx-tag-name" type="text" class="fork-input" bind:value={createTagName} placeholder={t('createTag.namePlaceholder')} autofocus onkeydown={(e) => { if (e.key === 'Enter' && createTagName.trim()) { showCreateTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createTag', payload: { name: createTagName.trim(), ref: createTagRef, message: createTagMessage.trim() || undefined } }); if (createTagPush) vscode.postMessage({ type: 'pushTag', payload: { name: createTagName.trim() } }); } }} />
-      </div>
-      <div class="fork-row fork-row-top">
-        <label class="fork-label" for="ctx-tag-msg">{t('createTag.message')}</label>
-        <textarea id="ctx-tag-msg" class="fork-textarea" bind:value={createTagMessage} placeholder={t('createTag.messagePlaceholder')} rows="4"></textarea>
-      </div>
-      <div class="fork-row">
-        <span class="fork-label"></span>
-        <label class="checkbox-label">
-          <input type="checkbox" bind:checked={createTagPush} />
-          <span>{t('createTag.pushToRemotes')}</span>
-        </label>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showCreateTagModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showCreateTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createTag', payload: { name: createTagName.trim(), ref: createTagRef, message: createTagMessage.trim() || undefined } }); if (createTagPush) vscode.postMessage({ type: 'pushTag', payload: { name: createTagName.trim() } }); }} disabled={!createTagName.trim()}>{createTagPush ? t('createTag.createAndPush') : t('createTag.create')}</button>
-    </div>
-  </Modal>
+  <CreateTagModal
+    startPoint={createTagRef}
+    subject={createTagSubject}
+    onClose={() => { showCreateTagModal = false; contextMenuHash = null; }}
+    onCreate={(name, message, startPoint, push) => { showCreateTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createTag', payload: { name, ref: startPoint, message: message || undefined } }); if (push) vscode.postMessage({ type: 'pushTag', payload: { name } }); }}
+  />
 {/if}
 
 {#if showCreateBranchModal}
-  <Modal title={t('createBranch.title')} onClose={() => { showCreateBranchModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">{t('createBranch.desc')}</p>
-    <div class="fork-form">
-      <div class="fork-row">
-        <span class="fork-label">{t('createBranch.createAt')}</span>
-        <span class="fork-value"><i class="codicon codicon-git-commit"></i> {createBranchStartPoint.substring(0, 7)} {createBranchSubject}</span>
-      </div>
-      <div class="fork-row">
-        <label class="fork-label" for="ctx-branch-name">{t('createBranch.name')}</label>
-        <!-- svelte-ignore a11y_autofocus -->
-        <input id="ctx-branch-name" type="text" class="fork-input" bind:value={createBranchName} placeholder={t('createBranch.namePlaceholder')} autofocus onkeydown={(e) => { if (e.key === 'Enter' && createBranchName.trim()) { showCreateBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createBranch', payload: { name: createBranchName.trim(), startPoint: createBranchStartPoint, checkout: createBranchCheckout } }); } }} />
-      </div>
-      <div class="fork-row">
-        <span class="fork-label"></span>
-        <label class="checkbox-label">
-          <input type="checkbox" bind:checked={createBranchCheckout} />
-          <span>{t('createBranch.checkout')}</span>
-        </label>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showCreateBranchModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showCreateBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createBranch', payload: { name: createBranchName.trim(), startPoint: createBranchStartPoint, checkout: createBranchCheckout } }); }} disabled={!createBranchName.trim()}>{createBranchCheckout ? t('createBranch.createAndCheckout') : t('createBranch.create')}</button>
-    </div>
-  </Modal>
+  <CreateBranchModal
+    startPoint={createBranchStartPoint}
+    subject={createBranchSubject}
+    onClose={() => { showCreateBranchModal = false; contextMenuHash = null; }}
+    onCreate={(name, startPoint, checkout) => { showCreateBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createBranch', payload: { name, startPoint, checkout } }); }}
+  />
 {/if}
 
 {#if showDeleteBranchModal}
-  <Modal title={t('deleteBranch.title')} onClose={() => { showDeleteBranchModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">{t('deleteBranch.confirm', { name: deleteBranchName })}</p>
-    <div class="form-group">
-      <label class="checkbox-label">
-        <input type="checkbox" bind:checked={deleteBranchForce} />
-        <span>{t('deleteBranch.force')}</span>
-      </label>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showDeleteBranchModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="danger-btn" onclick={() => { showDeleteBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteBranch', payload: { name: deleteBranchName, force: deleteBranchForce } }); }}>{t('sidebar.delete')}</button>
-    </div>
-  </Modal>
+  <DeleteBranchModal
+    branchName={deleteBranchName}
+    onClose={() => { showDeleteBranchModal = false; contextMenuHash = null; }}
+    onDelete={(force) => { showDeleteBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteBranch', payload: { name: deleteBranchName, force } }); }}
+  />
 {/if}
 
 {#if showCheckoutRemoteModal}
-  <Modal title={t('checkoutRemote.title')} onClose={() => { showCheckoutRemoteModal = false; }}>
-    <p class="modal-desc">{t('checkoutRemote.desc', { remote: checkoutRemoteName })}</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">{t('checkoutRemote.remote')}:</span><span class="info-value"><i class="codicon codicon-cloud"></i> {checkoutRemoteName}</span></div>
-      <div class="info-row">
-        <span class="info-label">{t('checkoutRemote.localName')}:</span>
-        <span class="info-value" style="flex: 1;">
-          <!-- svelte-ignore a11y_autofocus -->
-          <input
-            type="text"
-            class="modal-input"
-            bind:value={checkoutRemoteLocalName}
-            autofocus
-            onkeydown={(e) => {
-              if (e.key === 'Enter' && checkoutRemoteLocalName.trim()) {
-                showCheckoutRemoteModal = false;
-                vscode.postMessage({ type: 'createBranch', payload: { name: checkoutRemoteLocalName.trim(), startPoint: checkoutRemoteName, checkout: true } });
-              }
-            }}
-          />
-        </span>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showCheckoutRemoteModal = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => {
-        showCheckoutRemoteModal = false;
-        vscode.postMessage({ type: 'createBranch', payload: { name: checkoutRemoteLocalName.trim(), startPoint: checkoutRemoteName, checkout: true } });
-      }} disabled={!checkoutRemoteLocalName.trim()}>{t('checkoutRemote.checkout')}</button>
-    </div>
-  </Modal>
+  <CheckoutRemoteModal
+    remoteName={checkoutRemoteName}
+    defaultLocalName={checkoutRemoteLocalName}
+    onClose={() => { showCheckoutRemoteModal = false; }}
+    onCheckout={(localName) => { showCheckoutRemoteModal = false; vscode.postMessage({ type: 'createBranch', payload: { name: localName, startPoint: checkoutRemoteName, checkout: true } }); }}
+  />
 {/if}
 
 {#if showCheckoutCommitModal}
   <Modal title={t('checkoutCommit.title')} onClose={() => { showCheckoutCommitModal = false; }}>
-    <p class="modal-desc">{t('checkoutCommit.desc', { hash: checkoutCommitHash.substring(0, 7) })}</p>
+    <p class="modal-desc">{t('checkoutCommit.desc', { hash: '' })} <span class="modal-hash">{checkoutCommitHash.substring(0, 7)}</span></p>
     <div class="form-actions">
       <button onclick={() => { showCheckoutCommitModal = false; }}>{t('common.cancel')}</button>
       <button class="primary" onclick={() => {
         showCheckoutCommitModal = false;
         vscode.postMessage({ type: 'checkout', payload: { ref: checkoutCommitHash } });
-      }}>Checkout</button>
+      }}>{t('checkoutCommit.checkout')}</button>
     </div>
   </Modal>
 {/if}
 
 {#if showPullAfterCheckoutModal}
-  <Modal title="Checkout Branch" onClose={() => { showPullAfterCheckoutModal = false; }}>
-    <p class="modal-desc">This branch is <strong>{pullAfterCheckoutBehind}</strong> commit{pullAfterCheckoutBehind > 1 ? 's' : ''} behind the remote. Pull after checkout?</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Branch:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {pullAfterCheckoutRef}</span></div>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showPullAfterCheckoutModal = false; }}>{t('common.cancel')}</button>
-      <button onclick={() => {
-        showPullAfterCheckoutModal = false;
-        vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef } });
-      }}>Checkout Only</button>
-      <button class="primary" onclick={() => {
-        showPullAfterCheckoutModal = false;
-        vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef, pullAfter: true } });
-      }}>Checkout & Pull</button>
-    </div>
-  </Modal>
+  <PullAfterCheckoutModal
+    branchName={pullAfterCheckoutRef}
+    behind={pullAfterCheckoutBehind}
+    onClose={() => { showPullAfterCheckoutModal = false; }}
+    onCheckoutOnly={() => { showPullAfterCheckoutModal = false; vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef } }); }}
+    onCheckoutAndPull={() => { showPullAfterCheckoutModal = false; vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef, pullAfter: true } }); }}
+  />
 {/if}
 
 <style>
@@ -1204,131 +1071,10 @@
   }
 
   /* ---- Modal styles ---- */
-  .modal-desc {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-bottom: 16px;
-  }
-
-  .info-rows {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-
-  .info-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 13px;
-  }
-
-  .info-label {
-    width: 90px;
-    flex-shrink: 0;
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-
-  .info-value {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    min-width: 0;
-  }
-
-
   .form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
   }
 
-  .form-group { margin-bottom: 12px; }
-
-  .modal-input {
-    width: 100%;
-    padding: 5px 8px;
-    background: var(--input-bg);
-    color: var(--input-fg);
-    border: 1px solid var(--input-border, var(--border-color));
-    border-radius: 3px;
-    font-size: 12px;
-    font-family: inherit;
-    outline: none;
-  }
-
-  .modal-input:focus {
-    border-color: var(--vscode-focusBorder, #007fd4);
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    font-size: 12px;
-  }
-
-  .danger-btn {
-    background: var(--vscode-errorForeground, #f44336) !important;
-    color: #fff !important;
-  }
-
-  /* ---- Fork-style form layout ---- */
-  .fork-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .fork-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .fork-row-top {
-    align-items: flex-start;
-  }
-
-  .fork-label {
-    min-width: 120px;
-    text-align: right;
-    color: var(--vscode-descriptionForeground);
-    font-size: 12px;
-    flex-shrink: 0;
-  }
-
-  .fork-value {
-    font-size: 12px;
-    color: var(--vscode-foreground);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .fork-input {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .fork-textarea {
-    flex: 1;
-    min-width: 0;
-    resize: vertical;
-    font-family: inherit;
-    font-size: 12px;
-    padding: 6px 8px;
-    background: var(--vscode-input-background);
-    color: var(--vscode-input-foreground);
-    border: 1px solid var(--vscode-input-border, transparent);
-    border-radius: 2px;
-  }
-
-  .fork-textarea:focus {
-    outline: 1px solid var(--vscode-focusBorder);
-    outline-offset: -1px;
-  }
 </style>

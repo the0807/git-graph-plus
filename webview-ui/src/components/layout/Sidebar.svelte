@@ -5,7 +5,15 @@
   import { t } from '../../lib/i18n/index.svelte';
   import ContextMenu from '../common/ContextMenu.svelte';
   import Modal from '../common/Modal.svelte';
-  import ColorSelect from '../common/ColorSelect.svelte';
+  import DeleteTagModal from '../modals/DeleteTagModal.svelte';
+  import DeleteBranchModal from '../modals/DeleteBranchModal.svelte';
+  import AddRemoteModal from '../modals/AddRemoteModal.svelte';
+  import PullAfterCheckoutModal from '../modals/PullAfterCheckoutModal.svelte';
+  import CheckoutRemoteModal from '../modals/CheckoutRemoteModal.svelte';
+  import MergeBranchModal from '../modals/MergeBranchModal.svelte';
+  import RebaseBranchModal from '../modals/RebaseBranchModal.svelte';
+  import CreateBranchModal from '../modals/CreateBranchModal.svelte';
+  import CreateTagModal from '../modals/CreateTagModal.svelte';
   import { onMount } from 'svelte';
   import type { WorktreeInfo } from '../../lib/types';
 
@@ -22,14 +30,9 @@
 
   // Modal state
   let showCreateBranch = $state(false);
-  let newBranchName = $state('');
-  let newBranchCheckout = $state(true);
-  let newBranchStartPoint = $state('');
 
   // Add Remote state
   let showAddRemote = $state(false);
-  let newRemoteName = $state('');
-  let newRemoteUrl = $state('');
 
   // Stash state
   let showStashSave = $state(false);
@@ -39,9 +42,6 @@
 
   // Tag state
   let showCreateTag = $state(false);
-  let newTagName = $state('');
-  let newTagMessage = $state('');
-  let newTagRef = $state('');
 
   // Rename state
   let showRenameBranch = $state(false);
@@ -51,15 +51,12 @@
   // Merge/Rebase confirmation
   let showMergeModal = $state(false);
   let mergeTarget = $state('');
-  let mergeMode = $state<'default' | 'no-ff' | 'ff-only' | 'squash'>('default');
   let showRebaseModal = $state(false);
   let rebaseTarget = $state('');
-  let rebaseAutostash = $state(false);
 
   // Delete confirmations
   let showDeleteBranchModal = $state(false);
   let deleteBranchName = $state('');
-  let deleteBranchForce = $state(false);
 
   let showDeleteTagModal = $state(false);
   let deleteTagName = $state('');
@@ -133,7 +130,7 @@
         },
         {
           label: t('sidebar.mergeInto'),
-          action: () => { mergeTarget = branchName; mergeMode = 'default'; showMergeModal = true; },
+          action: () => { mergeTarget = branchName; showMergeModal = true; },
           disabled: isCurrent,
         },
         {
@@ -148,7 +145,7 @@
         },
         {
           label: t('sidebar.delete'),
-          action: () => { deleteBranchName = branchName; deleteBranchForce = false; showDeleteBranchModal = true; },
+          action: () => { deleteBranchName = branchName; showDeleteBranchModal = true; },
           danger: true,
           disabled: isCurrent,
         },
@@ -162,43 +159,11 @@
     }
   }
 
-  function handleCreateBranch() {
-    const name = newBranchName.trim();
-    if (!name) return;
-    vscode.postMessage({
-      type: 'createBranch',
-      payload: { name, startPoint: newBranchStartPoint || undefined, checkout: newBranchCheckout },
-    });
-    showCreateBranch = false;
-    newBranchName = '';
-    newBranchStartPoint = '';
-  }
-
   function handleStashSave() {
     vscode.postMessage({ type: 'stashSave', payload: { message: stashMessage.trim() || undefined, includeUntracked: stashIncludeUntracked, keepIndex: stashKeepIndex } });
     showStashSave = false;
     stashMessage = '';
     stashKeepIndex = false;
-  }
-
-  function handleCreateTag() {
-    const name = newTagName.trim();
-    if (!name) return;
-    vscode.postMessage({ type: 'createTag', payload: { name, ref: newTagRef.trim() || undefined, message: newTagMessage.trim() || undefined } });
-    showCreateTag = false;
-    newTagName = '';
-    newTagMessage = '';
-    newTagRef = '';
-  }
-
-  function handleAddRemote() {
-    const name = newRemoteName.trim();
-    const url = newRemoteUrl.trim();
-    if (!name || !url) return;
-    vscode.postMessage({ type: 'addRemote', payload: { name, url } });
-    showAddRemote = false;
-    newRemoteName = '';
-    newRemoteUrl = '';
   }
 
   function handleRenameBranch() {
@@ -209,10 +174,6 @@
       payload: { oldName: renameBranchOld, newName },
     });
     showRenameBranch = false;
-  }
-
-  function handleCreateKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') { handleCreateBranch(); }
   }
 
   function handleRenameKeydown(e: KeyboardEvent) {
@@ -300,7 +261,7 @@
                 items: [
                   { label: t('sidebar.checkout'), action: () => doCheckoutRemote(branch.name, remoteBranchLocalName) },
                   { separator: true, label: '', action: () => {} },
-                  { label: t('sidebar.mergeInto'), action: () => { mergeTarget = branch.name; mergeMode = 'default'; showMergeModal = true; } },
+                  { label: t('sidebar.mergeInto'), action: () => { mergeTarget = branch.name; showMergeModal = true; } },
                   { label: t('sidebar.rebaseOnto'), action: () => { rebaseTarget = branch.name; showRebaseModal = true; } },
                 ],
               };
@@ -441,52 +402,27 @@
   />
 {/if}
 
-<!-- Create Branch Modal -->
 {#if showCreateBranch}
-  <Modal title={t('createBranch.title')} onClose={() => { showCreateBranch = false; }}>
-    <div class="form-group">
-      <label for="branch-name">{t('createBranch.name')}</label>
-      <!-- svelte-ignore a11y_autofocus -->
-      <input
-        id="branch-name"
-        type="text"
-        bind:value={newBranchName}
-        onkeydown={handleCreateKeydown}
-        placeholder="feature/my-branch"
-        autofocus
-      />
-    </div>
-    <div class="form-group">
-      <label for="start-point">{t('createBranch.startPoint')}</label>
-      <input
-        id="start-point"
-        type="text"
-        bind:value={newBranchStartPoint}
-        onkeydown={handleCreateKeydown}
-        placeholder="HEAD"
-      />
-    </div>
-    <div class="form-group">
-      <label class="checkbox-label">
-        <input type="checkbox" bind:checked={newBranchCheckout} />
-        {t('createBranch.checkout')}
-      </label>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showCreateBranch = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={handleCreateBranch} disabled={!newBranchName.trim()}>{t('createBranch.create')}</button>
-    </div>
-  </Modal>
+  <CreateBranchModal
+    startPoint="HEAD"
+    editableStartPoint={true}
+    onClose={() => { showCreateBranch = false; }}
+    onCreate={(name, startPoint, checkout) => { showCreateBranch = false; vscode.postMessage({ type: 'createBranch', payload: { name, startPoint: startPoint === 'HEAD' ? undefined : startPoint, checkout } }); }}
+  />
 {/if}
 
 <!-- Rename Branch Modal -->
 {#if showRenameBranch}
   <Modal title={t('renameBranch.title')} onClose={() => { showRenameBranch = false; }}>
-    <div class="form-group">
-      <label for="rename-input">{t('renameBranch.newName', { name: renameBranchOld })}</label>
+    <div class="modal-context-card">
+      <span class="modal-pill modal-pill--target">{renameBranchOld}</span>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-field-label" for="rename-input">{t('renameBranch.newName', { name: renameBranchOld })}</label>
       <!-- svelte-ignore a11y_autofocus -->
       <input
         id="rename-input"
+        class="modal-input"
         type="text"
         bind:value={renameBranchNew}
         onkeydown={handleRenameKeydown}
@@ -500,41 +436,29 @@
   </Modal>
 {/if}
 
-<!-- Add Remote Modal -->
 {#if showAddRemote}
-  <Modal title={t('addRemote.title')} onClose={() => { showAddRemote = false; }}>
-    <div class="form-group">
-      <label for="remote-name">{t('addRemote.name')}</label>
-      <!-- svelte-ignore a11y_autofocus -->
-      <input id="remote-name" type="text" bind:value={newRemoteName} placeholder="upstream" autofocus />
-    </div>
-    <div class="form-group">
-      <label for="remote-url">{t('addRemote.url')}</label>
-      <input id="remote-url" type="text" bind:value={newRemoteUrl} placeholder="https://github.com/..." onkeydown={(e) => { if (e.key === 'Enter') handleAddRemote(); }} />
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showAddRemote = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={handleAddRemote} disabled={!newRemoteName.trim() || !newRemoteUrl.trim()}>{t('addRemote.add')}</button>
-    </div>
-  </Modal>
+  <AddRemoteModal
+    onClose={() => { showAddRemote = false; }}
+    onAdd={(name, url) => { showAddRemote = false; vscode.postMessage({ type: 'addRemote', payload: { name, url } }); }}
+  />
 {/if}
 
 <!-- Stash Save Modal -->
 {#if showStashSave}
   <Modal title={t('stash.title')} onClose={() => { showStashSave = false; }}>
-    <div class="form-group">
-      <label for="stash-msg">{t('stash.message')}</label>
+    <div class="modal-form-group">
+      <label class="modal-field-label" for="stash-msg">{t('stash.message')}</label>
       <!-- svelte-ignore a11y_autofocus -->
-      <input id="stash-msg" type="text" bind:value={stashMessage} placeholder="WIP" autofocus onkeydown={(e) => { if (e.key === 'Enter') handleStashSave(); }} />
+      <input id="stash-msg" class="modal-input" type="text" bind:value={stashMessage} placeholder="WIP" autofocus onkeydown={(e) => { if (e.key === 'Enter') handleStashSave(); }} />
     </div>
-    <div class="form-group">
-      <label class="checkbox-label">
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
         <input type="checkbox" bind:checked={stashIncludeUntracked} />
         <span>{t('stash.includeUntracked')}</span>
       </label>
     </div>
-    <div class="form-group">
-      <label class="checkbox-label">
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
         <input type="checkbox" bind:checked={stashKeepIndex} />
         <span>{t('stash.keepIndex')}</span>
       </label>
@@ -546,107 +470,47 @@
   </Modal>
 {/if}
 
-<!-- Create Tag Modal -->
 {#if showCreateTag}
-  <Modal title={t('createTag.title')} onClose={() => { showCreateTag = false; }}>
-    <div class="form-group">
-      <label for="tag-name">{t('createTag.name')}</label>
-      <!-- svelte-ignore a11y_autofocus -->
-      <input id="tag-name" type="text" bind:value={newTagName} placeholder="v1.0.0" autofocus />
-    </div>
-    <div class="form-group">
-      <label for="tag-msg">{t('createTag.message')}</label>
-      <input id="tag-msg" type="text" bind:value={newTagMessage} placeholder="Release 1.0.0" />
-    </div>
-    <div class="form-group">
-      <label for="tag-ref">{t('createTag.target')}</label>
-      <input id="tag-ref" type="text" bind:value={newTagRef} placeholder="HEAD" onkeydown={(e) => { if (e.key === 'Enter') handleCreateTag(); }} />
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showCreateTag = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={handleCreateTag} disabled={!newTagName.trim()}>{t('createTag.create')}</button>
-    </div>
-  </Modal>
+  <CreateTagModal
+    startPoint="HEAD"
+    editableStartPoint={true}
+    onClose={() => { showCreateTag = false; }}
+    onCreate={(name, message, startPoint, push) => { showCreateTag = false; vscode.postMessage({ type: 'createTag', payload: { name, ref: startPoint === 'HEAD' ? undefined : startPoint, message: message || undefined } }); if (push) vscode.postMessage({ type: 'pushTag', payload: { name } }); }}
+  />
 {/if}
 
 {#if showMergeModal}
-  <Modal title="Merge Branch" onClose={() => { showMergeModal = false; }}>
-    <p class="modal-desc">Merge the selected branch into the current branch.</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Source:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {mergeTarget}</span></div>
-      <div class="info-row"><span class="info-label">Into:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-      <div class="info-row">
-        <span class="info-label">Merge Type:</span>
-        <span class="info-value">
-          <ColorSelect
-            options={[
-              { value: 'default', label: 'Default — Fast-forward if possible', color: '#4caf50' },
-              { value: 'no-ff', label: 'No Fast-forward — Always create merge commit', color: '#2196f3' },
-              { value: 'ff-only', label: 'Fast-forward Only — Fail if not possible', color: '#ff9800' },
-              { value: 'squash', label: 'Squash — Combine all commits into one', color: '#9c27b0', warning: 'Original commits will not be preserved in the history.' },
-            ]}
-            value={mergeMode}
-            onChange={(v) => { mergeMode = v as typeof mergeMode; }}
-          />
-        </span>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showMergeModal = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showMergeModal = false; vscode.postMessage({ type: 'merge', payload: { branch: mergeTarget, noFf: mergeMode === 'no-ff', ffOnly: mergeMode === 'ff-only', squash: mergeMode === 'squash' } }); }}>Merge</button>
-    </div>
-  </Modal>
+  <MergeBranchModal
+    source={mergeTarget}
+    target={branchStore.currentBranch?.name ?? 'current branch'}
+    onClose={() => { showMergeModal = false; }}
+    onMerge={(options) => { showMergeModal = false; vscode.postMessage({ type: 'merge', payload: { branch: mergeTarget, ...options } }); }}
+  />
 {/if}
 
 {#if showRebaseModal}
-  <Modal title="Rebase Branch" onClose={() => { showRebaseModal = false; }}>
-    <p class="modal-desc">Rebase the current branch onto the selected branch. This will rewrite commit history.</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Branch:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-      <div class="info-row"><span class="info-label">Onto:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {rebaseTarget}</span></div>
-      <div class="info-row">
-        <span class="info-label">Options:</span>
-        <span class="info-value">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={rebaseAutostash} />
-            <span>{t('rebase.autostash')}</span>
-          </label>
-        </span>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showRebaseModal = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showRebaseModal = false; vscode.postMessage({ type: 'rebase', payload: { onto: rebaseTarget, autostash: rebaseAutostash } }); }}>Rebase</button>
-    </div>
-  </Modal>
+  <RebaseBranchModal
+    branch={branchStore.currentBranch?.name ?? 'current branch'}
+    onto={rebaseTarget}
+    onClose={() => { showRebaseModal = false; }}
+    onRebase={(options) => { showRebaseModal = false; vscode.postMessage({ type: 'rebase', payload: { onto: rebaseTarget, autostash: options.autostash } }); }}
+  />
 {/if}
 
-<!-- Delete Branch Confirmation -->
 {#if showDeleteBranchModal}
-  <Modal title={t('deleteBranch.title')} onClose={() => { showDeleteBranchModal = false; }}>
-    <p class="modal-desc">{t('deleteBranch.confirm', { name: deleteBranchName })}</p>
-    <div class="form-group">
-      <label class="checkbox-label">
-        <input type="checkbox" bind:checked={deleteBranchForce} />
-        <span>{t('deleteBranch.force')}</span>
-      </label>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showDeleteBranchModal = false; }}>{t('common.cancel')}</button>
-      <button class="danger-btn" onclick={() => { showDeleteBranchModal = false; vscode.postMessage({ type: 'deleteBranch', payload: { name: deleteBranchName, force: deleteBranchForce } }); }}>{t('sidebar.delete')}</button>
-    </div>
-  </Modal>
+  <DeleteBranchModal
+    branchName={deleteBranchName}
+    onClose={() => { showDeleteBranchModal = false; }}
+    onDelete={(force) => { showDeleteBranchModal = false; vscode.postMessage({ type: 'deleteBranch', payload: { name: deleteBranchName, force } }); }}
+  />
 {/if}
 
-<!-- Delete Tag Confirmation -->
 {#if showDeleteTagModal}
-  <Modal title={t('deleteTag.title')} onClose={() => { showDeleteTagModal = false; }}>
-    <p class="modal-desc">{t('deleteTag.confirm', { name: deleteTagName })}</p>
-    <div class="form-actions">
-      <button onclick={() => { showDeleteTagModal = false; }}>{t('common.cancel')}</button>
-      <button class="danger-btn" onclick={() => { showDeleteTagModal = false; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); }}>{t('sidebar.delete')}</button>
-    </div>
-  </Modal>
+  <DeleteTagModal
+    tagName={deleteTagName}
+    onClose={() => { showDeleteTagModal = false; }}
+    onDelete={() => { showDeleteTagModal = false; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); }}
+  />
 {/if}
 
 <!-- Stash Drop Confirmation -->
@@ -664,6 +528,9 @@
 {#if showDeleteRemoteTagModal}
   <Modal title={t('deleteRemoteTag.title')} onClose={() => { showDeleteRemoteTagModal = false; }}>
     <p class="modal-desc">{t('deleteRemoteTag.confirm', { name: deleteRemoteTagName })}</p>
+    <div class="modal-context-card">
+      <span class="modal-pill modal-pill--danger">{deleteRemoteTagName}</span>
+    </div>
     <div class="form-actions">
       <button onclick={() => { showDeleteRemoteTagModal = false; }}>{t('common.cancel')}</button>
       <button class="danger-btn" onclick={() => { showDeleteRemoteTagModal = false; vscode.postMessage({ type: 'deleteRemoteTag', payload: { name: deleteRemoteTagName } }); }}>{t('sidebar.delete')}</button>
@@ -671,58 +538,23 @@
   </Modal>
 {/if}
 
-<!-- Checkout Remote Branch -->
 {#if showCheckoutRemoteModal}
-  <Modal title={t('checkoutRemote.title')} onClose={() => { showCheckoutRemoteModal = false; }}>
-    <p class="modal-desc">{t('checkoutRemote.desc', { remote: checkoutRemoteName })}</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">{t('checkoutRemote.remote')}:</span><span class="info-value"><i class="codicon codicon-cloud"></i> {checkoutRemoteName}</span></div>
-      <div class="info-row">
-        <span class="info-label">{t('checkoutRemote.localName')}:</span>
-        <span class="info-value" style="flex: 1;">
-          <!-- svelte-ignore a11y_autofocus -->
-          <input
-            type="text"
-            bind:value={checkoutRemoteLocalName}
-            autofocus
-            onkeydown={(e) => {
-              if (e.key === 'Enter' && checkoutRemoteLocalName.trim()) {
-                showCheckoutRemoteModal = false;
-                vscode.postMessage({ type: 'createBranch', payload: { name: checkoutRemoteLocalName.trim(), startPoint: checkoutRemoteName, checkout: true } });
-              }
-            }}
-          />
-        </span>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showCheckoutRemoteModal = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => {
-        showCheckoutRemoteModal = false;
-        vscode.postMessage({ type: 'createBranch', payload: { name: checkoutRemoteLocalName.trim(), startPoint: checkoutRemoteName, checkout: true } });
-      }} disabled={!checkoutRemoteLocalName.trim()}>{t('checkoutRemote.checkout')}</button>
-    </div>
-  </Modal>
+  <CheckoutRemoteModal
+    remoteName={checkoutRemoteName}
+    defaultLocalName={checkoutRemoteLocalName}
+    onClose={() => { showCheckoutRemoteModal = false; }}
+    onCheckout={(localName) => { showCheckoutRemoteModal = false; vscode.postMessage({ type: 'createBranch', payload: { name: localName, startPoint: checkoutRemoteName, checkout: true } }); }}
+  />
 {/if}
 
 {#if showPullAfterCheckoutModal}
-  <Modal title="Checkout Branch" onClose={() => { showPullAfterCheckoutModal = false; }}>
-    <p class="modal-desc">This branch is <strong>{pullAfterCheckoutBehind}</strong> commit{pullAfterCheckoutBehind > 1 ? 's' : ''} behind the remote. Pull after checkout?</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Branch:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {pullAfterCheckoutRef}</span></div>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showPullAfterCheckoutModal = false; }}>{t('common.cancel')}</button>
-      <button onclick={() => {
-        showPullAfterCheckoutModal = false;
-        vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef } });
-      }}>Checkout Only</button>
-      <button class="primary" onclick={() => {
-        showPullAfterCheckoutModal = false;
-        vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef, pullAfter: true } });
-      }}>Checkout & Pull</button>
-    </div>
-  </Modal>
+  <PullAfterCheckoutModal
+    branchName={pullAfterCheckoutRef}
+    behind={pullAfterCheckoutBehind}
+    onClose={() => { showPullAfterCheckoutModal = false; }}
+    onCheckoutOnly={() => { showPullAfterCheckoutModal = false; vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef } }); }}
+    onCheckoutAndPull={() => { showPullAfterCheckoutModal = false; vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef, pullAfter: true } }); }}
+  />
 {/if}
 
 <style>
@@ -773,21 +605,6 @@
   .item-badge { font-size: 10px; opacity: 0.7; flex-shrink: 0; }
   .remote-item { opacity: 0.9; }
 
-  .form-group { margin-bottom: 12px; }
-  .form-group label { display: block; font-size: 12px; margin-bottom: 4px; color: var(--text-secondary); }
-  .form-group input[type="text"] {
-    width: 100%; padding: 5px 8px; background: var(--input-bg); color: var(--input-fg);
-    border: 1px solid var(--input-border, var(--border-color)); border-radius: 3px;
-    font-size: 12px; font-family: inherit; outline: none;
-  }
-  .form-group input[type="text"]:focus { border-color: var(--vscode-focusBorder, #007fd4); }
-  .checkbox-label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
   .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-
-  .modal-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
-  .info-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
-  .info-row { display: flex; align-items: center; gap: 12px; font-size: 13px; }
-  .info-label { width: 90px; flex-shrink: 0; font-weight: 600; color: var(--text-secondary); }
-  .info-value { display: flex; align-items: center; gap: 5px; min-width: 0; }
   .danger-btn { background: var(--vscode-errorForeground, #f44336) !important; color: #fff !important; }
 </style>
