@@ -11,6 +11,7 @@ webview-ui/vite.config.ts
 webview-ui/svelte.config.js
 webview-ui/index.html
 node_modules/**
+!node_modules/@vscode/codicons/dist/**
 test-repo/**
 esbuild.config.mjs
 tsconfig.json

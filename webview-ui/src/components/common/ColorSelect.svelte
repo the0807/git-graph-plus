@@ -3,6 +3,7 @@
     value: string;
     label: string;
     color: string;
+    warning?: string;
   }
 
   interface Props {
@@ -42,9 +43,14 @@
       open = false;
     }
   }
-</script>
 
-<svelte:window onclick={handleClickOutside} />
+  $effect(() => {
+    if (open) {
+      window.addEventListener('click', handleClickOutside, true);
+      return () => window.removeEventListener('click', handleClickOutside, true);
+    }
+  });
+</script>
 
 <div class="color-select" class:open>
   <!-- Hidden sizer: renders all options to establish max width -->
@@ -72,8 +78,15 @@
         >
           <span class="dot" style="background: {opt.color}"></span>
           <span>{opt.label}</span>
+          {#if opt.warning}<i class="codicon codicon-warning warning-icon"></i>{/if}
         </button>
       {/each}
+    </div>
+  {/if}
+  {#if current.warning}
+    <div class="warning-message">
+      <i class="codicon codicon-warning"></i>
+      <span>{current.warning}</span>
     </div>
   {/if}
 </div>
@@ -178,5 +191,26 @@
     font-weight: 600;
     background: var(--bg-selected);
     color: var(--text-selected);
+  }
+
+  .warning-icon {
+    margin-left: auto;
+    color: #f0a020;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .warning-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 5px 8px;
+    background: rgba(240, 160, 32, 0.1);
+    border: 1px solid rgba(240, 160, 32, 0.3);
+    border-radius: 4px;
+    color: #f0a020;
+    font-size: 11px;
+    line-height: 1.3;
   }
 </style>

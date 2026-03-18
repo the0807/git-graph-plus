@@ -656,7 +656,7 @@
             options={[
               { value: 'soft', label: 'Soft — Keep all changes staged', color: '#4caf50' },
               { value: 'mixed', label: 'Mixed — Keep all changes unstaged', color: '#ff9800' },
-              { value: 'hard', label: 'Hard — Discard all changes', color: '#f44336' },
+              { value: 'hard', label: 'Hard — Discard all changes', color: '#f44336', warning: 'All uncommitted changes will be permanently lost.' },
             ]}
             value={resetMode}
             onChange={(v) => { resetMode = v as typeof resetMode; }}
@@ -689,7 +689,7 @@
               { value: 'default', label: 'Default — Fast-forward if possible', color: '#4caf50' },
               { value: 'no-ff', label: 'No Fast-forward — Always create merge commit', color: '#2196f3' },
               { value: 'ff-only', label: 'Fast-forward Only — Fail if not possible', color: '#ff9800' },
-              { value: 'squash', label: 'Squash — Combine all commits into one', color: '#9c27b0' },
+              { value: 'squash', label: 'Squash — Combine all commits into one', color: '#9c27b0', warning: 'Original commits will not be preserved in the history.' },
             ]}
             value={mergeMode}
             onChange={(v) => { mergeMode = v as typeof mergeMode; }}
@@ -970,6 +970,7 @@
     align-items: center;
     cursor: pointer;
     transition: background 0.08s;
+    user-select: none;
   }
 
   .commit-row:hover {

@@ -23,7 +23,7 @@
   "tagMessage": "Tag message (leave empty for lightweight tag)",
   "tagReleasePlaceholder": "Release 1.0.0",
   "createTagFailed": "Create tag failed: {0}",
-  "clickToOpen": "Git Graph+ — Click to open",
+  "clickToOpen": "Click to open",
   "clickToFetch": "Click to fetch",
   "upToDate": "Up to date — Click to fetch",
   "noRepo": "no repo",
