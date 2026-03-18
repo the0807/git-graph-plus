@@ -550,7 +550,7 @@ export class GitService {
     }
   }
 
-  // --- Phase 5: Stash, Cherry-pick, Revert, Blame, Reflog, File History, Tags ---
+  // --- Phase 5: Stash, Cherry-pick, Revert, Tags ---
 
   async stashSave(message?: string, includeUntracked?: boolean, keepIndex?: boolean): Promise<void> {
     const args = ['stash', 'push'];
@@ -602,29 +602,6 @@ export class GitService {
 
   async abortRevert(): Promise<void> {
     await this.exec(['revert', '--abort']);
-  }
-
-  async blame(file: string): Promise<string> {
-    return this.exec(['blame', '--porcelain', file]);
-  }
-
-  async reflog(limit: number = 100): Promise<string> {
-    return this.exec(['reflog', '--format=%H%x00%gd%x00%gs%x00%aI', `-n${limit}`]);
-  }
-
-  async fileHistory(file: string, limit: number = 100): Promise<Commit[]> {
-    const args = [
-      'log',
-      '--format=%x01%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
-      '--follow',
-      `--max-count=${limit}`,
-      '--',
-      file,
-    ];
-    const [raw, remoteNames] = await Promise.all([this.exec(args), this.getRemoteNames()]);
-    const commits = parseLog(raw, remoteNames);
-    commits.sort((a, b) => b.committer.date.localeCompare(a.committer.date));
-    return commits;
   }
 
   async showFileAtRef(ref: string, file: string): Promise<string> {
@@ -1004,27 +981,4 @@ export class GitService {
     } catch { return false; }
   }
 
-  // --- PR Creation (via gh CLI) ---
-
-  async createPullRequest(title: string, body: string, base?: string): Promise<string> {
-    const args = ['pr', 'create', '--title', title, '--body', body];
-    if (base) { args.push('--base', base); }
-    return new Promise((resolve, reject) => {
-      const proc = spawn('gh', args, {
-        cwd: this.repoPath,
-        env: { ...process.env },
-      });
-      let stdout = '';
-      let stderr = '';
-      proc.stdout.on('data', (d: Buffer) => { stdout += d.toString(); });
-      proc.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
-      proc.on('close', (code) => {
-        if (code === 0) { resolve(stdout.trim()); }
-        else { reject(new GitError(stderr, code, ['gh', ...args])); }
-      });
-      proc.on('error', () => {
-        reject(new GitError('gh CLI not found. Install from https://cli.github.com', null, ['gh']));
-      });
-    });
-  }
 }

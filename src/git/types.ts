@@ -115,26 +115,6 @@ export interface DiffLine {
   newLineNumber?: number;
 }
 
-export interface BlameData {
-  file: string;
-  lines: BlameLine[];
-}
-
-export interface BlameLine {
-  commit: string;
-  author: string;
-  date: string;
-  content: string;
-  lineNumber: number;
-}
-
-export interface ReflogEntry {
-  hash: string;
-  action: string;
-  message: string;
-  date: string;
-}
-
 export interface BranchData {
   branches: BranchInfo[];
   tags: TagInfo[];

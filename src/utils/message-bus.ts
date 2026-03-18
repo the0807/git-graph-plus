@@ -1,12 +1,9 @@
-import type { CommitGraphData, BranchData, DiffData, BlameData, ReflogEntry, Commit, WorktreeInfo } from '../git/types';
+import type { CommitGraphData, BranchData, DiffData, Commit, WorktreeInfo } from '../git/types';
 
 // Messages from Webview → Extension
 export type WebviewMessage =
   | { type: 'getLog'; payload: { branch?: string; limit?: number } }
   | { type: 'getBranches' }
-  | { type: 'getBlame'; payload: { file: string } }
-  | { type: 'getReflog' }
-  | { type: 'getFileHistory'; payload: { file: string } }
   | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean } }
   | { type: 'getCommitDiff'; payload: { hash: string } }
   | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean } }
@@ -45,7 +42,6 @@ export type WebviewMessage =
   | { type: 'lsTree'; payload: { ref: string; path?: string } }
   | { type: 'flowInit' }
   | { type: 'flowAction'; payload: { flowType: string; action: string; name: string } }
-  | { type: 'createPR'; payload: { title: string; body: string; base?: string } }
   | { type: 'getSubmodules' }
   | { type: 'submoduleUpdate' }
   | { type: 'getLfsFiles' }
@@ -70,10 +66,7 @@ export type WebviewMessage =
 export type ExtensionMessage =
   | { type: 'logData'; payload: CommitGraphData }
   | { type: 'branchData'; payload: BranchData }
-  | { type: 'blameData'; payload: BlameData }
-  | { type: 'reflogData'; payload: ReflogEntry[] }
   | { type: 'commitDiffData'; payload: { diffs: DiffData[]; files: Array<{ path: string; status: string }> } }
-  | { type: 'fileHistoryData'; payload: CommitGraphData }
   | { type: 'rebaseCommitsData'; payload: { base: string; commits: Commit[] } }
   | { type: 'searchResults'; payload: CommitGraphData }
   | { type: 'activityLogData'; payload: Array<{ command: string; timestamp: string; success: boolean; duration: number }> }
@@ -83,7 +76,6 @@ export type ExtensionMessage =
   | { type: 'bisectResult'; payload: { message: string } }
   | { type: 'statsData'; payload: { byAuthor: Array<{ author: string; email: string; count: number }>; byWeekdayHour: Array<{ weekday: number; hour: number; count: number }> } }
   | { type: 'lsTreeData'; payload: { ref: string; path?: string; entries: Array<{ mode: string; type: 'blob' | 'tree'; hash: string; name: string }> } }
-  | { type: 'prCreated'; payload: { url: string } }
   | { type: 'submoduleData'; payload: Array<{ hash: string; path: string; status: string }> }
   | { type: 'lfsData'; payload: { files: Array<{ oid: string; path: string }>; locks: Array<{ path: string; owner: string; id: string }> } }
   | { type: 'setLocale'; payload: { locale: string } }

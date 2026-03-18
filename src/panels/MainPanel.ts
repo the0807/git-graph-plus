@@ -3,7 +3,6 @@ import * as path from 'path';
 import { readFile } from 'fs/promises';
 import { GitService, GitError } from '../git/git-service';
 import { buildGraph, buildGraphFromGitOutput, buildFullGraph } from '../git/git-graph-builder';
-import { parseBlame, parseReflog } from '../git/git-parser';
 import { FileWatcher } from '../services/file-watcher';
 import { RepoDiscoveryService } from '../services/repo-discovery';
 import type { WebviewMessage } from '../utils/message-bus';
@@ -346,24 +345,6 @@ export class MainPanel {
           await this.refreshAll();
           break;
         }
-        case 'getBlame': {
-          const blameRaw = await this.gitService.blame(message.payload.file);
-          const blameData = parseBlame(blameRaw, message.payload.file);
-          this.panel.webview.postMessage({ type: 'blameData', payload: blameData });
-          break;
-        }
-        case 'getReflog': {
-          const reflogRaw = await this.gitService.reflog();
-          const reflogData = parseReflog(reflogRaw);
-          this.panel.webview.postMessage({ type: 'reflogData', payload: reflogData });
-          break;
-        }
-        case 'getFileHistory': {
-          const fileCommits = await this.gitService.fileHistory(message.payload.file);
-          const fileGraph = buildGraph(fileCommits);
-          this.panel.webview.postMessage({ type: 'fileHistoryData', payload: { commits: fileCommits, graph: fileGraph } });
-          break;
-        }
         case 'createTag': {
           await this.gitService.createTag(message.payload.name, message.payload.ref, message.payload.message);
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'createTag', success: true } });
@@ -495,12 +476,6 @@ export class MainPanel {
           }
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: `flow-${action}`, success: true } });
           await this.refreshAll();
-          break;
-        }
-        // --- PR Creation ---
-        case 'createPR': {
-          const prUrl = await this.gitService.createPullRequest(message.payload.title, message.payload.body, message.payload.base);
-          this.panel.webview.postMessage({ type: 'prCreated', payload: { url: prUrl } });
           break;
         }
         // --- Submodule ---

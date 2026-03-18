@@ -14,25 +14,38 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 
 ### 커밋 그래프
 - 브랜치/머지 시각화 및 색상 구분이 적용된 인터랙티브 커밋 그래프
+- Fork와 같은 시간순 커밋 정렬 (committer date 기준)
 - 커밋을 클릭하여 상세 정보, 변경된 파일, diff 확인
 - 우클릭 컨텍스트 메뉴: checkout, cherry-pick, revert, reset, merge, rebase 등
+- 두 커밋 비교: 기준 커밋 선택 후 다른 커밋 클릭으로 diff 확인
+- 커밋과 로컬 작업 변경사항 비교
 - 메시지, 작성자, 날짜 범위, 해시로 검색
 - 작성자명 옆에 Gravatar 아바타 표시
-- 크기 조절 가능한 하단 패널
+- 크기 조절 가능한 하단 패널 (Escape로 닫기)
+- 로컬 전용 커밋 표시 (파란 점 — push 안 됨)
+- 리모트 전용 커밋 표시 (회색 점 — 리모트가 앞서감)
 
 ### 브랜치 & 태그 관리
 - 브랜치 생성, 이름 변경, 삭제, checkout
 - Merge (default, no-ff, ff-only, squash) 및 rebase (interactive 포함)
 - Cherry-pick 및 revert
 - 경량 태그 및 주석 태그 생성
-- 리모트 태그 push, 삭제, 관리
+- 리모트 태그 push, 삭제, 관리 (리모트에서도 삭제 옵션)
+- upstream 추적 기반 로컬/리모트 브랜치 매칭
 
 ### 리모트 작업
-- 리모트 선택이 가능한 fetch, pull, push
+- 확인 모달이 있는 fetch, pull, push (리모트 선택 가능)
 - 리모트 추가 및 제거
-- `--force-with-lease` 안전 장치를 사용한 강제 push
+- `--force-with-lease` 안전 장치를 사용한 강제 push (경고 표시)
 - 자동 fetch 간격 설정 가능
 - 리모트 브랜치 checkout 시 로컬 트래킹 브랜치 생성 다이얼로그
+- 뒤처진 브랜치 checkout 시 pull 제안
+
+### 충돌 해결
+- Merge, rebase, cherry-pick, revert 시 자동 충돌 감지
+- 충돌 배너에 파일 목록 및 상태 표시
+- 충돌 파일 클릭으로 VS Code 에디터에서 열기 (3-way 병합 편집기 지원)
+- Continue 및 Abort 버튼 (해결된 파일 자동 스테이징)
 
 ### Stash & Worktree
 - Stash 저장, 적용, pop, 삭제
@@ -44,9 +57,8 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 - Git Bisect (start, good, bad, reset)
 - Git LFS 파일 목록 및 잠금 관리
 - 서브모듈 상태 확인, 업데이트, 그래프 전환
-- Blame 뷰, reflog 뷰어, 파일 히스토리
-- 리포지토리 통계 (작성자별 커밋, 활동 히트맵)
-- GitHub CLI를 통한 Pull Request 생성
+- 리포지토리 통계 (작성자별 Gravatar 커밋 통계, 활동 히트맵)
+- 사용자 액션 필터링이 적용된 활동 로그
 
 ### 멀티 리포지토리 & 서브모듈
 - 워크스페이스 내 서브모듈 자동 탐색
@@ -73,27 +85,29 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 
 ## 설정
 
-| 설정 | 기본값 | 설명 |
-| ---- | ------ | ---- |
-| `gitGraphPlus.maxCommits` | `1000` | 처음에 불러올 최대 커밋 수 |
-| `gitGraphPlus.defaultView` | `graph` | 기본 뷰 (`graph` 또는 `log`) |
-| `gitGraphPlus.graphRowHeight` | `28` | 커밋 그래프 행 높이 (px) |
-| `gitGraphPlus.autoRefresh` | `true` | 리포지토리 변경 감지 시 자동 새로고침 |
-| `gitGraphPlus.showRemoteBranches` | `true` | 사이드바에 리모트 브랜치 표시 |
-| `gitGraphPlus.confirmForcePush` | `true` | 강제 push 전 확인 대화상자 표시 |
-| `gitGraphPlus.autoFetch` | `true` | 리모트에서 주기적으로 자동 fetch |
-| `gitGraphPlus.autoFetchInterval` | `10` | 자동 fetch 간격 (분, 1–60) |
-| `gitGraphPlus.locale` | `auto` | UI 언어 (`auto`, `en`, `ko`) |
+| 설정                              | 기본값  | 설명                                  |
+| --------------------------------- | ------- | ------------------------------------- |
+| `gitGraphPlus.maxCommits`         | `1000`  | 처음에 불러올 최대 커밋 수            |
+| `gitGraphPlus.defaultView`        | `graph` | 기본 뷰 (`graph` 또는 `log`)          |
+| `gitGraphPlus.graphRowHeight`     | `28`    | 커밋 그래프 행 높이 (px)              |
+| `gitGraphPlus.autoRefresh`        | `true`  | 리포지토리 변경 감지 시 자동 새로고침 |
+| `gitGraphPlus.showRemoteBranches` | `true`  | 사이드바에 리모트 브랜치 표시         |
+| `gitGraphPlus.confirmForcePush`   | `true`  | 강제 push 전 확인 대화상자 표시       |
+| `gitGraphPlus.autoFetch`          | `true`  | 리모트에서 주기적으로 자동 fetch      |
+| `gitGraphPlus.autoFetchInterval`  | `10`    | 자동 fetch 간격 (분, 1–60)            |
+| `gitGraphPlus.locale`             | `auto`  | UI 언어 (`auto`, `en`, `ko`)          |
 
 ## 요구 사항
 
 - VS Code 1.85.0 이상
 - Git이 설치되어 있고 PATH에서 사용 가능
-- [GitHub CLI](https://cli.github.com/) (선택 사항, PR 생성 시 필요)
 
 ## 크레딧
 
-- 확장 아이콘: [VS Code Codicons](https://github.com/microsoft/vscode-codicons) (`git-merge`), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) 라이선스
+- [Git Graph](https://github.com/mhutchie/vscode-git-graph), [Fork](https://git-fork.com/), [SourceGit](https://github.com/sourcegit-scm/sourcegit)의 UI/UX에서 아이디어를 얻었습니다
+- 그래프 레이아웃 알고리즘은 [SourceGit](https://github.com/sourcegit-scm/sourcegit)에서 포팅되었습니다 (MIT 라이선스)
+- 이 프로젝트는 [Git Graph](https://github.com/mhutchie/vscode-git-graph)의 코드를 사용하지 않으며, 모든 코드는 처음부터 새로 작성되었습니다
+- 확장 아이콘: [VS Code Codicons](https://github.com/microsoft/vscode-codicons), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) 라이선스
 
 ## 라이선스
 

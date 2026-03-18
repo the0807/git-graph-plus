@@ -14,25 +14,38 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 
 ### Commit Graph
 - Interactive commit graph with branch/merge visualization and color-coded rails
+- Chronological commit ordering (committer date) like Fork
 - Click any commit to view details, changed files, and diffs
 - Right-click context menus: checkout, cherry-pick, revert, reset, merge, rebase, and more
+- Compare two commits: select a base commit, then click another to see the diff
+- Compare any commit to local working tree changes
 - Search by message, author, date range, or hash
 - Gravatar avatars next to author names
-- Resizable bottom panel for commit details
+- Resizable bottom panel for commit details (Escape to close)
+- Local-only commit indicator (blue dot — not pushed)
+- Remote-only commit indicator (gray dot — remote ahead)
 
 ### Branch & Tag Management
 - Create, rename, delete, and checkout branches
 - Merge (default, no-ff, ff-only, squash) and rebase (including interactive)
 - Cherry-pick and revert commits
 - Create lightweight and annotated tags
-- Push, delete, and manage remote tags
+- Push, delete, and manage remote tags (delete from remote option)
+- Upstream tracking-based local/remote branch matching
 
 ### Remote Operations
-- Fetch, pull, and push with remote selection
+- Fetch, pull, and push with remote selection and confirmation modals
 - Add and remove remotes
-- Force push with `--force-with-lease` safety
+- Force push with `--force-with-lease` safety (with warning indicator)
 - Configurable auto-fetch interval
 - Remote branch checkout with local tracking branch dialog
+- Pull-after-checkout prompt when branch is behind remote
+
+### Conflict Resolution
+- Automatic conflict detection on merge, rebase, cherry-pick, and revert
+- Conflict banner with file list and status indicators
+- Click conflict files to open in VS Code editor (supports 3-way merge editor)
+- Continue and Abort buttons with auto-staging of resolved files
 
 ### Stash & Worktree
 - Save, apply, pop, and drop stashes
@@ -44,9 +57,8 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 - Git Bisect (start, good, bad, reset)
 - Git LFS file listing and lock management
 - Submodule status, update, and graph switching
-- Blame view, reflog viewer, file history
-- Repository statistics (commits by author, activity heatmap)
-- Pull request creation via GitHub CLI
+- Repository statistics (commits by author with Gravatar, activity heatmap)
+- Activity log with user action filtering
 
 ### Multi-Repository & Submodules
 - Auto-discovers submodules within workspace
@@ -73,27 +85,29 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 
 ## Settings
 
-| Setting | Default | Description |
-| ------- | ------- | ----------- |
-| `gitGraphPlus.maxCommits` | `1000` | Maximum commits to load initially |
-| `gitGraphPlus.defaultView` | `graph` | Default view (`graph` or `log`) |
-| `gitGraphPlus.graphRowHeight` | `28` | Row height in commit graph (px) |
-| `gitGraphPlus.autoRefresh` | `true` | Auto-refresh on repository changes |
-| `gitGraphPlus.showRemoteBranches` | `true` | Show remote branches in sidebar |
-| `gitGraphPlus.confirmForcePush` | `true` | Confirm before force pushing |
-| `gitGraphPlus.autoFetch` | `true` | Periodically fetch from remotes |
-| `gitGraphPlus.autoFetchInterval` | `10` | Auto-fetch interval (minutes, 1–60) |
-| `gitGraphPlus.locale` | `auto` | UI language (`auto`, `en`, `ko`) |
+| Setting                           | Default | Description                         |
+| --------------------------------- | ------- | ----------------------------------- |
+| `gitGraphPlus.maxCommits`         | `1000`  | Maximum commits to load initially   |
+| `gitGraphPlus.defaultView`        | `graph` | Default view (`graph` or `log`)     |
+| `gitGraphPlus.graphRowHeight`     | `28`    | Row height in commit graph (px)     |
+| `gitGraphPlus.autoRefresh`        | `true`  | Auto-refresh on repository changes  |
+| `gitGraphPlus.showRemoteBranches` | `true`  | Show remote branches in sidebar     |
+| `gitGraphPlus.confirmForcePush`   | `true`  | Confirm before force pushing        |
+| `gitGraphPlus.autoFetch`          | `true`  | Periodically fetch from remotes     |
+| `gitGraphPlus.autoFetchInterval`  | `10`    | Auto-fetch interval (minutes, 1–60) |
+| `gitGraphPlus.locale`             | `auto`  | UI language (`auto`, `en`, `ko`)    |
 
 ## Requirements
 
 - VS Code 1.85.0 or later
 - Git installed and available in PATH
-- [GitHub CLI](https://cli.github.com/) (optional, for PR creation)
 
 ## Acknowledgements
 
-- Extension icon from [VS Code Codicons](https://github.com/microsoft/vscode-codicons) (`git-merge`), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- UI/UX ideas from [Git Graph](https://github.com/mhutchie/vscode-git-graph), [Fork](https://git-fork.com/), and [SourceGit](https://github.com/sourcegit-scm/sourcegit)
+- Graph layout algorithm ported from [SourceGit](https://github.com/sourcegit-scm/sourcegit) (MIT License)
+- This project does not use any code from [Git Graph](https://github.com/mhutchie/vscode-git-graph). All code has been written from scratch.
+- Extension icon from [VS Code Codicons](https://github.com/microsoft/vscode-codicons), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 ## License
 

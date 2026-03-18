@@ -1,3 +1,6 @@
+// Graph layout algorithm ported from SourceGit (https://github.com/sourcegit-scm/sourcegit)
+// Copyright (c) SourceGit contributors, licensed under MIT License.
+
 import type { BranchInfo, Commit, GraphNode, ParentConnection } from './types';
 
 const COLOR_PALETTE = [

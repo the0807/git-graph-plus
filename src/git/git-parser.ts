@@ -1,4 +1,4 @@
-import type { Commit, Ref, BranchInfo, TagInfo, RemoteInfo, StashEntry, DiffData, DiffHunk, DiffLine, BlameData, BlameLine, ReflogEntry, WorktreeInfo } from './types';
+import type { Commit, Ref, BranchInfo, TagInfo, RemoteInfo, StashEntry, DiffData, DiffHunk, DiffLine, WorktreeInfo } from './types';
 
 const RECORD_SEP = '\x01';
 const FIELD_SEP = '\x00';
@@ -346,54 +346,6 @@ export function parseStashList(raw: string): StashEntry[] {
   });
 }
 
-export function parseBlame(raw: string, file: string): BlameData {
-  const lines: BlameLine[] = [];
-
-  if (!raw.trim()) {
-    return { file, lines };
-  }
-
-  const chunks = raw.split('\n');
-  let currentCommit = '';
-  let currentAuthor = '';
-  let currentDate = '';
-  let lineNumber = 0;
-  let expectContent = false;
-
-  for (const line of chunks) {
-    if (expectContent) {
-      // Line starts with \t — actual content
-      lines.push({
-        commit: currentCommit,
-        author: currentAuthor,
-        date: currentDate,
-        content: line.startsWith('\t') ? line.substring(1) : line,
-        lineNumber,
-      });
-      expectContent = false;
-      continue;
-    }
-
-    // Header: hash origLine finalLine [numLines]
-    const headerMatch = line.match(/^([0-9a-f]{40}) \d+ (\d+)/);
-    if (headerMatch) {
-      currentCommit = headerMatch[1];
-      lineNumber = parseInt(headerMatch[2], 10);
-      continue;
-    }
-
-    if (line.startsWith('author ')) {
-      currentAuthor = line.substring(7);
-    } else if (line.startsWith('author-time ')) {
-      const timestamp = parseInt(line.substring(12), 10);
-      currentDate = new Date(timestamp * 1000).toISOString();
-    } else if (line.startsWith('filename ')) {
-      expectContent = true;
-    }
-  }
-
-  return { file, lines };
-}
 
 export function parseWorktreeList(raw: string): WorktreeInfo[] {
   if (!raw.trim()) {
@@ -463,18 +415,3 @@ function unescapeGitPath(p: string): string {
   });
 }
 
-export function parseReflog(raw: string): ReflogEntry[] {
-  if (!raw.trim()) {
-    return [];
-  }
-
-  return raw.trim().split('\n').filter(Boolean).map((line) => {
-    const fields = line.split(FIELD_SEP);
-    return {
-      hash: fields[0]?.trim() ?? '',
-      action: fields[1]?.trim() ?? '',
-      message: fields[2]?.trim() ?? '',
-      date: fields[3]?.trim() ?? '',
-    };
-  });
-}

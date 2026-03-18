@@ -1,5 +1,53 @@
 # Changelog
 
+## 0.1.3 (2026-03-19)
+
+### New Features
+- **Commit comparison**: Select a base commit, then click another to see the diff between them
+- **Compare to local changes**: Compare any commit against current working tree
+- **Conflict resolution UI**: Conflict banner with file list, open in editor, Continue/Abort buttons
+- **Local-only commit indicators**: Blue dot for unpushed commits
+- **Remote-only commit indicators**: Gray dot for commits only on remote (branch behind)
+- **Pull-after-checkout prompt**: Offers to pull when checking out a branch that is behind remote
+- **Delete tag from remote**: Option to also delete tag from remote when deleting locally
+- **Chronological commit ordering**: Committer date-based sorting like Fork
+
+### UI/UX Improvements
+- **Modal redesign**: All 21 modals restyled with Hybrid design (pill badges, arrow indicators, context cards)
+- **9 shared modal components**: Extracted duplicated modals into reusable components
+- **Custom checkbox styling**: Theme-aware checkboxes (transparent unchecked, blue/red checked)
+- **Activity log filtering**: Show user actions only by default, toggle to see all internal commands
+- **Stats Gravatar avatars**: Profile images in contributor statistics
+- **Stats heatmap improvements**: Larger cells, center alignment, hover effects, legend
+- **Compare indicator**: Blue themed floating bar with click-to-compare mode
+- **Refresh spinner**: Loading indicator on refresh button
+- **Context menu positioning**: Uses actual rendered size for viewport boundary detection
+- **Escape to close**: Press Escape to close bottom panel
+- **Double-click fix**: Click/double-click discrimination prevents panel flicker
+- **Text selection prevention**: Disable text selection on commit rows
+
+### Bug Fixes
+- Fix codicon font not loading in packaged extension (.vscodeignore allowlist)
+- Fix duplicated "Git Graph+" prefix in status bar tooltip
+- Fix merge `ffOnly` option not being passed to git
+- Fix rename branch from context menu sending empty name (now opens modal)
+- Fix compare feature: add missing `compareCommits` message handler
+- Fix `compareToWorking`: use correct response format
+- Fix file status detection: use `git diff --name-status` instead of guessing from additions/deletions
+- Fix remote-only detection when commits are reachable from other merged branches (per-branch ancestor BFS)
+- Fix modal options not resetting when reopening (reset, cherry-pick, revert)
+- Fix shared modal button alignment (global CSS for `form-actions` and `danger-btn`)
+- Fix error messages: show stderr only instead of full git command string
+
+### Refactoring
+- Extract 9 shared modal components to `webview-ui/src/components/modals/`
+- Add 36+ i18n keys for previously hardcoded modal strings
+- Remove unused features: blame view, reflog viewer, file history, PR creation (backend only, no UI)
+- Upstream tracking-based local/remote branch matching (with name fallback)
+- Separate `GraphDot` localOnly/remoteTip flags from type for correct combined states
+- Auto-stage resolved files before continue operation (`git add -A`)
+- Clean up unused state variables, functions, imports, and CSS
+
 ## 0.1.2 (2026-03-18)
 
 ### Bug Fixes

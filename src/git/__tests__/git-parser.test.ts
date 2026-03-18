@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseLog, parseRefs, parseBranches, parseTags, parseRemotes, parseStashList, parseDiff, parseBlame, parseReflog } from '../git-parser';
+import { parseLog, parseRefs, parseBranches, parseTags, parseRemotes, parseStashList, parseDiff } from '../git-parser';
 
 describe('parseLog', () => {
   it('should return empty array for empty input', () => {
@@ -261,51 +261,3 @@ diff --git a/file2.ts b/file2.ts
   });
 });
 
-describe('parseBlame', () => {
-  it('should return empty lines for empty input', () => {
-    const result = parseBlame('', 'test.ts');
-    expect(result.file).toBe('test.ts');
-    expect(result.lines).toEqual([]);
-  });
-
-  it('should parse porcelain blame output', () => {
-    const raw = [
-      'abc1234567890abcdef1234567890abcdef12345 1 1 1',
-      'author Alice',
-      'author-mail <alice@example.com>',
-      'author-time 1700000000',
-      'author-tz +0000',
-      'committer Alice',
-      'committer-mail <alice@example.com>',
-      'committer-time 1700000000',
-      'committer-tz +0000',
-      'summary Initial commit',
-      'filename test.ts',
-      '\tconst x = 1;',
-    ].join('\n');
-
-    const result = parseBlame(raw, 'test.ts');
-    expect(result.lines).toHaveLength(1);
-    expect(result.lines[0].commit).toBe('abc1234567890abcdef1234567890abcdef12345');
-    expect(result.lines[0].author).toBe('Alice');
-    expect(result.lines[0].content).toBe('const x = 1;');
-    expect(result.lines[0].lineNumber).toBe(1);
-  });
-});
-
-describe('parseReflog', () => {
-  it('should return empty array for empty input', () => {
-    expect(parseReflog('')).toEqual([]);
-  });
-
-  it('should parse reflog entries', () => {
-    const raw = 'abc1234\x00HEAD@{0}\x00commit: Fix bug\x002024-01-15T10:00:00+09:00\ndef5678\x00HEAD@{1}\x00checkout: moving from main to feature\x002024-01-14T09:00:00+09:00';
-    const result = parseReflog(raw);
-
-    expect(result).toHaveLength(2);
-    expect(result[0].hash).toBe('abc1234');
-    expect(result[0].action).toBe('HEAD@{0}');
-    expect(result[0].message).toBe('commit: Fix bug');
-    expect(result[1].message).toBe('checkout: moving from main to feature');
-  });
-});
