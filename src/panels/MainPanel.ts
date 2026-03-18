@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { readFile } from 'fs/promises';
-import { GitService } from '../git/git-service';
+import { GitService, GitError } from '../git/git-service';
 import { buildGraph, buildGraphFromGitOutput, buildFullGraph } from '../git/git-graph-builder';
 import { parseBlame, parseReflog } from '../git/git-parser';
 import { FileWatcher } from '../services/file-watcher';
@@ -183,7 +183,7 @@ export class MainPanel {
           break;
         }
         case 'merge': {
-          await this.gitService.merge(message.payload.branch, { noFf: message.payload.noFf, squash: message.payload.squash });
+          await this.gitService.merge(message.payload.branch, { noFf: message.payload.noFf, ffOnly: message.payload.ffOnly, squash: message.payload.squash });
           this.panel.webview.postMessage({
             type: 'operationComplete',
             payload: { operation: 'merge', success: true },
@@ -617,15 +617,44 @@ export class MainPanel {
           await this.sendRepoList();
           break;
         }
+        case 'continueOperation': {
+          await this.gitService.continueOperation();
+          this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'continue', success: true } });
+          await this.refreshAll();
+          break;
+        }
+        case 'abortOperation': {
+          await this.gitService.abortOperation();
+          this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'abort', success: true } });
+          await this.refreshAll();
+          break;
+        }
+        case 'openConflictFile': {
+          const fileUri = vscode.Uri.file(`${this.repoPath}/${message.payload.file}`);
+          await vscode.window.showTextDocument(fileUri);
+          break;
+        }
         default:
           break;
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this.panel.webview.postMessage({
-        type: 'error',
-        payload: { message: errorMessage },
-      });
+      // Use stderr directly for GitError (cleaner than the full "git xxx failed (exit N): ..." message)
+      const errorMessage = err instanceof GitError ? err.stderr.trim().split('\n')[0] : err instanceof Error ? err.message : String(err);
+      // Check if this is a merge/rebase conflict
+      const conflictFiles = await this.gitService.getConflictFiles();
+      if (conflictFiles.length > 0) {
+        const opState = await this.gitService.getOperationState();
+        this.panel.webview.postMessage({
+          type: 'conflictData',
+          payload: { operation: opState.type ?? 'merge', files: conflictFiles },
+        });
+        await this.refreshAll();
+      } else {
+        this.panel.webview.postMessage({
+          type: 'error',
+          payload: { message: errorMessage },
+        });
+      }
     }
   }
 

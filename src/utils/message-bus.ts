@@ -12,7 +12,7 @@ export type WebviewMessage =
   | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean } }
   | { type: 'deleteBranch'; payload: { name: string; force?: boolean } }
   | { type: 'renameBranch'; payload: { oldName: string; newName: string } }
-  | { type: 'merge'; payload: { branch: string; noFf?: boolean; squash?: boolean } }
+  | { type: 'merge'; payload: { branch: string; noFf?: boolean; ffOnly?: boolean; squash?: boolean } }
   | { type: 'abortMerge' }
   | { type: 'rebase'; payload: { onto: string; autostash?: boolean } }
   | { type: 'abortRebase' }
@@ -61,7 +61,10 @@ export type WebviewMessage =
   | { type: 'saveCommitPatch'; payload: { hash: string } }
   | { type: 'compareToWorking'; payload: { hash: string } }
   | { type: 'compareCommits'; payload: { ref1: string; ref2: string } }
-  | { type: 'getImageAtRef'; payload: { ref: string; path: string } };
+  | { type: 'getImageAtRef'; payload: { ref: string; path: string } }
+  | { type: 'continueOperation' }
+  | { type: 'abortOperation' }
+  | { type: 'openConflictFile'; payload: { file: string } };
 
 // Messages from Extension → Webview
 export type ExtensionMessage =
@@ -86,4 +89,5 @@ export type ExtensionMessage =
   | { type: 'setLocale'; payload: { locale: string } }
   | { type: 'repoList'; payload: { repos: Array<{ path: string; name: string }>; active: string } }
   | { type: 'worktreeData'; payload: WorktreeInfo[] }
-  | { type: 'imageData'; payload: { ref: string; path: string; base64: string; mimeType: string } };
+  | { type: 'imageData'; payload: { ref: string; path: string; base64: string; mimeType: string } }
+  | { type: 'conflictData'; payload: { operation: string; files: string[] } };

@@ -17,6 +17,7 @@
 
   let searchResults = $state<CommitGraphData | null>(null);
   let resizing = $state(false);
+  let conflict = $state<{ operation: string; files: string[] } | null>(null);
 
   onMount(() => {
     function handleMessage(event: MessageEvent) {
@@ -36,6 +37,10 @@
           uiStore.activeRepo = msg.payload.active;
           break;
         case 'operationComplete':
+          conflict = null;
+          break;
+        case 'conflictData':
+          conflict = msg.payload;
           break;
         case 'error':
           uiStore.setError(msg.payload.message);
@@ -115,6 +120,43 @@
 <div class="app-container" class:resizing>
   <Toolbar />
 
+  {#if conflict}
+    <div class="conflict-banner">
+      <div class="conflict-header">
+        <div class="conflict-info">
+          <i class="codicon codicon-warning conflict-icon"></i>
+          <span class="conflict-title">
+            <strong>{conflict.operation}</strong> conflict
+          </span>
+          <span class="conflict-count">{conflict.files.length} file{conflict.files.length > 1 ? 's' : ''}</span>
+        </div>
+        <div class="conflict-actions">
+          <button class="conflict-btn conflict-btn--abort" onclick={() => { vscode.postMessage({ type: 'abortOperation' }); conflict = null; }}>
+            <i class="codicon codicon-discard"></i> Abort
+          </button>
+          <button class="conflict-btn conflict-btn--continue" onclick={() => { vscode.postMessage({ type: 'continueOperation' }); }}>
+            <i class="codicon codicon-check"></i> Continue
+          </button>
+        </div>
+      </div>
+      <div class="conflict-files">
+        {#each conflict.files as file}
+          <button class="conflict-file" onclick={() => vscode.postMessage({ type: 'openConflictFile', payload: { file } })}>
+            <span class="conflict-file-status">C</span>
+            <span class="conflict-file-path">
+              {#if file.includes('/')}
+                <span class="conflict-file-dir">{file.substring(0, file.lastIndexOf('/') + 1)}</span>{file.substring(file.lastIndexOf('/') + 1)}
+              {:else}
+                {file}
+              {/if}
+            </span>
+            <i class="codicon codicon-go-to-file conflict-open-icon"></i>
+          </button>
+        {/each}
+      </div>
+    </div>
+  {/if}
+
   {#if uiStore.errorMessage}
     <div class="error-bar">
       <span class="error-text">{uiStore.errorMessage}</span>
@@ -187,6 +229,145 @@
     flex-shrink: 0;
     font-size: 11px;
     padding: 2px 8px;
+  }
+
+  /* ---- Conflict banner ---- */
+  .conflict-banner {
+    background: rgba(240, 160, 32, 0.06);
+    border-bottom: 1px solid rgba(240, 160, 32, 0.25);
+    font-size: 12px;
+  }
+
+  .conflict-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+  }
+
+  .conflict-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .conflict-icon {
+    color: #f0a020;
+    font-size: 14px;
+  }
+
+  .conflict-title {
+    color: var(--text-primary);
+    font-size: 12px;
+  }
+
+  .conflict-title strong {
+    text-transform: capitalize;
+  }
+
+  .conflict-count {
+    color: var(--text-secondary);
+    font-size: 11px;
+    background: rgba(240, 160, 32, 0.15);
+    padding: 1px 6px;
+    border-radius: 8px;
+    color: #f0a020;
+  }
+
+  .conflict-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .conflict-btn {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .conflict-btn--abort {
+    background: transparent;
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+  }
+
+  .conflict-btn--abort:hover {
+    background: rgba(244, 67, 54, 0.1);
+  }
+
+  .conflict-btn--continue {
+    background: var(--vscode-button-background, #0078d4);
+    color: var(--vscode-button-foreground, #fff);
+    border: none;
+  }
+
+  .conflict-files {
+    display: flex;
+    flex-direction: column;
+    padding: 0 14px 8px;
+    gap: 1px;
+  }
+
+  .conflict-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .conflict-file:hover {
+    background: rgba(240, 160, 32, 0.08);
+  }
+
+  .conflict-file-status {
+    font-size: 10px;
+    font-weight: 700;
+    color: #f0a020;
+    background: rgba(240, 160, 32, 0.15);
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .conflict-file-path {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .conflict-file-dir {
+    color: var(--text-secondary);
+  }
+
+  .conflict-open-icon {
+    opacity: 0;
+    font-size: 11px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+
+  .conflict-file:hover .conflict-open-icon {
+    opacity: 1;
   }
 
   .content-area {

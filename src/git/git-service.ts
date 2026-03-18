@@ -254,10 +254,13 @@ export class GitService {
     await this.exec(['branch', '-m', oldName, newName]);
   }
 
-  async merge(branch: string, options?: { noFf?: boolean; squash?: boolean }): Promise<void> {
+  async merge(branch: string, options?: { noFf?: boolean; ffOnly?: boolean; squash?: boolean }): Promise<void> {
     const args = ['merge', branch];
     if (options?.noFf) {
       args.push('--no-ff');
+    }
+    if (options?.ffOnly) {
+      args.push('--ff-only');
     }
     if (options?.squash) {
       args.push('--squash');
@@ -484,6 +487,57 @@ export class GitService {
       return { active: true, onto: ontoRaw.trim() || undefined };
     } catch {
       return { active: false };
+    }
+  }
+
+  async getConflictFiles(): Promise<string[]> {
+    try {
+      const raw = await this.exec(['diff', '--name-only', '--diff-filter=U']);
+      return raw.trim().split('\n').filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  async getOperationState(): Promise<{ type: 'merge' | 'rebase' | 'cherry-pick' | 'revert' | null }> {
+    try {
+      await this.exec(['rev-parse', '--verify', 'MERGE_HEAD']);
+      return { type: 'merge' };
+    } catch { /* not merging */ }
+    try {
+      await this.exec(['rev-parse', '--verify', 'REBASE_HEAD']);
+      return { type: 'rebase' };
+    } catch { /* not rebasing */ }
+    try {
+      await this.exec(['rev-parse', '--verify', 'CHERRY_PICK_HEAD']);
+      return { type: 'cherry-pick' };
+    } catch { /* not cherry-picking */ }
+    try {
+      await this.exec(['rev-parse', '--verify', 'REVERT_HEAD']);
+      return { type: 'revert' };
+    } catch { /* not reverting */ }
+    return { type: null };
+  }
+
+  async continueOperation(): Promise<void> {
+    // Stage all resolved conflict files before continuing
+    await this.exec(['add', '-A']);
+    const state = await this.getOperationState();
+    switch (state.type) {
+      case 'merge': await this.exec(['commit', '--no-edit']); break;
+      case 'rebase': await this.exec(['rebase', '--continue']); break;
+      case 'cherry-pick': await this.exec(['cherry-pick', '--continue']); break;
+      case 'revert': await this.exec(['revert', '--continue']); break;
+    }
+  }
+
+  async abortOperation(): Promise<void> {
+    const state = await this.getOperationState();
+    switch (state.type) {
+      case 'merge': await this.abortMerge(); break;
+      case 'rebase': await this.abortRebase(); break;
+      case 'cherry-pick': await this.exec(['cherry-pick', '--abort']); break;
+      case 'revert': await this.exec(['revert', '--abort']); break;
     }
   }
 

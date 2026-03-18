@@ -73,10 +73,15 @@
   let contextMenu = $state<{ x: number; y: number; items: any[] } | null>(null);
   let contextMenuHash = $state<string | null>(null);
   let compareBase = $state<string | null>(null);
+  let clickTimer: ReturnType<typeof setTimeout> | null = null;
   let interactiveRebaseBase = $state<string | null>(null);
   let showResetModal = $state(false);
   let resetTarget = $state('');
   let resetMode = $state<'soft' | 'mixed' | 'hard'>('mixed');
+
+  let showRenameBranchModal = $state(false);
+  let renameBranchOld = $state('');
+  let renameBranchNew = $state('');
 
   // Confirmation modals
   let showMergeModal = $state(false);
@@ -248,7 +253,7 @@
             { separator: true, label: '', action: () => {} },
             {
               label: t('graph.rename'),
-              action: () => vscode.postMessage({ type: 'renameBranch', payload: { oldName: branchName, newName: '' } }),
+              action: () => { renameBranchOld = branchName; renameBranchNew = branchName; showRenameBranchModal = true; },
             },
             {
               label: t('graph.deleteBranch'),
@@ -552,11 +557,13 @@
                 uiStore.showBottomPanel = true;
                 vscode.postMessage({ type: 'compareCommits', payload: { ref1: compareBase, ref2: commit.hash } });
                 compareBase = null;
-              } else {
-                selectCommit(commit.hash);
+                return;
               }
+              if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
+              clickTimer = setTimeout(() => { clickTimer = null; selectCommit(commit.hash); }, 200);
             }}
             ondblclick={() => {
+              if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
               const localRef = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
               if (localRef) {
                 doCheckout(localRef.name);
@@ -840,6 +847,25 @@
     onCheckoutOnly={() => { showPullAfterCheckoutModal = false; vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef } }); }}
     onCheckoutAndPull={() => { showPullAfterCheckoutModal = false; vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef, pullAfter: true } }); }}
   />
+{/if}
+
+{#if showRenameBranchModal}
+  <Modal title={t('renameBranch.title')} onClose={() => { showRenameBranchModal = false; }}>
+    <div class="modal-context-card">
+      <span class="modal-pill modal-pill--target">{renameBranchOld}</span>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-field-label" for="ctx-rename-input">{t('renameBranch.newName', { name: renameBranchOld })}</label>
+      <!-- svelte-ignore a11y_autofocus -->
+      <input id="ctx-rename-input" class="modal-input" type="text" bind:value={renameBranchNew} autofocus
+        onkeydown={(e) => { if (e.key === 'Enter' && renameBranchNew.trim() && renameBranchNew !== renameBranchOld) { showRenameBranchModal = false; vscode.postMessage({ type: 'renameBranch', payload: { oldName: renameBranchOld, newName: renameBranchNew.trim() } }); } }} />
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { showRenameBranchModal = false; }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => { showRenameBranchModal = false; vscode.postMessage({ type: 'renameBranch', payload: { oldName: renameBranchOld, newName: renameBranchNew.trim() } }); }}
+        disabled={!renameBranchNew.trim() || renameBranchNew === renameBranchOld}>{t('renameBranch.rename')}</button>
+    </div>
+  </Modal>
 {/if}
 
 <style>
