@@ -23,6 +23,7 @@
   let newRemoteUrl = $state('');
 
   function refresh() {
+    operating = 'refresh';
     vscode.postMessage({ type: 'getLog', payload: { limit: 1000 } });
     vscode.postMessage({ type: 'getBranches' });
   }
@@ -85,6 +86,9 @@
     function handler(event: MessageEvent) {
       const msg = event.data;
       if ((msg.type === 'operationComplete' || msg.type === 'error') && operating) {
+        operating = null;
+      }
+      if (msg.type === 'logData' && operating === 'refresh') {
         operating = null;
       }
     }
@@ -179,7 +183,10 @@
       {#if ahead > 0}<span class="btn-badge">{ahead}</span>{/if}
     </button>
     <span class="separator"></span>
-    <button class="toolbar-btn" onclick={refresh} title={t('toolbar.refreshDesc')}><i class="codicon codicon-refresh"></i> {t('toolbar.refresh')}</button>
+    <button class="toolbar-btn" onclick={refresh} disabled={operating !== null} title={t('toolbar.refreshDesc')}>
+      {#if operating === 'refresh'}<span class="spinner"></span>{:else}<i class="codicon codicon-refresh"></i>{/if}
+      {t('toolbar.refresh')}
+    </button>
   </div>
 </div>
 

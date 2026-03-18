@@ -7,7 +7,7 @@ export type WebviewMessage =
   | { type: 'getBlame'; payload: { file: string } }
   | { type: 'getReflog' }
   | { type: 'getFileHistory'; payload: { file: string } }
-  | { type: 'checkout'; payload: { ref: string } }
+  | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean } }
   | { type: 'getCommitDiff'; payload: { hash: string } }
   | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean } }
   | { type: 'deleteBranch'; payload: { name: string; force?: boolean } }

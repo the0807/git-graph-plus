@@ -72,6 +72,33 @@
   let checkoutRemoteName = $state('');
   let checkoutRemoteLocalName = $state('');
 
+  // Pull after checkout
+  let showPullAfterCheckoutModal = $state(false);
+  let pullAfterCheckoutRef = $state('');
+  let pullAfterCheckoutBehind = $state(0);
+
+  function doCheckout(ref: string) {
+    const branch = branchStore.branches.find(b => !b.remote && b.name === ref);
+    if (branch && branch.behind > 0) {
+      pullAfterCheckoutRef = ref;
+      pullAfterCheckoutBehind = branch.behind;
+      showPullAfterCheckoutModal = true;
+      return;
+    }
+    vscode.postMessage({ type: 'checkout', payload: { ref } });
+  }
+
+  function doCheckoutRemote(remoteName: string, branchName: string) {
+    const localBranch = branchStore.branches.find(b => !b.remote && (b.upstream === remoteName || b.name === branchName));
+    if (localBranch) {
+      doCheckout(localBranch.name);
+    } else {
+      checkoutRemoteName = remoteName;
+      checkoutRemoteLocalName = branchName;
+      showCheckoutRemoteModal = true;
+    }
+  }
+
   let showStashDropModal = $state(false);
   let stashDropIndex = $state(0);
   let stashDropMessage = $state('');
@@ -101,7 +128,7 @@
       items: [
         {
           label: t('sidebar.checkout'),
-          action: () => vscode.postMessage({ type: 'checkout', payload: { ref: branchName } }),
+          action: () => doCheckout(branchName),
           disabled: isCurrent,
         },
         {
@@ -131,7 +158,7 @@
 
   function onBranchDoubleClick(branchName: string, isCurrent: boolean) {
     if (!isCurrent) {
-      vscode.postMessage({ type: 'checkout', payload: { ref: branchName } });
+      doCheckout(branchName);
     }
   }
 
@@ -265,13 +292,13 @@
           <div
             class="item"
             style="padding-left: 28px;"
-            ondblclick={() => { checkoutRemoteName = branch.name; checkoutRemoteLocalName = remoteBranchLocalName; showCheckoutRemoteModal = true; }}
+            ondblclick={() => doCheckoutRemote(branch.name, remoteBranchLocalName)}
             oncontextmenu={(e) => {
               e.preventDefault();
               contextMenu = {
                 x: e.clientX, y: e.clientY,
                 items: [
-                  { label: t('sidebar.checkout'), action: () => { checkoutRemoteName = branch.name; checkoutRemoteLocalName = remoteBranchLocalName; showCheckoutRemoteModal = true; } },
+                  { label: t('sidebar.checkout'), action: () => doCheckoutRemote(branch.name, remoteBranchLocalName) },
                   { separator: true, label: '', action: () => {} },
                   { label: t('sidebar.mergeInto'), action: () => { mergeTarget = branch.name; mergeMode = 'default'; showMergeModal = true; } },
                   { label: t('sidebar.rebaseOnto'), action: () => { rebaseTarget = branch.name; showRebaseModal = true; } },
@@ -674,6 +701,26 @@
         showCheckoutRemoteModal = false;
         vscode.postMessage({ type: 'createBranch', payload: { name: checkoutRemoteLocalName.trim(), startPoint: checkoutRemoteName, checkout: true } });
       }} disabled={!checkoutRemoteLocalName.trim()}>{t('checkoutRemote.checkout')}</button>
+    </div>
+  </Modal>
+{/if}
+
+{#if showPullAfterCheckoutModal}
+  <Modal title="Checkout Branch" onClose={() => { showPullAfterCheckoutModal = false; }}>
+    <p class="modal-desc">This branch is <strong>{pullAfterCheckoutBehind}</strong> commit{pullAfterCheckoutBehind > 1 ? 's' : ''} behind the remote. Pull after checkout?</p>
+    <div class="info-rows">
+      <div class="info-row"><span class="info-label">Branch:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {pullAfterCheckoutRef}</span></div>
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { showPullAfterCheckoutModal = false; }}>{t('common.cancel')}</button>
+      <button onclick={() => {
+        showPullAfterCheckoutModal = false;
+        vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef } });
+      }}>Checkout Only</button>
+      <button class="primary" onclick={() => {
+        showPullAfterCheckoutModal = false;
+        vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef, pullAfter: true } });
+      }}>Checkout & Pull</button>
     </div>
   </Modal>
 {/if}

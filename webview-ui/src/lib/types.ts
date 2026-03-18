@@ -52,7 +52,9 @@ export interface GraphLinkData {
 export interface GraphDotData {
   center: { x: number; y: number };
   color: number;
-  type: 'default' | 'head' | 'merge' | 'remote-tip';
+  type: 'default' | 'head' | 'merge';
+  localOnly: boolean;
+  remoteTip: boolean;
 }
 
 export interface CommitGraphData {

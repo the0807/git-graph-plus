@@ -114,6 +114,35 @@
   let createBranchName = $state('');
   let createBranchCheckout = $state(true);
 
+  let showPullAfterCheckoutModal = $state(false);
+  let pullAfterCheckoutRef = $state('');
+  let pullAfterCheckoutBehind = $state(0);
+
+  function doCheckout(ref: string) {
+    // Check if this is a local branch that is behind its remote
+    const branch = branchStore.branches.find(b => !b.remote && b.name === ref);
+    if (branch && branch.behind > 0) {
+      pullAfterCheckoutRef = ref;
+      pullAfterCheckoutBehind = branch.behind;
+      showPullAfterCheckoutModal = true;
+      return;
+    }
+    vscode.postMessage({ type: 'checkout', payload: { ref } });
+  }
+
+  function doCheckoutRemote(remoteName: string, branchName: string) {
+    // Check if a local branch tracks this remote (upstream), or has the same name
+    const localBranch = branchStore.branches.find(b => !b.remote && (b.upstream === remoteName || b.name === branchName));
+    if (localBranch) {
+      doCheckout(localBranch.name);
+    } else {
+      // No local branch → show create modal
+      checkoutRemoteName = remoteName;
+      checkoutRemoteLocalName = branchName;
+      showCheckoutRemoteModal = true;
+    }
+  }
+
   let isSearchActive = $derived(searchResults !== null);
 
   let displayCommits = $derived(searchResults?.commits ?? commitStore.commits);
@@ -210,7 +239,7 @@
           children: [
             {
               label: 'Checkout',
-              action: () => vscode.postMessage({ type: 'checkout', payload: { ref: branchName } }),
+              action: () => doCheckout(branchName),
             },
             {
               label: t('graph.mergeInto', { branch: currentBranch }),
@@ -241,7 +270,7 @@
           children: [
             {
               label: 'Checkout',
-              action: () => { checkoutRemoteName = fullName; checkoutRemoteLocalName = ref.name; showCheckoutRemoteModal = true; },
+              action: () => doCheckoutRemote(fullName, ref.name),
             },
             {
               label: t('graph.mergeInto', { branch: currentBranch }),
@@ -485,9 +514,7 @@
           {@const dotColor = COLOR_PALETTE[dot.color % COLOR_PALETTE.length]}
           {@const dx = laneX(dot.center.x)}
           {@const dy = dot.center.y * ROW_HEIGHT}
-          {#if dot.type === 'remote-tip'}
-            <circle cx={dx} cy={dy} r={3} fill="var(--text-secondary, #888)" />
-          {:else if dot.type === 'head'}
+          {#if dot.type === 'head'}
             <circle cx={dx} cy={dy} r={5} fill="var(--bg-primary, #1e1e1e)" stroke={dotColor} stroke-width="2" />
           {:else if dot.type === 'merge'}
             <circle cx={dx} cy={dy} r={4} fill="var(--bg-primary, #1e1e1e)" stroke={dotColor} stroke-width="1.5" />
@@ -506,31 +533,34 @@
         {#each visibleCommits as { commit, index } (commit.hash)}
           {@const dot = displayDots[index]}
           {@const nodeColor = dot ? COLOR_PALETTE[dot.color % COLOR_PALETTE.length] : '#888'}
-          {@const isRemoteTip = dot?.type === 'remote-tip'}
+          {@const isRemoteTip = dot?.remoteTip ?? false}
           <div
             class="commit-row"
             class:selected={uiStore.selectedCommitHash === commit.hash}
             class:highlighted={contextMenuHash === commit.hash}
             style="height: {ROW_HEIGHT}px;"
-            onclick={() => { if (!isRemoteTip) selectCommit(commit.hash); }}
+            onclick={() => selectCommit(commit.hash)}
             ondblclick={() => {
-              if (isRemoteTip) return;
               const localRef = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
               if (localRef) {
-                vscode.postMessage({ type: 'checkout', payload: { ref: localRef.name } });
+                doCheckout(localRef.name);
               } else {
                 checkoutCommitHash = commit.hash;
                 showCheckoutCommitModal = true;
               }
             }}
-            oncontextmenu={(e) => { if (!isRemoteTip) onCommitContextMenu(e, commit); }}
+            oncontextmenu={(e) => onCommitContextMenu(e, commit)}
             role="row"
             tabindex={0}
             onkeydown={(e) => { if (e.key === 'Enter') selectCommit(commit.hash); }}
           >
             <div class="col-message" style="padding-left: {(displayLeftMargin[index] ?? graphWidth) * X_SCALE + 4}px;">
-              {#if !isRemoteTip}
-                {#each commit.refs.filter(r => {
+              {#if dot?.localOnly}
+                <span class="local-dot" title="Not pushed"></span>
+              {:else if dot?.remoteTip}
+                <span class="remote-dot" title="Remote only"></span>
+              {/if}
+              {#each commit.refs.filter(r => {
                   if (r.type === 'remote-branch') {
                     if (r.name === 'HEAD') return false;
                     const fullRemoteName = `${r.remote}/${r.name}`;
@@ -546,7 +576,13 @@
                   const order = { head: 0, branch: 1, 'remote-branch': 2, tag: 3, stash: 4 };
                   return (order[a.type] ?? 4) - (order[b.type] ?? 4);
                 }) as ref}
-                  {@const hasRemote = (ref.type === 'branch' || ref.type === 'head') && commit.refs.some(r => r.type === 'remote-branch' && r.name === ref.name)}
+                  {@const hasRemote = (ref.type === 'branch' || ref.type === 'head') && (() => {
+                    const localInfo = branchStore.branches.find(b => !b.remote && b.name === ref.name);
+                    if (localInfo?.upstream) {
+                      return commit.refs.some(r => r.type === 'remote-branch' && `${r.remote}/${r.name}` === localInfo.upstream);
+                    }
+                    return commit.refs.some(r => r.type === 'remote-branch' && r.name === ref.name);
+                  })()}
                   {@const badgeColor = ref.type === 'tag' ? '#e2a029' : ref.type === 'stash' ? '#9c27b0' : nodeColor}
                   <span
                     class="ref-badge"
@@ -556,14 +592,12 @@
                     ondblclick={(e) => {
                       e.stopPropagation();
                       if (ref.type === 'remote-branch') {
-                        checkoutRemoteName = `${ref.remote}/${ref.name}`;
-                        checkoutRemoteLocalName = ref.name;
-                        showCheckoutRemoteModal = true;
+                        doCheckoutRemote(`${ref.remote}/${ref.name}`, ref.name);
                       } else if (ref.type === 'tag' || ref.type === 'stash') {
                         checkoutCommitHash = ref.type === 'stash' ? commit.hash : ref.name;
                         showCheckoutCommitModal = true;
                       } else {
-                        vscode.postMessage({ type: 'checkout', payload: { ref: ref.name } });
+                        doCheckout(ref.name);
                       }
                     }}
                     role="button"
@@ -571,9 +605,7 @@
                     onkeydown={(e) => {
                       if (e.key === 'Enter') {
                         if (ref.type === 'remote-branch') {
-                          checkoutRemoteName = `${ref.remote}/${ref.name}`;
-                          checkoutRemoteLocalName = ref.name;
-                          showCheckoutRemoteModal = true;
+                          doCheckoutRemote(`${ref.remote}/${ref.name}`, ref.name);
                         } else if (ref.type === 'tag' || ref.type === 'stash') {
                           checkoutCommitHash = ref.type === 'stash' ? commit.hash : ref.name;
                           showCheckoutCommitModal = true;
@@ -602,16 +634,13 @@
                   </span>
                 {/each}
                 <span class="commit-subject truncate" title={commit.subject}>{commit.subject}</span>
-              {/if}
             </div>
-            {#if !isRemoteTip}
               <div class="col-author truncate" title={commit.author.name}>
                 <img class="avatar-sm" src={getGravatarUrl(commit.author.email, 20)} alt="" loading="lazy" />
                 {commit.author.name}
               </div>
               <div class="col-hash" title={commit.hash}>{commit.abbreviatedHash}</div>
               <div class="col-date" title={new Date(commit.author.date).toLocaleString()}>{formatDate(commit.author.date)}</div>
-            {/if}
           </div>
         {/each}
       </div>
@@ -906,6 +935,26 @@
   </Modal>
 {/if}
 
+{#if showPullAfterCheckoutModal}
+  <Modal title="Checkout Branch" onClose={() => { showPullAfterCheckoutModal = false; }}>
+    <p class="modal-desc">This branch is <strong>{pullAfterCheckoutBehind}</strong> commit{pullAfterCheckoutBehind > 1 ? 's' : ''} behind the remote. Pull after checkout?</p>
+    <div class="info-rows">
+      <div class="info-row"><span class="info-label">Branch:</span><span class="info-value"><i class="codicon codicon-git-branch"></i> {pullAfterCheckoutRef}</span></div>
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { showPullAfterCheckoutModal = false; }}>{t('common.cancel')}</button>
+      <button onclick={() => {
+        showPullAfterCheckoutModal = false;
+        vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef } });
+      }}>Checkout Only</button>
+      <button class="primary" onclick={() => {
+        showPullAfterCheckoutModal = false;
+        vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef, pullAfter: true } });
+      }}>Checkout & Pull</button>
+    </div>
+  </Modal>
+{/if}
+
 <style>
   /* ---- Layout ---- */
   .commit-graph {
@@ -1002,6 +1051,24 @@
     gap: 5px;
     padding: 0 10px;
     overflow: hidden;
+  }
+
+  .local-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #4da6ff;
+    opacity: 0.8;
+  }
+
+  .remote-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-secondary, #888);
+    opacity: 0.8;
   }
 
   .col-author {

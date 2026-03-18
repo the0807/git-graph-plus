@@ -97,7 +97,7 @@ describe('buildFullGraph remote-tip detection', () => {
       makeCommit('c1', []),
     ];
     const graph = buildFullGraph(commits);
-    expect(graph.dots[0].type).toBe('remote-tip');
+    expect(graph.dots[0].remoteTip).toBe(true);
     expect(graph.dots[1].type).toBe('default');
   });
 
@@ -110,7 +110,7 @@ describe('buildFullGraph remote-tip detection', () => {
       makeCommit('c1', []),
     ];
     const graph = buildFullGraph(commits);
-    expect(graph.dots[0].type).not.toBe('remote-tip');
+    expect(graph.dots[0].remoteTip).toBe(false);
   });
 
   it('should NOT mark as remote-tip when commit has head ref', () => {
@@ -134,7 +134,7 @@ describe('buildFullGraph remote-tip detection', () => {
       makeCommit('c1', []),
     ];
     const graph = buildFullGraph(commits);
-    expect(graph.dots[0].type).not.toBe('remote-tip');
+    expect(graph.dots[0].remoteTip).toBe(false);
   });
 
   it('should not generate paths for remote-tip commits', () => {
@@ -144,7 +144,7 @@ describe('buildFullGraph remote-tip detection', () => {
       makeCommit('c1', []),
     ];
     const graph = buildFullGraph(commits);
-    expect(graph.dots[0].type).toBe('remote-tip');
+    expect(graph.dots[0].remoteTip).toBe(true);
     expect(graph.dots[0].center).toBeDefined();
     const remoteTipY = graph.dots[0].center.y;
     const pathsStartingAtTip = graph.paths.filter(p =>
@@ -161,9 +161,49 @@ describe('buildFullGraph remote-tip detection', () => {
       makeCommit('c1', []),
     ];
     const graph = buildFullGraph(commits);
-    expect(graph.dots[0].type).toBe('remote-tip');
+    expect(graph.dots[0].remoteTip).toBe(true);
     const remoteTipY = graph.dots[0].center.y;
     const linksFromTip = graph.links.filter(l => l.start.y === remoteTipY);
     expect(linksFromTip).toHaveLength(0);
+  });
+
+  it('should mark ALL commits between remote tip and local branch as remoteTip', () => {
+    // Scenario: remote is 3 commits ahead of local
+    // A (main) ← B ← C ← D (origin/main)
+    const commits = [
+      makeCommit('d', ['c'], [{ type: 'remote-branch', name: 'main', remote: 'origin' }]),
+      makeCommit('c', ['b']),
+      makeCommit('b', ['a']),
+      makeCommit('a', [], [{ type: 'branch', name: 'main' }]),
+    ];
+    const graph = buildFullGraph(commits);
+    expect(graph.dots[0].remoteTip).toBe(true);  // d
+    expect(graph.dots[1].remoteTip).toBe(true);  // c
+    expect(graph.dots[2].remoteTip).toBe(true);  // b
+    expect(graph.dots[3].remoteTip).toBe(false); // a (local branch)
+  });
+
+  it('should mark remote-only commits even when merged into another local branch', () => {
+    // Scenario: feature/db was merged into main, then remote advanced
+    // main merged feature/db at some point, then feature/db local was reset back
+    // 3f (feature/db local) ← f2 ← 8b ← c5 ← f0 (origin/feature/db)
+    //                          \→ merged into main
+    const commits = [
+      makeCommit('f0', ['c5'], [{ type: 'remote-branch', name: 'feature/db', remote: 'origin' }]),
+      makeCommit('merge', ['main-prev', 'f0'], [{ type: 'branch', name: 'main' }]),
+      makeCommit('c5', ['8b']),
+      makeCommit('8b', ['f2']),
+      makeCommit('f2', ['3f']),
+      makeCommit('3f', ['base'], [{ type: 'branch', name: 'feature/db' }]),
+      makeCommit('main-prev', ['base']),
+      makeCommit('base', []),
+    ];
+    const graph = buildFullGraph(commits);
+    // f0, c5, 8b, f2 should all be remote-only even though they're reachable from main
+    expect(graph.dots[0].remoteTip).toBe(true);  // f0
+    expect(graph.dots[2].remoteTip).toBe(true);  // c5
+    expect(graph.dots[3].remoteTip).toBe(true);  // 8b
+    expect(graph.dots[4].remoteTip).toBe(true);  // f2
+    expect(graph.dots[5].remoteTip).toBe(false); // 3f (local branch)
   });
 });

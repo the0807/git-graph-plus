@@ -102,7 +102,7 @@ export class GitService {
       args.push('--all');
     }
 
-    args.push('--topo-order');
+    args.push('--date-order');
 
     if (options?.limit) {
       args.push(`--max-count=${options.limit}`);
@@ -120,7 +120,10 @@ export class GitService {
       this.exec(args),
       this.getRemoteNames(),
     ]);
-    return parseLog(raw, remoteNames);
+    const commits = parseLog(raw, remoteNames);
+    // Sort by committer date descending (newest first) for pure chronological order
+    commits.sort((a, b) => b.committer.date.localeCompare(a.committer.date));
+    return commits;
   }
 
   private async getRemoteNames(): Promise<string[]> {
@@ -151,7 +154,7 @@ export class GitService {
     const args = ['log', '--graph', `--format=${format}`];
 
     if (options?.all !== false) { args.push('--all'); }
-    args.push('--topo-order');
+    args.push('--date-order');
     if (options?.limit) { args.push(`--max-count=${options.limit}`); }
     if (options?.branch) { args.push(options.branch); }
 
@@ -449,7 +452,7 @@ export class GitService {
     const args = [
       'log',
       '--format=%x01%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
-      '--topo-order',
+      '--date-order',
       '--reverse',
       `${base}..HEAD`,
     ];
@@ -554,7 +557,9 @@ export class GitService {
       file,
     ];
     const [raw, remoteNames] = await Promise.all([this.exec(args), this.getRemoteNames()]);
-    return parseLog(raw, remoteNames);
+    const commits = parseLog(raw, remoteNames);
+    commits.sort((a, b) => b.committer.date.localeCompare(a.committer.date));
+    return commits;
   }
 
   async showFileAtRef(ref: string, file: string): Promise<string> {
@@ -585,7 +590,7 @@ export class GitService {
       'log',
       '--format=%x01%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
       '--all',
-      '--topo-order',
+      '--date-order',
       `--max-count=${options?.limit ?? 200}`,
     ];
 
@@ -603,7 +608,9 @@ export class GitService {
     }
 
     const [raw, remoteNames] = await Promise.all([this.exec(args), this.getRemoteNames()]);
-    return parseLog(raw, remoteNames);
+    const commits = parseLog(raw, remoteNames);
+    commits.sort((a, b) => b.committer.date.localeCompare(a.committer.date));
+    return commits;
   }
 
   async searchByFile(filePath: string, limit: number = 100): Promise<Commit[]> {
@@ -616,7 +623,9 @@ export class GitService {
       filePath,
     ];
     const [raw, remoteNames] = await Promise.all([this.exec(args), this.getRemoteNames()]);
-    return parseLog(raw, remoteNames);
+    const commits = parseLog(raw, remoteNames);
+    commits.sort((a, b) => b.committer.date.localeCompare(a.committer.date));
+    return commits;
   }
 
   async searchByHash(hash: string): Promise<Commit | null> {

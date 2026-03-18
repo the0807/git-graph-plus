@@ -98,9 +98,12 @@ export class MainPanel {
     try {
       switch (message.type) {
         case 'getLog': {
-          const commits = await this.gitService.log(message.payload);
-          const graph = buildGraph(commits);
-          const fullGraph = buildFullGraph(commits);
+          const [commits, logBranches] = await Promise.all([
+            this.gitService.log(message.payload),
+            this.gitService.branches(),
+          ]);
+          const graph = buildGraph(commits, logBranches);
+          const fullGraph = buildFullGraph(commits, logBranches);
           this.panel.webview.postMessage({
             type: 'logData',
             payload: {
@@ -138,6 +141,9 @@ export class MainPanel {
         }
         case 'checkout': {
           await this.gitService.checkout(message.payload.ref);
+          if (message.payload.pullAfter) {
+            await this.gitService.pull();
+          }
           this.panel.webview.postMessage({
             type: 'operationComplete',
             payload: { operation: 'checkout', success: true },
@@ -657,8 +663,8 @@ export class MainPanel {
         this.gitService.remotes(),
         this.gitService.stashList(),
       ]);
-      const graph = buildGraph(allCommits);
-      const fg = buildFullGraph(allCommits);
+      const graph = buildGraph(allCommits, branches);
+      const fg = buildFullGraph(allCommits, branches);
       this.panel.webview.postMessage({ type: 'logData', payload: { commits: allCommits, graph, paths: fg.paths, links: fg.links, dots: fg.dots, commitLeftMargin: fg.commitLeftMargin } });
       this.panel.webview.postMessage({ type: 'branchData', payload: { branches, tags, remotes, stashes } });
     } catch (err) {
@@ -691,9 +697,12 @@ export class MainPanel {
 
     if (what === 'refs' || what === 'unknown') {
       try {
-        const repoCommits = await this.gitService.log({ limit: 1000 });
-        const graph = buildGraph(repoCommits);
-        const fg = buildFullGraph(repoCommits);
+        const [repoCommits, repoBranches] = await Promise.all([
+          this.gitService.log({ limit: 1000 }),
+          this.gitService.branches(),
+        ]);
+        const graph = buildGraph(repoCommits, repoBranches);
+        const fg = buildFullGraph(repoCommits, repoBranches);
         this.panel.webview.postMessage({
           type: 'logData',
           payload: { commits: repoCommits, graph, paths: fg.paths, links: fg.links, dots: fg.dots, commitLeftMargin: fg.commitLeftMargin },

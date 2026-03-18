@@ -1,4 +1,4 @@
-import type { Commit, GraphNode, ParentConnection } from './types';
+import type { BranchInfo, Commit, GraphNode, ParentConnection } from './types';
 
 const COLOR_PALETTE = [
   '#63b0f4', '#73d13d', '#ff7a45', '#b37feb',
@@ -23,7 +23,9 @@ export interface GraphLink {
 export interface GraphDot {
   center: { x: number; y: number };
   color: number;
-  type: 'default' | 'head' | 'merge' | 'remote-tip';
+  type: 'default' | 'head' | 'merge';
+  localOnly: boolean;
+  remoteTip: boolean;
 }
 
 export interface FullGraphData {
@@ -131,9 +133,31 @@ class PathHelper {
   }
 }
 
-// ── Remote-tip detection ──
+// ── Remote-only detection ──
+// Finds commits that exist only on remote branches (between remote tip and local branch).
+// Uses upstream tracking info for accurate local↔remote branch matching.
 
-function buildRemoteTipSet(commits: Commit[]): Set<string> {
+function buildUpstreamMap(branches: BranchInfo[]): Map<string, string> {
+  // Maps "remote/branch" (upstream) → local branch hash
+  const map = new Map<string, string>();
+  for (const b of branches) {
+    if (!b.remote && b.upstream) {
+      map.set(b.upstream, b.hash);
+    }
+  }
+  return map;
+}
+
+function buildRemoteOnlyData(commits: Commit[], branches: BranchInfo[]): { tipSet: Set<string>; allSet: Set<string> } {
+  const hashIndex = new Map<string, number>();
+  for (let i = 0; i < commits.length; i++) {
+    hashIndex.set(commits[i].hash, i);
+  }
+
+  // upstream map: "origin/main" → local branch hash
+  const upstreamMap = buildUpstreamMap(branches);
+
+  // Fallback: name-based map from commit refs (for branches without explicit upstream)
   const localBranchMap = new Map<string, string>();
   for (const c of commits) {
     for (const r of c.refs) {
@@ -143,7 +167,9 @@ function buildRemoteTipSet(commits: Commit[]): Set<string> {
     }
   }
 
-  const remoteTips = new Set<string>();
+  // Find remote tips with their corresponding local hash
+  const tipSet = new Set<string>();
+  const tips: Array<{ tipIdx: number; localHash: string }> = [];
   for (const c of commits) {
     const hasRemoteRef = c.refs.some(r => r.type === 'remote-branch');
     const hasLocalRef = c.refs.some(r => r.type === 'branch' || r.type === 'head' || r.type === 'tag');
@@ -151,20 +177,98 @@ function buildRemoteTipSet(commits: Commit[]): Set<string> {
 
     for (const r of c.refs) {
       if (r.type !== 'remote-branch') continue;
-      const localHash = localBranchMap.get(r.name);
+      const fullRemoteName = `${r.remote}/${r.name}`;
+      const localHash = upstreamMap.get(fullRemoteName) ?? localBranchMap.get(r.name);
       if (localHash && localHash !== c.hash) {
-        remoteTips.add(c.hash);
+        tipSet.add(c.hash);
+        const idx = hashIndex.get(c.hash);
+        if (idx !== undefined) tips.push({ tipIdx: idx, localHash });
         break;
       }
     }
   }
 
-  return remoteTips;
+  // For each remote tip, BFS through parents stopping at the corresponding local branch's ancestors
+  const allSet = new Set<string>();
+  const ancestorCache = new Map<string, Set<string>>();
+
+  for (const { tipIdx, localHash } of tips) {
+    // Get or compute ancestors of the corresponding local branch
+    let localAncestors = ancestorCache.get(localHash);
+    if (!localAncestors) {
+      localAncestors = new Set([localHash]);
+      const q: number[] = [];
+      const li = hashIndex.get(localHash);
+      if (li !== undefined) q.push(li);
+      while (q.length > 0) {
+        const idx = q.shift()!;
+        for (const ph of commits[idx].parents) {
+          if (!localAncestors.has(ph)) {
+            localAncestors.add(ph);
+            const pi = hashIndex.get(ph);
+            if (pi !== undefined) q.push(pi);
+          }
+        }
+      }
+      ancestorCache.set(localHash, localAncestors);
+    }
+
+    // BFS from remote tip, stop at local branch ancestors
+    allSet.add(commits[tipIdx].hash);
+    const queue = [tipIdx];
+    while (queue.length > 0) {
+      const idx = queue.shift()!;
+      for (const parentHash of commits[idx].parents) {
+        if (allSet.has(parentHash) || localAncestors.has(parentHash)) continue;
+        allSet.add(parentHash);
+        const pi = hashIndex.get(parentHash);
+        if (pi !== undefined) queue.push(pi);
+      }
+    }
+  }
+
+  return { tipSet, allSet };
+}
+
+// ── Local-only detection ──
+
+function buildPushedSet(commits: Commit[]): Set<string> {
+  const hashIndex = new Map<string, number>();
+  for (let i = 0; i < commits.length; i++) {
+    hashIndex.set(commits[i].hash, i);
+  }
+
+  const pushed = new Set<string>();
+  const queue: number[] = [];
+
+  // Start from commits that have remote-branch refs
+  for (let i = 0; i < commits.length; i++) {
+    if (commits[i].refs.some(r => r.type === 'remote-branch')) {
+      if (!pushed.has(commits[i].hash)) {
+        pushed.add(commits[i].hash);
+        queue.push(i);
+      }
+    }
+  }
+
+  // BFS through parents
+  while (queue.length > 0) {
+    const idx = queue.shift()!;
+    for (const parentHash of commits[idx].parents) {
+      if (!pushed.has(parentHash)) {
+        pushed.add(parentHash);
+        const pi = hashIndex.get(parentHash);
+        if (pi !== undefined) queue.push(pi);
+      }
+    }
+  }
+
+  return pushed;
 }
 
 // ── Main parse function (SourceGit CommitGraph.Parse port) ──
 
-export function buildFullGraph(commits: Commit[]): FullGraphData {
+export function buildFullGraph(commits: Commit[], branches: BranchInfo[] = []): FullGraphData {
   const UNIT_W = 12;
   const HALF_W = 6;
   const UNIT_H = 1;
@@ -181,7 +285,8 @@ export function buildFullGraph(commits: Commit[]): FullGraphData {
   const ended: PathHelper[] = [];
   const colorPicker = new ColorPicker(COLOR_PALETTE.length);
   let offsetY = -HALF_H;
-  const remoteTipSet = buildRemoteTipSet(commits);
+  const { tipSet: remoteTipSet, allSet: remoteOnlySet } = buildRemoteOnlyData(commits, branches);
+  const pushedSet = buildPushedSet(commits);
 
   for (const commit of commits) {
     let major: PathHelper | null = null;
@@ -233,15 +338,15 @@ export function buildFullGraph(commits: Commit[]): FullGraphData {
     // Dot
     const position = { x: major?.lastX ?? offsetX, y: offsetY };
     const dotColor = major?.path.color ?? 0;
-    const isRemoteTip = remoteTipSet.has(commit.hash);
+    const isRemoteOnly = remoteOnlySet.has(commit.hash);
+    const isLocalOnly = !pushedSet.has(commit.hash);
     let dotType: GraphDot['type'] = 'default';
     if (commit.refs.some(r => r.type === 'head')) dotType = 'head';
     else if (commit.parents.length > 1) dotType = 'merge';
-    if (isRemoteTip) dotType = 'remote-tip';
-    result.dots.push({ center: position, color: dotColor, type: dotType });
+    result.dots.push({ center: position, color: dotColor, type: dotType, localOnly: isLocalOnly, remoteTip: isRemoteOnly });
 
     // Merge parents — skip for remote-tip commits (no lines)
-    if (!isRemoteTip) {
+    if (!remoteTipSet.has(commit.hash)) {
       for (let j = 1; j < commit.parents.length; j++) {
         const parentHash = commit.parents[j];
         const parent = unsolved.find(p => p.next === parentHash);
@@ -280,8 +385,8 @@ export function buildFullGraph(commits: Commit[]): FullGraphData {
 
 // ── Legacy adapter: convert FullGraphData to GraphNode[] for existing rendering ──
 
-export function buildGraph(commits: Commit[]): GraphNode[] {
-  const full = buildFullGraph(commits);
+export function buildGraph(commits: Commit[], branches: BranchInfo[] = []): GraphNode[] {
+  const full = buildFullGraph(commits, branches);
   const nodes: GraphNode[] = [];
 
   for (let i = 0; i < commits.length; i++) {
