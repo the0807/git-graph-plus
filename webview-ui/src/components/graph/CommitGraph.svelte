@@ -586,12 +586,11 @@
               {#each commit.refs.filter(r => {
                   if (r.type === 'remote-branch') {
                     if (r.name === 'HEAD') return false;
-                    const fullRemoteName = `${r.remote}/${r.name}`;
-                    // Hide if a local branch on this commit tracks this remote
+                    // Hide remote badge only if a local branch explicitly tracks it
                     const localRefs = commit.refs.filter(lr => lr.type === 'branch' || lr.type === 'head');
                     for (const lr of localRefs) {
                       const localInfo = branchStore.branches.find(b => !b.remote && b.name === lr.name);
-                      if (localInfo?.upstream === fullRemoteName) return false;
+                      if (localInfo?.upstream === `${r.remote}/${r.name}`) return false;
                     }
                   }
                   return true;
@@ -601,12 +600,10 @@
                 }) as ref}
                   {@const hasRemote = (ref.type === 'branch' || ref.type === 'head') && (() => {
                     const localInfo = branchStore.branches.find(b => !b.remote && b.name === ref.name);
-                    if (localInfo?.upstream) {
-                      return commit.refs.some(r => r.type === 'remote-branch' && `${r.remote}/${r.name}` === localInfo.upstream);
-                    }
-                    return commit.refs.some(r => r.type === 'remote-branch' && r.name === ref.name);
+                    if (!localInfo?.upstream) return false;
+                    return commit.refs.some(r => r.type === 'remote-branch' && `${r.remote}/${r.name}` === localInfo.upstream);
                   })()}
-                  {@const badgeColor = ref.type === 'tag' ? '#e2a029' : ref.type === 'stash' ? '#9c27b0' : nodeColor}
+                  {@const badgeColor = ref.type === 'tag' ? '#f0c040' : ref.type === 'stash' ? '#c24de0' : nodeColor}
                   <span
                     class="ref-badge"
                     style="--badge-color: {badgeColor};"
@@ -640,6 +637,7 @@
                   >
                     {#if ref.type === 'head'}
                       <i class="codicon codicon-check ref-icon"></i>
+                      {#if hasRemote}<i class="codicon codicon-cloud ref-icon"></i>{/if}
                       {ref.name}
                     {:else if ref.type === 'remote-branch'}
                       <i class="codicon codicon-cloud ref-icon"></i>
@@ -976,8 +974,8 @@
   }
 
   .local-dot {
-    width: 7px;
-    height: 7px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     flex-shrink: 0;
     background: #4da6ff;
@@ -985,8 +983,8 @@
   }
 
   .remote-dot {
-    width: 7px;
-    height: 7px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     flex-shrink: 0;
     background: var(--text-secondary, #888);

@@ -299,7 +299,7 @@
                 <button
                   class="file-item"
                   class:selected={selectedFile === node.path}
-                  style="padding-left: {8 + depth * 16}px;"
+                  style="padding-left: {8 + depth * 16 + 18}px;"
                   onclick={() => { selectedFile = selectedFile === node.path ? null : node.path; }}
                   ondblclick={() => { if (commit) vscode.postMessage({ type: 'openDiff', payload: { file: node.path, commitHash: commit.hash } }); }}
                   title="Double-click to open in editor"

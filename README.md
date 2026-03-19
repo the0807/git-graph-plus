@@ -14,7 +14,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 
 ### Commit Graph
 - Interactive commit graph with branch/merge visualization and color-coded rails
-- Chronological commit ordering (committer date) like Fork
+- Topological commit ordering like Fork
 - Click any commit to view details, changed files, and diffs
 - Right-click context menus: checkout, cherry-pick, revert, reset, merge, rebase, and more
 - Compare two commits: select a base commit, then click another to see the diff
@@ -105,7 +105,6 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 ## Acknowledgements
 
 - UI/UX ideas from [Git Graph](https://github.com/mhutchie/vscode-git-graph), [Fork](https://git-fork.com/), and [SourceGit](https://github.com/sourcegit-scm/sourcegit)
-- Graph layout algorithm ported from [SourceGit](https://github.com/sourcegit-scm/sourcegit) (MIT License)
 - This project does not use any code from [Git Graph](https://github.com/mhutchie/vscode-git-graph). All code has been written from scratch.
 - Extension icon from [VS Code Codicons](https://github.com/microsoft/vscode-codicons), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 

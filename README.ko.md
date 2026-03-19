@@ -14,7 +14,7 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 
 ### 커밋 그래프
 - 브랜치/머지 시각화 및 색상 구분이 적용된 인터랙티브 커밋 그래프
-- Fork와 같은 시간순 커밋 정렬 (committer date 기준)
+- Fork와 같은 위상순 커밋 정렬 (topo-order)
 - 커밋을 클릭하여 상세 정보, 변경된 파일, diff 확인
 - 우클릭 컨텍스트 메뉴: checkout, cherry-pick, revert, reset, merge, rebase 등
 - 두 커밋 비교: 기준 커밋 선택 후 다른 커밋 클릭으로 diff 확인
@@ -105,7 +105,6 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 ## 크레딧
 
 - [Git Graph](https://github.com/mhutchie/vscode-git-graph), [Fork](https://git-fork.com/), [SourceGit](https://github.com/sourcegit-scm/sourcegit)의 UI/UX에서 아이디어를 얻었습니다
-- 그래프 레이아웃 알고리즘은 [SourceGit](https://github.com/sourcegit-scm/sourcegit)에서 포팅되었습니다 (MIT 라이선스)
 - 이 프로젝트는 [Git Graph](https://github.com/mhutchie/vscode-git-graph)의 코드를 사용하지 않으며, 모든 코드는 처음부터 새로 작성되었습니다
 - 확장 아이콘: [VS Code Codicons](https://github.com/microsoft/vscode-codicons), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) 라이선스
 

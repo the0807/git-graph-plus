@@ -102,7 +102,7 @@ export class GitService {
       args.push('--all');
     }
 
-    args.push('--date-order');
+    args.push('--topo-order');
 
     if (options?.limit) {
       args.push(`--max-count=${options.limit}`);
@@ -121,8 +121,6 @@ export class GitService {
       this.getRemoteNames(),
     ]);
     const commits = parseLog(raw, remoteNames);
-    // Sort by committer date descending (newest first) for pure chronological order
-    commits.sort((a, b) => b.committer.date.localeCompare(a.committer.date));
     return commits;
   }
 
@@ -154,7 +152,7 @@ export class GitService {
     const args = ['log', '--graph', `--format=${format}`];
 
     if (options?.all !== false) { args.push('--all'); }
-    args.push('--date-order');
+    args.push('--topo-order');
     if (options?.limit) { args.push(`--max-count=${options.limit}`); }
     if (options?.branch) { args.push(options.branch); }
 
@@ -239,7 +237,7 @@ export class GitService {
   }
 
   async createAndCheckoutBranch(name: string, startPoint?: string): Promise<void> {
-    const args = ['checkout', '-b', name];
+    const args = ['checkout', '-b', name, '--track'];
     if (startPoint) {
       args.push(startPoint);
     }
@@ -466,7 +464,7 @@ export class GitService {
     const args = [
       'log',
       '--format=%x01%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
-      '--date-order',
+      '--topo-order',
       '--reverse',
       `${base}..HEAD`,
     ];
@@ -632,7 +630,7 @@ export class GitService {
       'log',
       '--format=%x01%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
       '--all',
-      '--date-order',
+      '--topo-order',
       `--max-count=${options?.limit ?? 200}`,
     ];
 
@@ -651,7 +649,6 @@ export class GitService {
 
     const [raw, remoteNames] = await Promise.all([this.exec(args), this.getRemoteNames()]);
     const commits = parseLog(raw, remoteNames);
-    commits.sort((a, b) => b.committer.date.localeCompare(a.committer.date));
     return commits;
   }
 
@@ -666,7 +663,6 @@ export class GitService {
     ];
     const [raw, remoteNames] = await Promise.all([this.exec(args), this.getRemoteNames()]);
     const commits = parseLog(raw, remoteNames);
-    commits.sort((a, b) => b.committer.date.localeCompare(a.committer.date));
     return commits;
   }
 
