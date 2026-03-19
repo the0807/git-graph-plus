@@ -28,7 +28,7 @@
   <p class="modal-desc">{t('checkoutRemote.desc', { remote: remoteName })}</p>
   <div class="modal-context-card">
     <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
-    <span>{remoteName}</span>
+    <span class="modal-pill modal-pill--target">{remoteName}</span>
   </div>
   <div class="modal-form-group">
     <label class="modal-field-label" for="checkout-local-name">{t('checkoutRemote.localName')}</label>

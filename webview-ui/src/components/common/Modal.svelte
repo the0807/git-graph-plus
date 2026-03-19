@@ -126,6 +126,7 @@
     padding: 8px 12px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     margin-bottom: 14px;
     flex-wrap: nowrap;

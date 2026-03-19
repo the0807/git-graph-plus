@@ -139,11 +139,18 @@ export const ko: Record<string, string> = {
   'reset.reset': 'Reset {mode}',
 
   // Interactive rebase
-  'rebase.title': '{base} 위에 Interactive Rebase',
+  'rebase.title': 'Interactive Rebase',
   'rebase.loading': 'Commit 로딩 중',
   'rebase.noCommits': 'Rebase할 commit이 없습니다',
-  'rebase.instructions': '드래그하여 순서 변경. 클릭하여 액션 전환: pick \u2192 squash \u2192 fixup \u2192 reword \u2192 edit \u2192 drop.',
+  'rebase.instructions': '드래그 또는 화살표로 순서 변경. 액션을 클릭하여 변경.',
   'rebase.start': 'Rebase 시작',
+  'rebase.dropWarning': '{count}개 commit이 삭제됩니다.',
+  'rebase.action.pick': '그대로 적용',
+  'rebase.action.reword': '메시지만 변경',
+  'rebase.action.edit': '멈추고 수정',
+  'rebase.action.squash': '이전 커밋에 합침',
+  'rebase.action.fixup': '합치고 메시지 제거',
+  'rebase.action.drop': '커밋 제거',
 
   // Commit details
   'details.commit': 'Commit',
@@ -187,9 +194,13 @@ export const ko: Record<string, string> = {
   'checkoutRemote.checkout': 'Checkout',
 
   // Checkout commit modal
-  'checkoutCommit.title': 'Commit Checkout',
-  'checkoutCommit.desc': 'commit {hash}을(를) detached HEAD 상태로 checkout합니다. 어떤 브랜치에도 속하지 않게 됩니다.',
+  'checkoutCommit.title': 'Checkout',
+  'checkoutCommit.desc': 'Commit checkout',
+  'checkoutCommit.branchDesc': '이 브랜치로 전환합니다.',
   'checkoutCommit.checkout': 'Checkout',
+  'checkoutCommit.checkoutBranch': '{name} Checkout',
+  'checkoutCommit.checkoutRemote': '{name} Checkout',
+  'checkoutCommit.detachedWarning': '이 커밋에 브랜치가 없습니다. Detached HEAD 상태가 됩니다.',
 
   // Checkout branch modal (pull after checkout)
   'checkoutBranch.title': '브랜치 Checkout',

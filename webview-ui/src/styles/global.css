@@ -36,7 +36,7 @@
   --lane-width: 14px;
   --bottom-panel-height: 250px;
   --graph-node-radius: 4px;
-  --toolbar-height: 40px;
+  --toolbar-height: 36px;
 }
 
 * {
@@ -92,11 +92,11 @@ button {
   background: var(--button-secondary-bg);
   color: var(--button-secondary-fg);
   border: none;
-  padding: 4px 10px;
+  padding: 5px 12px;
   cursor: pointer;
-  font-size: inherit;
+  font-size: 12px;
   font-family: inherit;
-  border-radius: 3px;
+  border-radius: 4px;
   transition: background 0.1s, opacity 0.1s;
 }
 
@@ -122,6 +122,41 @@ button.primary:hover {
 button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Checkbox */
+input[type="checkbox"] {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--text-secondary, #888);
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+
+input[type="checkbox"]:checked {
+  background: var(--vscode-button-background, #0078d4);
+  border-color: var(--vscode-button-background, #0078d4);
+}
+
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+input[type="checkbox"]:focus {
+  outline: none;
+  border-color: var(--vscode-focusBorder, #007fd4);
 }
 
 /* Loading spinner */

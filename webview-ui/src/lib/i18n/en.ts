@@ -139,11 +139,18 @@ export const en: Record<string, string> = {
   'reset.reset': 'Reset {mode}',
 
   // Interactive rebase
-  'rebase.title': 'Interactive Rebase onto {base}',
+  'rebase.title': 'Interactive Rebase',
   'rebase.loading': 'Loading commits',
   'rebase.noCommits': 'No commits to rebase',
-  'rebase.instructions': 'Drag to reorder. Click action to cycle: pick \u2192 squash \u2192 fixup \u2192 reword \u2192 edit \u2192 drop.',
+  'rebase.instructions': 'Drag or use arrows to reorder. Click action to change.',
   'rebase.start': 'Start Rebase',
+  'rebase.dropWarning': '{count} commit(s) will be dropped.',
+  'rebase.action.pick': 'Use commit',
+  'rebase.action.reword': 'Edit message',
+  'rebase.action.edit': 'Stop to amend',
+  'rebase.action.squash': 'Meld into previous',
+  'rebase.action.fixup': 'Meld, discard message',
+  'rebase.action.drop': 'Remove commit',
 
   // Commit details
   'details.commit': 'Commit',
@@ -187,9 +194,13 @@ export const en: Record<string, string> = {
   'checkoutRemote.checkout': 'Checkout',
 
   // Checkout commit modal
-  'checkoutCommit.title': 'Checkout Commit',
-  'checkoutCommit.desc': 'This will checkout commit {hash} in detached HEAD state. You will not be on any branch.',
+  'checkoutCommit.title': 'Checkout',
+  'checkoutCommit.desc': 'Checkout commit',
+  'checkoutCommit.branchDesc': 'Switch to this branch.',
   'checkoutCommit.checkout': 'Checkout',
+  'checkoutCommit.checkoutBranch': 'Checkout {name}',
+  'checkoutCommit.checkoutRemote': 'Checkout {name}',
+  'checkoutCommit.detachedWarning': 'No branch at this commit. You will be in detached HEAD state.',
 
   // Checkout branch modal (pull after checkout)
   'checkoutBranch.title': 'Checkout Branch',

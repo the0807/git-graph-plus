@@ -107,12 +107,6 @@
         <i class="codicon codicon-git-branch branch-icon"></i>
         {branchStore.currentBranch.name}
       </span>
-      {#if ahead > 0 || behind > 0}
-        <span class="branch-sync">
-          {#if ahead > 0}<span class="sync-badge ahead"><i class="codicon codicon-arrow-up"></i>{ahead}</span>{/if}
-          {#if behind > 0}<span class="sync-badge behind"><i class="codicon codicon-arrow-down"></i>{behind}</span>{/if}
-        </span>
-      {/if}
     {/if}
   </div>
 
@@ -148,32 +142,30 @@
       title={t('toolbar.fetchAll')}
     >
       {#if operating === 'fetch'}<span class="spinner"></span>{:else}<i class="codicon codicon-cloud-download"></i>{/if}
-      {t('toolbar.fetch')}
     </button>
     <button
       class="toolbar-btn"
+      class:has-badge={behind > 0}
       onclick={doPull}
       disabled={operating !== null}
       title={t('toolbar.pullDesc')}
     >
-      {#if operating === 'pull'}<span class="spinner"></span>{:else}<i class="codicon codicon-repo-pull"></i>{/if}
-      {t('toolbar.pull')}
-      {#if behind > 0}<span class="btn-badge">{behind}</span>{/if}
+      {#if operating === 'pull'}<span class="spinner"></span>{:else}<i class="codicon codicon-arrow-down"></i>{/if}
+      {#if behind > 0}<span class="btn-badge pull-badge">{behind}</span>{/if}
     </button>
     <button
       class="toolbar-btn"
+      class:has-badge={ahead > 0}
       onclick={doPush}
       disabled={operating !== null}
       title={t('toolbar.pushDesc')}
     >
-      {#if operating === 'push'}<span class="spinner"></span>{:else}<i class="codicon codicon-repo-push"></i>{/if}
-      {t('toolbar.push')}
-      {#if ahead > 0}<span class="btn-badge">{ahead}</span>{/if}
+      {#if operating === 'push'}<span class="spinner"></span>{:else}<i class="codicon codicon-arrow-up"></i>{/if}
+      {#if ahead > 0}<span class="btn-badge push-badge">{ahead}</span>{/if}
     </button>
     <span class="separator"></span>
-    <button class="toolbar-btn" onclick={refresh} disabled={operating !== null} title={t('toolbar.refreshDesc')}>
+    <button class="toolbar-btn icon-only" onclick={refresh} disabled={operating !== null} title={t('toolbar.refreshDesc')}>
       {#if operating === 'refresh'}<span class="spinner"></span>{:else}<i class="codicon codicon-refresh"></i>{/if}
-      {t('toolbar.refresh')}
     </button>
   </div>
 </div>
@@ -262,8 +254,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: var(--toolbar-height);
-    padding: 0 12px;
+    height: 36px;
+    padding: 0 10px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
@@ -272,12 +264,13 @@
   .toolbar-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
   }
 
   .toolbar-title {
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
+    opacity: 0.7;
   }
 
   .repo-selector {
@@ -306,37 +299,12 @@
     font-size: 12px;
   }
 
-  .branch-sync {
-    display: flex;
-    gap: 4px;
-    font-size: 10px;
-  }
-
-  .sync-badge {
-    display: flex;
-    align-items: center;
-    gap: 1px;
-    padding: 1px 5px;
-    border-radius: 8px;
-    font-weight: 600;
-  }
-
-  .sync-badge.ahead {
-    background: color-mix(in srgb, var(--vscode-gitDecoration-addedResourceForeground, #73c991) 20%, transparent);
-    color: var(--vscode-gitDecoration-addedResourceForeground, #73c991);
-  }
-
-  .sync-badge.behind {
-    background: color-mix(in srgb, var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d) 20%, transparent);
-    color: var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d);
-  }
-
   .toolbar-center {
     display: flex;
     align-items: center;
-    gap: 2px;
-    background: rgba(128, 128, 128, 0.15);
-    border-radius: 4px;
+    gap: 1px;
+    background: rgba(128, 128, 128, 0.12);
+    border-radius: 5px;
     padding: 2px;
   }
 
@@ -344,11 +312,12 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 10px;
+    padding: 3px 12px;
     font-size: 11px;
-    border-radius: 3px;
+    border-radius: 4px;
     background: transparent;
     color: var(--text-secondary);
+    font-weight: 500;
   }
 
   .view-tab.active {
@@ -358,41 +327,72 @@
 
   .view-tab:hover:not(.active) {
     color: var(--text-primary);
+    background: rgba(128, 128, 128, 0.1);
   }
 
   .toolbar-right {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 2px;
   }
 
   .toolbar-btn {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 3px;
-    padding: 3px 8px;
-    font-size: 11px;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 16px;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-secondary);
+    min-width: 32px;
+    height: 32px;
+  }
+
+  .toolbar-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
   }
 
   .toolbar-btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: wait;
   }
 
+  .toolbar-btn.icon-only {
+    padding: 4px 6px;
+  }
+
   .btn-badge {
-    background: var(--vscode-badge-background, #4d4d4d);
-    color: var(--vscode-badge-foreground, #fff);
-    font-size: 9px;
-    padding: 0 4px;
-    border-radius: 6px;
-    min-width: 14px;
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 0 5px;
+    border-radius: 8px;
+    min-width: 16px;
     text-align: center;
+    line-height: 16px;
+  }
+
+  .pull-badge {
+    background: color-mix(in srgb, var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d) 25%, transparent);
+    color: var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d);
+  }
+
+  .push-badge {
+    background: color-mix(in srgb, var(--vscode-gitDecoration-addedResourceForeground, #73c991) 25%, transparent);
+    color: var(--vscode-gitDecoration-addedResourceForeground, #73c991);
   }
 
   .separator {
     width: 1px;
-    height: 16px;
+    height: 18px;
     background: var(--border-color);
+    margin: 0 4px;
   }
 
   .form-actions {

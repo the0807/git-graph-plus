@@ -373,10 +373,14 @@
 
 {#if showRenameBranchModal}
   <Modal title={t('renameBranch.title')} onClose={() => { showRenameBranchModal = false; }}>
-    <p class="modal-desc">{@html t('renameBranch.desc', { name: `<span class="modal-pill modal-pill--source">${renameBranchOld}</span>` })}</p>
+    <div class="modal-context-card">
+      <span class="modal-pill modal-pill--source">{renameBranchOld}</span>
+    </div>
     <div class="modal-form-group">
       <label class="modal-field-label" for="rename-branch-input">{t('renameBranch.newName')}</label>
-      <input id="rename-branch-input" class="modal-input" type="text" bind:value={renameBranchNew} />
+      <!-- svelte-ignore a11y_autofocus -->
+      <input id="rename-branch-input" class="modal-input" type="text" bind:value={renameBranchNew} autofocus
+        onkeydown={(e) => { if (e.key === 'Enter' && renameBranchNew.trim() && renameBranchNew !== renameBranchOld) { showRenameBranchModal = false; vscode.postMessage({ type: 'renameBranch', payload: { oldName: renameBranchOld, newName: renameBranchNew } }); } }} />
     </div>
     <div class="form-actions">
       <button onclick={() => { showRenameBranchModal = false; }}>{t('common.cancel')}</button>

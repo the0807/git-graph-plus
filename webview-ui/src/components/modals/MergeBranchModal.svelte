@@ -13,6 +13,7 @@
 
   let { source, target, onClose, onMerge }: Props = $props();
   let mergeMode = $state<'default' | 'no-ff' | 'ff-only' | 'squash'>('default');
+  const shortRef = (ref: string) => /^[0-9a-f]{40}$/i.test(ref) ? ref.substring(0, 7) : ref;
   let mergeBtn: HTMLButtonElement | undefined = $state();
 
   onMount(() => { mergeBtn?.focus(); });
@@ -21,9 +22,9 @@
 <Modal title={t('merge.title')} {onClose}>
   <p class="modal-desc">{t('merge.desc')}</p>
   <div class="modal-context-card">
-    <span class="modal-pill modal-pill--source">{source}</span>
+    <span class="modal-pill modal-pill--source">{shortRef(source)}</span>
     <span class="modal-arrow">&rarr;</span>
-    <span class="modal-pill modal-pill--target">{target}</span>
+    <span class="modal-pill modal-pill--target">{shortRef(target)}</span>
   </div>
   <div class="modal-form-group">
     <span class="modal-field-label">{t('merge.mergeType')}</span>

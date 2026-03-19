@@ -12,6 +12,7 @@
 
   let { branch, onto, onClose, onRebase }: Props = $props();
   let autostash = $state(false);
+  const shortRef = (ref: string) => /^[0-9a-f]{40}$/i.test(ref) ? ref.substring(0, 7) : ref;
   let rebaseBtn: HTMLButtonElement | undefined = $state();
 
   onMount(() => { rebaseBtn?.focus(); });
@@ -20,9 +21,9 @@
 <Modal title={t('rebaseBranch.title')} {onClose}>
   <p class="modal-desc">{t('rebaseBranch.desc')}</p>
   <div class="modal-context-card">
-    <span class="modal-pill modal-pill--target">{branch}</span>
+    <span class="modal-pill modal-pill--target">{shortRef(branch)}</span>
     <span class="modal-arrow">&rarr;</span>
-    <span class="modal-pill modal-pill--source">{onto}</span>
+    <span class="modal-pill modal-pill--source">{shortRef(onto)}</span>
   </div>
   <div class="modal-form-group">
     <label class="modal-checkbox">

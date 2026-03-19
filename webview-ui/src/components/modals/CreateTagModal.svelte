@@ -31,9 +31,10 @@
 <Modal title={t('createTag.title')} {onClose}>
   <p class="modal-desc">{t('createTag.desc')}</p>
   {#if subject}
-    <div class="modal-field-row">
-      <span class="modal-field-label">{t('createTag.createAt')}</span>
-      <span><span class="modal-hash">{startPoint.substring(0, 7)}</span> <span style="color: var(--text-secondary); font-size: 12px;">{subject}</span></span>
+    <div class="modal-context-card">
+      <i class="codicon codicon-git-commit"></i>
+      <span class="modal-pill modal-pill--target">{startPoint.substring(0, 7)}</span>
+      <span class="truncate" style="color: var(--text-secondary); font-size: 11px;">{subject}</span>
     </div>
   {/if}
   {#if editableStartPoint}

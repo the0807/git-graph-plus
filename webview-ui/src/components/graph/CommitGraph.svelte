@@ -181,15 +181,8 @@
   let pullAfterCheckoutBehind = $state(0);
 
   function doCheckout(ref: string) {
-    // Check if this is a local branch that is behind its remote
-    const branch = branchStore.branches.find(b => !b.remote && b.name === ref);
-    if (branch && branch.behind > 0) {
-      pullAfterCheckoutRef = ref;
-      pullAfterCheckoutBehind = branch.behind;
-      showPullAfterCheckoutModal = true;
-      return;
-    }
-    vscode.postMessage({ type: 'checkout', payload: { ref } });
+    checkoutCommitHash = ref;
+    showCheckoutCommitModal = true;
   }
 
   function doCheckoutRemote(remoteName: string, branchName: string) {
@@ -496,7 +489,20 @@
       { separator: true, label: '', action: () => {} },
       {
         label: t('graph.checkoutCommit'),
-        action: () => vscode.postMessage({ type: 'checkout', payload: { ref: commit.hash } }),
+        action: () => {
+          const localRef = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
+          if (localRef) {
+            doCheckout(localRef.name);
+          } else {
+            const remoteRef = commit.refs.find(r => r.type === 'remote-branch' && r.name !== 'HEAD');
+            if (remoteRef) {
+              doCheckoutRemote(`${remoteRef.remote}/${remoteRef.name}`, remoteRef.name);
+            } else {
+              checkoutCommitHash = commit.hash;
+              showCheckoutCommitModal = true;
+            }
+          }
+        },
       },
       {
         label: t('graph.cherryPickCommit'),
@@ -693,8 +699,13 @@
               if (localRef) {
                 doCheckout(localRef.name);
               } else {
-                checkoutCommitHash = commit.hash;
-                showCheckoutCommitModal = true;
+                const remoteRef = commit.refs.find(r => r.type === 'remote-branch' && r.name !== 'HEAD');
+                if (remoteRef) {
+                  doCheckoutRemote(`${remoteRef.remote}/${remoteRef.name}`, remoteRef.name);
+                } else {
+                  checkoutCommitHash = commit.hash;
+                  showCheckoutCommitModal = true;
+                }
               }
             }}
             oncontextmenu={(e) => onCommitContextMenu(e, commit)}
@@ -756,7 +767,7 @@
                           checkoutCommitHash = ref.type === 'stash' ? commit.hash : ref.name;
                           showCheckoutCommitModal = true;
                         } else {
-                          vscode.postMessage({ type: 'checkout', payload: { ref: ref.name } });
+                          doCheckout(ref.name);
                         }
                       }
                     }}
@@ -821,6 +832,8 @@
 {#if interactiveRebaseBase}
   <InteractiveRebase
     base={interactiveRebaseBase}
+    branchName={branchStore.currentBranch?.name ?? 'HEAD'}
+    baseSubject={commitStore.getCommit(interactiveRebaseBase)?.subject ?? ''}
     onClose={() => { interactiveRebaseBase = null; }}
   />
 {/if}
@@ -828,8 +841,11 @@
 {#if showResetModal}
   <Modal title={t('reset.modalTitle')} onClose={() => { showResetModal = false; contextMenuHash = null; }}>
     <p class="modal-desc">{t('reset.desc')}</p>
-    <div class="modal-field-row"><span class="modal-field-label">{t('reset.branch')}</span><span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-    <div class="modal-field-row"><span class="modal-field-label">{t('reset.moveTo')}</span><span class="modal-hash">{resetTarget.substring(0, 7)}</span></div>
+    <div class="modal-context-card">
+      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+      <span class="modal-arrow">&rarr;</span>
+      <span class="modal-pill modal-pill--target">{resetTarget.substring(0, 7)}</span>
+    </div>
       <div class="modal-form-group">
         <div class="modal-field-label">{t('reset.resetType')}</div>
         <ColorSelect
@@ -874,14 +890,16 @@
 {#if showCherryPickModal}
   <Modal title={t('cherryPick.title')} onClose={() => { showCherryPickModal = false; contextMenuHash = null; }}>
     <p class="modal-desc">{t('cherryPick.desc')}</p>
-    <div class="modal-field-row"><span class="modal-field-label">{t('common.commit')}</span><span class="modal-hash">{cherryPickTarget.substring(0, 7)}</span></div>
-    <div class="modal-field-row"><span class="modal-field-label">{t('common.onto')}</span><span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-    <div class="modal-field-row">
-        <span class="modal-field-label">{t('common.options')}</span>
-        <label class="modal-checkbox">
-          <input type="checkbox" bind:checked={cherryPickNoCommit} />
-          <span>{t('cherryPick.noCommit')}</span>
-        </label>
+    <div class="modal-context-card">
+      <span class="modal-pill modal-pill--target">{cherryPickTarget.substring(0, 7)}</span>
+      <span class="modal-arrow">&rarr;</span>
+      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={cherryPickNoCommit} />
+        <span>{t('cherryPick.noCommit')}</span>
+      </label>
     </div>
     <div class="form-actions">
       <button onclick={() => { showCherryPickModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
@@ -893,14 +911,16 @@
 {#if showRevertModal}
   <Modal title={t('revert.title')} onClose={() => { showRevertModal = false; contextMenuHash = null; }}>
     <p class="modal-desc">{t('revert.desc')}</p>
-    <div class="modal-field-row"><span class="modal-field-label">{t('common.commit')}</span><span class="modal-hash">{revertTarget.substring(0, 7)}</span></div>
-    <div class="modal-field-row"><span class="modal-field-label">{t('common.branch')}</span><span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span></div>
-    <div class="modal-field-row">
-        <span class="modal-field-label">{t('common.options')}</span>
-        <label class="modal-checkbox">
-          <input type="checkbox" bind:checked={revertNoCommit} />
-          <span>{t('revert.noCommit')}</span>
-        </label>
+    <div class="modal-context-card">
+      <span class="modal-pill modal-pill--danger">{revertTarget.substring(0, 7)}</span>
+      <span class="modal-arrow">↺</span>
+      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={revertNoCommit} />
+        <span>{t('revert.noCommit')}</span>
+      </label>
     </div>
     <div class="form-actions">
       <button onclick={() => { showRevertModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
@@ -982,14 +1002,77 @@
 {/if}
 
 {#if showCheckoutCommitModal}
+  {@const isBranchName = branchStore.branches.some(b => !b.remote && b.name === checkoutCommitHash)}
+  {@const commitForHash = !isBranchName ? commitStore.getCommit(checkoutCommitHash) : null}
+  {@const linkedBranches = commitForHash ? commitForHash.refs.filter(r => r.type === 'branch' || r.type === 'head').map(r => r.name) : []}
+  {@const linkedRemoteBranches = commitForHash ? commitForHash.refs.filter(r => r.type === 'remote-branch' && r.name !== 'HEAD').map(r => ({ remote: r.remote!, name: r.name })) : []}
   <Modal title={t('checkoutCommit.title')} onClose={() => { showCheckoutCommitModal = false; }}>
-    <p class="modal-desc">{t('checkoutCommit.desc', { hash: '' })} <span class="modal-hash">{checkoutCommitHash.substring(0, 7)}</span></p>
+    {#if isBranchName}
+      <p class="modal-desc">{t('checkoutCommit.branchDesc')}</p>
+      <div class="modal-context-card">
+        <i class="codicon codicon-git-branch"></i>
+        <span class="modal-pill modal-pill--source">{checkoutCommitHash}</span>
+      </div>
+    {:else}
+      <div class="modal-context-card">
+        <i class="codicon codicon-git-commit"></i>
+        <span class="modal-pill modal-pill--target">{checkoutCommitHash.substring(0, 7)}</span>
+      </div>
+      {#if linkedBranches.length > 0}
+        <div class="modal-context-card">
+          <i class="codicon codicon-git-branch"></i>
+          {#each linkedBranches as branch}
+            <span class="modal-pill modal-pill--source">{branch}</span>
+          {/each}
+        </div>
+      {:else if linkedRemoteBranches.length > 0}
+        <div class="modal-context-card">
+          <i class="codicon codicon-cloud"></i>
+          {#each linkedRemoteBranches as rb}
+            <span class="modal-pill modal-pill--target">{rb.remote}/{rb.name}</span>
+          {/each}
+        </div>
+      {:else}
+        <div class="modal-warning">
+          <i class="codicon codicon-warning"></i>
+          <span>{t('checkoutCommit.detachedWarning')}</span>
+        </div>
+      {/if}
+    {/if}
     <div class="form-actions">
       <button onclick={() => { showCheckoutCommitModal = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => {
-        showCheckoutCommitModal = false;
-        vscode.postMessage({ type: 'checkout', payload: { ref: checkoutCommitHash } });
-      }}>{t('checkoutCommit.checkout')}</button>
+      {#if !isBranchName && linkedBranches.length > 0}
+        <button class="primary" onclick={() => {
+          showCheckoutCommitModal = false;
+          const ref = linkedBranches[0];
+          const branch = branchStore.branches.find(b => !b.remote && b.name === ref);
+          if (branch && branch.behind > 0) {
+            pullAfterCheckoutRef = ref;
+            pullAfterCheckoutBehind = branch.behind;
+            showPullAfterCheckoutModal = true;
+          } else {
+            vscode.postMessage({ type: 'checkout', payload: { ref } });
+          }
+        }}>{t('checkoutCommit.checkoutBranch', { name: linkedBranches[0] })}</button>
+      {:else if !isBranchName && linkedRemoteBranches.length > 0}
+        <button class="primary" onclick={() => {
+          showCheckoutCommitModal = false;
+          const rb = linkedRemoteBranches[0];
+          doCheckoutRemote(`${rb.remote}/${rb.name}`, rb.name);
+        }}>{t('checkoutCommit.checkoutRemote', { name: linkedRemoteBranches[0].name })}</button>
+      {:else}
+        <button class="primary" onclick={() => {
+          showCheckoutCommitModal = false;
+          const branch = branchStore.branches.find(b => !b.remote && b.name === checkoutCommitHash);
+          if (branch && branch.behind > 0) {
+            pullAfterCheckoutRef = checkoutCommitHash;
+            pullAfterCheckoutBehind = branch.behind;
+            showPullAfterCheckoutModal = true;
+          } else {
+            vscode.postMessage({ type: 'checkout', payload: { ref: checkoutCommitHash } });
+          }
+        }}>{t('checkoutCommit.checkout')}</button>
+      {/if}
     </div>
   </Modal>
 {/if}
@@ -1007,7 +1090,7 @@
 {#if showRenameBranchModal}
   <Modal title={t('renameBranch.title')} onClose={() => { showRenameBranchModal = false; }}>
     <div class="modal-context-card">
-      <span class="modal-pill modal-pill--target">{renameBranchOld}</span>
+      <span class="modal-pill modal-pill--source">{renameBranchOld}</span>
     </div>
     <div class="modal-form-group">
       <label class="modal-field-label" for="ctx-rename-input">{t('renameBranch.newName', { name: renameBranchOld })}</label>
