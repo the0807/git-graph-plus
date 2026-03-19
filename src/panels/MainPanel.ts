@@ -17,6 +17,7 @@ export class MainPanel {
   private gitService: GitService;
   private fileWatcher: FileWatcher;
   private disposables: vscode.Disposable[] = [];
+  private allConflictFiles: string[] = [];
 
   private constructor(
     panel: vscode.WebviewPanel,
@@ -647,6 +648,40 @@ export class MainPanel {
           await this.sendRepoList();
           break;
         }
+        case 'stageFile': {
+          await this.gitService.stageFile(message.payload.file);
+          // Refresh conflict status after staging
+          if (this.allConflictFiles.length > 0) {
+            const stillConflicting = await this.gitService.getConflictFiles();
+            const conflictSet = new Set(stillConflicting);
+            const opState = await this.gitService.getOperationState();
+            if (opState.type) {
+              this.panel.webview.postMessage({
+                type: 'conflictData',
+                payload: {
+                  operation: opState.type,
+                  files: this.allConflictFiles.map(f => ({ path: f, resolved: !conflictSet.has(f) })),
+                },
+              });
+            }
+          }
+          break;
+        }
+        case 'refreshConflicts': {
+          if (this.allConflictFiles.length > 0) {
+            const stillConflicting = await this.gitService.getConflictFiles();
+            const conflictSet = new Set(stillConflicting);
+            const opState = await this.gitService.getOperationState();
+            this.panel.webview.postMessage({
+              type: 'conflictData',
+              payload: {
+                operation: opState.type ?? 'merge',
+                files: this.allConflictFiles.map(f => ({ path: f, resolved: !conflictSet.has(f) })),
+              },
+            });
+          }
+          break;
+        }
         case 'continueOperation': {
           await this.gitService.continueOperation();
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'continue', success: true } });
@@ -661,7 +696,12 @@ export class MainPanel {
         }
         case 'openConflictFile': {
           const fileUri = vscode.Uri.file(`${this.repoPath}/${message.payload.file}`);
-          await vscode.window.showTextDocument(fileUri);
+          // Try to open in VS Code's 3-way merge editor, fallback to normal editor
+          try {
+            await vscode.commands.executeCommand('git.openMergeEditor', fileUri);
+          } catch {
+            await vscode.window.showTextDocument(fileUri);
+          }
           break;
         }
         default:
@@ -673,10 +713,11 @@ export class MainPanel {
       // Check if this is a merge/rebase conflict
       const conflictFiles = await this.gitService.getConflictFiles();
       if (conflictFiles.length > 0) {
+        this.allConflictFiles = conflictFiles;
         const opState = await this.gitService.getOperationState();
         this.panel.webview.postMessage({
           type: 'conflictData',
-          payload: { operation: opState.type ?? 'merge', files: conflictFiles },
+          payload: { operation: opState.type ?? 'merge', files: conflictFiles.map(f => ({ path: f, resolved: false })) },
         });
         await this.refreshAll();
       } else {
@@ -774,6 +815,25 @@ export class MainPanel {
 
     if (what === 'refs' || what === 'unknown') {
       await this.refreshAll();
+    }
+
+    // Auto-refresh conflict status when index changes (file staged/resolved)
+    if (this.allConflictFiles.length > 0) {
+      const stillConflicting = await this.gitService.getConflictFiles();
+      const conflictSet = new Set(stillConflicting);
+      const opState = await this.gitService.getOperationState();
+      if (opState.type) {
+        this.panel.webview.postMessage({
+          type: 'conflictData',
+          payload: {
+            operation: opState.type,
+            files: this.allConflictFiles.map(f => ({ path: f, resolved: !conflictSet.has(f) })),
+          },
+        });
+      } else {
+        // Operation was completed or aborted
+        this.allConflictFiles = [];
+      }
     }
   }
 

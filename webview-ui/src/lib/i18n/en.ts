@@ -310,6 +310,12 @@ export const en: Record<string, string> = {
   'worktree.removeConfirm': 'Are you sure you want to remove the worktree at "{path}"?',
   'worktree.deleteBranch': 'Also delete branch "{name}"',
 
+  // Conflict resolution
+  'conflict.abortTitle': 'Abort Operation',
+  'conflict.abortConfirm': 'Abort the current {operation}? The operation will be cancelled and changes will be reverted.',
+  'conflict.abort': 'Abort',
+  'conflict.resolveSuccess': '{operation} completed successfully.',
+
   // Common
   'common.cancel': 'Cancel',
   'common.close': 'Close',

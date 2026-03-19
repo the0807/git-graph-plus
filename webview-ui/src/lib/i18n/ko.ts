@@ -310,6 +310,12 @@ export const ko: Record<string, string> = {
   'worktree.removeConfirm': '"{path}"의 worktree를 삭제하시겠습니까?',
   'worktree.deleteBranch': '연결된 브랜치 "{name}"도 함께 삭제',
 
+  // Conflict resolution
+  'conflict.abortTitle': '작업 중단',
+  'conflict.abortConfirm': '현재 {operation} 작업을 중단하시겠습니까? 작업이 중단되고 변경사항이 되돌려집니다.',
+  'conflict.abort': '중단',
+  'conflict.resolveSuccess': '{operation} 작업이 완료되었습니다.',
+
   // Common
   'common.cancel': '취소',
   'common.close': '닫기',

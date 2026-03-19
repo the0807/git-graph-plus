@@ -60,6 +60,8 @@ export type WebviewMessage =
   | { type: 'compareCommits'; payload: { ref1: string; ref2: string } }
   | { type: 'getImageAtRef'; payload: { ref: string; path: string } }
   | { type: 'continueOperation' }
+  | { type: 'refreshConflicts' }
+  | { type: 'stageFile'; payload: { file: string } }
   | { type: 'abortOperation' }
   | { type: 'openConflictFile'; payload: { file: string } };
 
@@ -84,7 +86,7 @@ export type ExtensionMessage =
   | { type: 'repoList'; payload: { repos: Array<{ path: string; name: string }>; active: string } }
   | { type: 'worktreeData'; payload: WorktreeInfo[] }
   | { type: 'imageData'; payload: { ref: string; path: string; base64: string; mimeType: string } }
-  | { type: 'conflictData'; payload: { operation: string; files: string[] } }
+  | { type: 'conflictData'; payload: { operation: string; files: Array<{ path: string; resolved: boolean }> } }
   | { type: 'showModal'; payload:
     | { modal: 'deleteBranch'; branchName: string }
     | { modal: 'deleteTag'; tagName: string }

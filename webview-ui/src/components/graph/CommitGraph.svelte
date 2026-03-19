@@ -73,6 +73,53 @@
   let contextMenu = $state<{ x: number; y: number; items: any[] } | null>(null);
   let contextMenuHash = $state<string | null>(null);
   const worktreeBranches = $derived(new Set(branchStore.worktrees.filter(w => !w.isMain).map(w => w.branch)));
+
+  // Set of commit hashes on the current branch's first-parent line
+  const currentBranchCommits = $derived.by(() => {
+    const set = new Set<string>();
+    const commits = commitStore.commits;
+    if (commits.length === 0) return set;
+    const hashIndex = new Map<string, number>();
+    for (let i = 0; i < commits.length; i++) hashIndex.set(commits[i].hash, i);
+    // Find HEAD commit
+    const headCommit = commits.find(c => c.refs.some(r => r.type === 'head'));
+    if (!headCommit) return set;
+    // Walk first parents
+    let hash: string | undefined = headCommit.hash;
+    while (hash) {
+      set.add(hash);
+      const idx = hashIndex.get(hash);
+      if (idx === undefined) break;
+      hash = commits[idx].parents[0]; // first parent
+    }
+    return set;
+  });
+
+  // Set of commit hashes that are remote-ahead for current branch's upstream only
+  const currentBranchRemoteAhead = $derived.by(() => {
+    const set = new Set<string>();
+    const current = branchStore.currentBranch;
+    if (!current?.upstream || current.behind === 0) return set;
+    const commits = commitStore.commits;
+    if (commits.length === 0) return set;
+    const hashIndex = new Map<string, number>();
+    for (let i = 0; i < commits.length; i++) hashIndex.set(commits[i].hash, i);
+    // Find the upstream remote tip commit
+    const [remote, ...rest] = current.upstream.split('/');
+    const remoteBranchName = rest.join('/');
+    const remoteTipCommit = commits.find(c => c.refs.some(r => r.type === 'remote-branch' && r.remote === remote && r.name === remoteBranchName));
+    if (!remoteTipCommit) return set;
+    // Walk first parents from remote tip, stop when hitting current branch commits
+    let hash: string | undefined = remoteTipCommit.hash;
+    while (hash && !currentBranchCommits.has(hash)) {
+      set.add(hash);
+      const idx = hashIndex.get(hash);
+      if (idx === undefined) break;
+      hash = commits[idx].parents[0];
+    }
+    return set;
+  });
+
   let compareBase = $state<string | null>(null);
   let clickTimer: ReturnType<typeof setTimeout> | null = null;
   let interactiveRebaseBase = $state<string | null>(null);
@@ -471,6 +518,9 @@
       label: t('graph.compareToLocal'),
       action: () => {
         uiStore.comparing = true;
+        uiStore.selectedCommitHash = null;
+        uiStore.compareRef1 = commit.hash;
+        uiStore.compareRef2 = null;
         uiStore.showBottomPanel = true;
         vscode.postMessage({ type: 'compareToWorking', payload: { hash: commit.hash } });
       },
@@ -481,6 +531,9 @@
         label: t('graph.compareWith', { hash: compareBase.substring(0, 7) }),
         action: () => {
           uiStore.comparing = true;
+          uiStore.selectedCommitHash = null;
+          uiStore.compareRef1 = compareBase;
+          uiStore.compareRef2 = commit.hash;
           uiStore.showBottomPanel = true;
           vscode.postMessage({ type: 'compareCommits', payload: { ref1: compareBase!, ref2: commit.hash } });
           compareBase = null;
@@ -493,7 +546,7 @@
     } else {
       items.push({
         label: t('graph.selectForCompare'),
-        action: () => { compareBase = commit.hash; },
+        action: () => { compareBase = commit.hash; uiStore.selectedCommitHash = null; uiStore.showBottomPanel = false; },
       });
     }
 
@@ -617,10 +670,15 @@
             class:selected={uiStore.selectedCommitHash === commit.hash}
             class:highlighted={contextMenuHash === commit.hash}
             class:compare-mode={compareBase !== null && compareBase !== commit.hash}
+            class:compare-base={compareBase === commit.hash}
+            class:compare-active={uiStore.comparing && (uiStore.compareRef1 === commit.hash || uiStore.compareRef2 === commit.hash)}
             style="height: {ROW_HEIGHT}px;"
             onclick={() => {
               if (compareBase && compareBase !== commit.hash) {
                 uiStore.comparing = true;
+                uiStore.selectedCommitHash = null;
+                uiStore.compareRef1 = compareBase;
+                uiStore.compareRef2 = commit.hash;
                 uiStore.showBottomPanel = true;
                 vscode.postMessage({ type: 'compareCommits', payload: { ref1: compareBase, ref2: commit.hash } });
                 compareBase = null;
@@ -645,9 +703,9 @@
             onkeydown={(e) => { if (e.key === 'Enter') selectCommit(commit.hash); }}
           >
             <div class="col-message" style="padding-left: {(displayLeftMargin[index] ?? graphWidth) * X_SCALE + 4}px;">
-              {#if dot?.localOnly}
+              {#if dot?.localOnly && currentBranchCommits.has(commit.hash)}
                 <span class="local-dot" title="Not pushed"></span>
-              {:else if dot?.remoteTip}
+              {:else if currentBranchRemoteAhead.has(commit.hash)}
                 <span class="remote-dot" title="Remote only"></span>
               {/if}
               {#each commit.refs.filter(r => {
@@ -1034,6 +1092,16 @@
 
   .commit-row:hover {
     background: var(--bg-hover);
+  }
+
+  .commit-row.compare-base {
+    background: rgba(99, 176, 244, 0.12);
+    box-shadow: inset 3px 0 0 #63b0f4;
+  }
+
+  .commit-row.compare-active {
+    background: rgba(99, 176, 244, 0.10);
+    box-shadow: inset 3px 0 0 #63b0f4;
   }
 
   .commit-row.compare-mode {

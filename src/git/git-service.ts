@@ -490,6 +490,10 @@ export class GitService {
     }
   }
 
+  async stageFile(filePath: string): Promise<void> {
+    await this.exec(['add', filePath]);
+  }
+
   async getConflictFiles(): Promise<string[]> {
     try {
       const raw = await this.exec(['diff', '--name-only', '--diff-filter=U']);

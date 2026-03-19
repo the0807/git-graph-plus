@@ -25,7 +25,8 @@
 
   let searchResults = $state<CommitGraphData | null>(null);
   let resizing = $state(false);
-  let conflict = $state<{ operation: string; files: string[] } | null>(null);
+  let conflict = $state<{ operation: string; files: Array<{ path: string; resolved: boolean }> } | null>(null);
+  let showAbortConfirmModal = $state(false);
 
   // Modals triggered from Activity Bar
   let showDeleteBranchModal = $state(false);
@@ -152,11 +153,22 @@
     vscode.postMessage({ type: 'getLog', payload: { limit: 1000 } });
     vscode.postMessage({ type: 'getBranches' });
 
+    // Refresh conflict status when webview becomes visible
+    function handleVisibility() {
+      if (!document.hidden && conflict) {
+        vscode.postMessage({ type: 'refreshConflicts' });
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
+
     // Keyboard shortcuts
     window.addEventListener('keydown', handleGlobalKeydown);
     return () => {
       window.removeEventListener('message', handleMessage);
       window.removeEventListener('keydown', handleGlobalKeydown);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
     };
   });
 
@@ -225,32 +237,61 @@
           <span class="conflict-title">
             <strong>{conflict.operation}</strong> conflict
           </span>
-          <span class="conflict-count">{conflict.files.length} file{conflict.files.length > 1 ? 's' : ''}</span>
+          <span class="conflict-count">{conflict.files.filter(f => f.resolved).length}/{conflict.files.length} resolved</span>
         </div>
         <div class="conflict-actions">
-          <button class="conflict-btn conflict-btn--abort" onclick={() => { vscode.postMessage({ type: 'abortOperation' }); conflict = null; }}>
+          <button class="conflict-btn conflict-btn--abort" onclick={() => { showAbortConfirmModal = true; }}>
             <i class="codicon codicon-discard"></i> Abort
           </button>
-          <button class="conflict-btn conflict-btn--continue" onclick={() => { vscode.postMessage({ type: 'continueOperation' }); }}>
-            <i class="codicon codicon-check"></i> Continue
+          <button class="conflict-btn conflict-btn--continue" disabled={conflict.files.some(f => !f.resolved)} onclick={() => { const op = conflict?.operation ?? 'merge'; vscode.postMessage({ type: 'continueOperation' }); conflict = null; uiStore.setSuccess(t('conflict.resolveSuccess', { operation: op })); }}>
+            <i class="codicon codicon-check"></i> Resolve
           </button>
         </div>
       </div>
       <div class="conflict-files">
         {#each conflict.files as file}
-          <button class="conflict-file" onclick={() => vscode.postMessage({ type: 'openConflictFile', payload: { file } })}>
-            <span class="conflict-file-status">C</span>
-            <span class="conflict-file-path">
-              {#if file.includes('/')}
-                <span class="conflict-file-dir">{file.substring(0, file.lastIndexOf('/') + 1)}</span>{file.substring(file.lastIndexOf('/') + 1)}
+          <div class="conflict-file-row" class:resolved={file.resolved}>
+            <button class="conflict-file" onclick={() => vscode.postMessage({ type: 'openConflictFile', payload: { file: file.path } })}>
+              {#if file.resolved}
+                <i class="codicon codicon-check conflict-file-status resolved-icon"></i>
               {:else}
-                {file}
+                <span class="conflict-file-status">C</span>
               {/if}
-            </span>
-            <i class="codicon codicon-go-to-file conflict-open-icon"></i>
-          </button>
+              <span class="conflict-file-path">
+                {#if file.path.includes('/')}
+                  <span class="conflict-file-dir">{file.path.substring(0, file.path.lastIndexOf('/') + 1)}</span>{file.path.substring(file.path.lastIndexOf('/') + 1)}
+                {:else}
+                  {file.path}
+                {/if}
+              </span>
+              {#if !file.resolved}
+                <span class="conflict-stage-hint" onclick={(e) => { e.stopPropagation(); vscode.postMessage({ type: 'stageFile', payload: { file: file.path } }); }} role="button" tabindex={0} onkeydown={(e) => { if (e.key === 'Enter') vscode.postMessage({ type: 'stageFile', payload: { file: file.path } }); }} title="Mark as resolved (git add)">
+                  <i class="codicon codicon-check"></i>
+                </span>
+              {/if}
+              <i class="codicon codicon-go-to-file conflict-open-icon"></i>
+            </button>
+          </div>
         {/each}
       </div>
+    </div>
+  {/if}
+
+  {#if showAbortConfirmModal}
+    <Modal title={t('conflict.abortTitle')} onClose={() => { showAbortConfirmModal = false; }}>
+      <p class="modal-desc">{t('conflict.abortConfirm', { operation: conflict?.operation ?? 'merge' })}</p>
+      <div class="form-actions">
+        <button onclick={() => { showAbortConfirmModal = false; }}>{t('common.cancel')}</button>
+        <button class="danger-btn" onclick={() => { showAbortConfirmModal = false; vscode.postMessage({ type: 'abortOperation' }); conflict = null; }}>{t('conflict.abort')}</button>
+      </div>
+    </Modal>
+  {/if}
+
+  {#if uiStore.successMessage}
+    <div class="success-bar">
+      <i class="codicon codicon-check"></i>
+      <span class="success-text">{uiStore.successMessage}</span>
+      <button class="success-dismiss" onclick={() => uiStore.setSuccess(null)} title="Dismiss"><i class="codicon codicon-close"></i></button>
     </div>
   {/if}
 
@@ -453,6 +494,34 @@
     user-select: none;
   }
 
+  .success-bar {
+    display: flex;
+    align-items: center;
+    padding: 6px 14px;
+    background: rgba(76, 175, 80, 0.1);
+    border-bottom: 1px solid rgba(76, 175, 80, 0.3);
+    font-size: 12px;
+    color: #4caf50;
+    gap: 8px;
+  }
+
+  .success-text {
+    flex: 1;
+  }
+
+  .success-dismiss {
+    background: transparent;
+    border: none;
+    color: #4caf50;
+    cursor: pointer;
+    padding: 2px 4px;
+    opacity: 0.7;
+  }
+
+  .success-dismiss:hover {
+    opacity: 1;
+  }
+
   .error-bar {
     display: flex;
     align-items: center;
@@ -551,11 +620,18 @@
     border: none;
   }
 
+  .conflict-btn--continue:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
   .conflict-files {
     display: flex;
     flex-direction: column;
     padding: 0 14px 8px;
     gap: 1px;
+    max-height: 150px;
+    overflow-y: auto;
   }
 
   .conflict-file {
@@ -570,6 +646,8 @@
     font-size: 12px;
     font-family: inherit;
     cursor: pointer;
+    flex: 1;
+    min-width: 0;
     text-align: left;
   }
 
@@ -589,6 +667,39 @@
     justify-content: center;
     border-radius: 3px;
     flex-shrink: 0;
+  }
+
+  .conflict-file-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .conflict-file-row.resolved {
+    opacity: 0.6;
+  }
+
+  .conflict-stage-hint {
+    display: none;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #4caf50;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 12px;
+  }
+
+  .conflict-file:hover .conflict-stage-hint {
+    display: inline-flex;
+  }
+
+  .conflict-stage-hint:hover {
+    background: rgba(76, 175, 80, 0.2);
+  }
+
+  .resolved-icon {
+    color: #4caf50;
+    background: rgba(76, 175, 80, 0.15);
   }
 
   .conflict-file-path {
