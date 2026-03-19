@@ -108,6 +108,10 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 - 이 프로젝트는 [Git Graph](https://github.com/mhutchie/vscode-git-graph)의 코드를 사용하지 않으며, 모든 코드는 처음부터 새로 작성되었습니다
 - 확장 아이콘: [VS Code Codicons](https://github.com/microsoft/vscode-codicons), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) 라이선스
 
+## 변경 이력
+
+[CHANGELOG.md](CHANGELOG.md)에서 릴리스 히스토리를 확인할 수 있습니다.
+
 ## 라이선스
 
 [Apache-2.0](LICENSE)

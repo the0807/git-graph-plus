@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.1.4 (2026-03-20)
+
+### New Features
+- **Activity Bar modal unification**: All Activity Bar actions now route through webview modals instead of native dialogs, with auto-open and modal queueing
+- **Worktree support**: Add worktree badge on branch refs, AddWorktreeModal with auto-path, and linked branch delete/cleanup
+- **Remote branch management**: Delete remote branches from commit graph context menu and Activity Bar, with confirmation modal
+- **Conflict resolution UX**: Per-file "Mark as Resolved", abort confirmation modal, auto-refresh via file watcher, 3-way merge editor default
+- **Compare highlights**: Blue left bar on base commit, both commits highlighted during comparison, compareRef tracking in uiStore
+
+### UI/UX Improvements
+- **Interactive rebase redesign**: Dropdown action selector with icons/descriptions, context card, move up/down buttons on hover, drop warning banner
+- **Toolbar compact mode**: Icon-only Fetch/Pull/Push/Refresh buttons, pull/push badge overlay (yellow behind, green ahead), height 40px → 36px
+- **Modal consistency**: 7-char short SHA pill badges, modal-context-card in Reset/CherryPick/Revert, unified Rename Branch modal
+- **Smart checkout**: Local branch → confirm modal, remote only → CheckoutRemoteModal, no branch → detached HEAD warning
+- **Context menu icons**: git-branch, cloud, tag, archive, folder-opened icons with alphabetical sort within ref types
+- **Custom checkbox style**: Transparent unchecked, theme-aware checked (blue/red)
+- **Local-only dot filtering**: Blue dot shown only on current branch first-parent line, gray dot only for current branch upstream ahead commits
+
+### Bug Fixes
+- Switch from `--date-order` to `--topo-order` for correct graph rendering (like Fork)
+- Remove post-parse commit sorting that broke topological order
+- Add `--track` to `createAndCheckoutBranch` for automatic upstream setup
+- Show remote badge only when upstream is explicitly tracked
+- Reduce local/remote dot indicator size (7px → 5px)
+- Brighten tag (#f0c040) and stash (#c24de0) badge colors
+
+### Refactoring
+- Remove unused `Sidebar.svelte`
+- Use single `fullRefresh` message for atomic branchData + logData updates
+- Add 60+ i18n keys for new modal and conflict resolution strings
+- Add CI concurrency control and improved dependency caching
+- Add CHANGELOG link to README (English and Korean)
+
 ## 0.1.3 (2026-03-19)
 
 ### New Features

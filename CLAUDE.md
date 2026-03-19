@@ -61,9 +61,21 @@ Extension and webview communicate exclusively via `postMessage()`. All message t
 - **Extension**: esbuild (`esbuild.config.mjs`) → `dist/extension.js` (CommonJS, Node platform, `vscode` externalized).
 - **Webview**: Vite (`webview-ui/vite.config.ts`) → `webview-ui/dist/main.{js,css}` (single bundle, no chunking, assets inlined up to 100KB).
 
+### Data Flow: Git Log → Canvas
+
+1. `GitService.log()` spawns git with `\x01`/`\x00` delimiters (handles newlines in commit bodies)
+2. `git-parser.ts` `parseLog()` splits on those delimiters → `Commit[]`
+3. `git-graph-builder.ts` computes layout (paths, links, dots, column assignments) → `CommitGraphData`
+4. MainPanel sends `CommitGraphData` via `postMessage()` → `commitStore.setData()`
+5. `CommitGraph.svelte` renders from store onto `<canvas>`
+
 ## Key Conventions
 
 - **i18n**: Extension side uses `vscode.l10n.t()` with bundles in `l10n/`. Webview side uses custom `t()` from `lib/i18n/index.svelte.ts`. When adding UI strings, update both `en.ts` and `ko.ts`. Command names go in `package.nls.json` / `package.nls.ko.json`.
-- **Message types**: When adding new extension↔webview communication, define the type in `src/utils/message-bus.ts`, handle in `MainPanel.handleMessage()`, and dispatch in `App.svelte`.
-- **Git operations**: Always go through `GitService` methods, never spawn git directly elsewhere. GitService throws `GitError` with stderr, exit code, and command args.
+- **Message types**: When adding new extension↔webview communication, define the type in `src/utils/message-bus.ts`, handle in `MainPanel.handleMessage()`, and dispatch in `App.svelte`. Types are duplicated between extension and webview (no shared code package).
+- **Git operations**: Always go through `GitService` methods, never spawn git directly elsewhere. GitService throws `GitError` with stderr, exit code, and command args. All spawned processes use `LC_ALL=C` (consistent output) and `GIT_TERMINAL_PROMPT=0` (no interactive prompts), with a 30-second default timeout.
+- **Error → conflict flow**: When a git operation fails, MainPanel checks for conflict files. If conflicts exist, it sends `conflictData` instead of a plain error message.
+- **MainPanel singleton**: One instance per workspace. Uses `pendingModal` pattern to queue modals triggered before the panel is created.
+- **Activity log**: GitService logs every command (args, timestamp, success, duration) in a 200-entry ring buffer, viewable in the webview.
+- **No linter/formatter config**: No eslint or prettier. `npm run lint` runs `tsc --noEmit` only. Webview type checking: `cd webview-ui && npm run check` (runs `svelte-check`).
 - **Tests**: Only parser and graph builder have unit tests (`src/git/__tests__/`). Run with vitest.
