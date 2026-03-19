@@ -7,7 +7,8 @@ export type WebviewMessage =
   | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean } }
   | { type: 'getCommitDiff'; payload: { hash: string } }
   | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean } }
-  | { type: 'deleteBranch'; payload: { name: string; force?: boolean } }
+  | { type: 'deleteBranch'; payload: { name: string; force?: boolean; worktreePath?: string; deleteRemote?: boolean } }
+  | { type: 'deleteRemoteBranch'; payload: { remote: string; name: string } }
   | { type: 'renameBranch'; payload: { oldName: string; newName: string } }
   | { type: 'merge'; payload: { branch: string; noFf?: boolean; ffOnly?: boolean; squash?: boolean } }
   | { type: 'abortMerge' }
@@ -29,6 +30,8 @@ export type WebviewMessage =
   | { type: 'removeRemote'; payload: { name: string } }
   | { type: 'openDiff'; payload: { file: string; commitHash?: string } }
   | { type: 'stashDrop'; payload: { index: number } }
+  | { type: 'worktreeAdd'; payload: { path: string; branch?: string; newBranch?: string } }
+  | { type: 'worktreeRemove'; payload: { path: string; deleteBranch?: string } }
   | { type: 'createTag'; payload: { name: string; ref?: string; message?: string } }
   | { type: 'deleteTag'; payload: { name: string } }
   | { type: 'searchCommits'; payload: { query: string; author?: string; after?: string; before?: string } }
@@ -47,8 +50,6 @@ export type WebviewMessage =
   | { type: 'getLfsFiles' }
   | { type: 'switchRepo'; payload: { path: string } }
   | { type: 'getWorktrees' }
-  | { type: 'addWorktree'; payload: { path: string; branch?: string; newBranch?: string } }
-  | { type: 'removeWorktree'; payload: { path: string; force?: boolean } }
   | { type: 'pruneWorktrees' }
   | { type: 'pushTag'; payload: { name: string; remote?: string } }
   | { type: 'pushAllTags'; payload: { remote?: string } }
@@ -66,6 +67,7 @@ export type WebviewMessage =
 export type ExtensionMessage =
   | { type: 'logData'; payload: CommitGraphData }
   | { type: 'branchData'; payload: BranchData }
+  | { type: 'fullRefresh'; payload: { logData: CommitGraphData; branchData: BranchData } }
   | { type: 'commitDiffData'; payload: { diffs: DiffData[]; files: Array<{ path: string; status: string }> } }
   | { type: 'rebaseCommitsData'; payload: { base: string; commits: Commit[] } }
   | { type: 'searchResults'; payload: CommitGraphData }
@@ -82,4 +84,20 @@ export type ExtensionMessage =
   | { type: 'repoList'; payload: { repos: Array<{ path: string; name: string }>; active: string } }
   | { type: 'worktreeData'; payload: WorktreeInfo[] }
   | { type: 'imageData'; payload: { ref: string; path: string; base64: string; mimeType: string } }
-  | { type: 'conflictData'; payload: { operation: string; files: string[] } };
+  | { type: 'conflictData'; payload: { operation: string; files: string[] } }
+  | { type: 'showModal'; payload:
+    | { modal: 'deleteBranch'; branchName: string }
+    | { modal: 'deleteTag'; tagName: string }
+    | { modal: 'stashDrop'; index: number; message: string }
+    | { modal: 'stashPop'; index: number; message: string }
+    | { modal: 'renameBranch'; branchName: string }
+    | { modal: 'mergeBranch'; branchName: string }
+    | { modal: 'createBranch' }
+    | { modal: 'createTag' }
+    | { modal: 'stashSave' }
+    | { modal: 'checkoutRemote'; remoteName: string; localName: string }
+    | { modal: 'deleteRemoteTag'; tagName: string }
+    | { modal: 'removeWorktree'; path: string; branch: string }
+    | { modal: 'deleteRemoteBranch'; remote: string; name: string }
+    | { modal: 'addWorktree'; defaultPath: string }
+  };

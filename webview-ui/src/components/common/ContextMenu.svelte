@@ -3,6 +3,7 @@
 
   interface MenuItem {
     label: string;
+    icon?: string;
     action: () => void;
     danger?: boolean;
     disabled?: boolean;
@@ -72,7 +73,8 @@
         onmouseenter={() => { activeSubmenu = idx; }}
         role="menuitem"
       >
-        {item.label}
+        {#if item.icon}<i class="codicon codicon-{item.icon} menu-icon"></i>{/if}
+        <span class="menu-label">{item.label}</span>
         <span class="submenu-arrow">›</span>
       </button>
       {#if activeSubmenu === idx}
@@ -95,6 +97,7 @@
                 onclick={() => { child.action(); onClose(); }}
                 role="menuitem"
               >
+                {#if child.icon}<i class="codicon codicon-{child.icon} menu-icon"></i>{/if}
                 {child.label}
               </button>
             {/if}
@@ -110,6 +113,7 @@
         onclick={() => { item.action(); onClose(); }}
         role="menuitem"
       >
+        {#if item.icon}<i class="codicon codicon-{item.icon} menu-icon"></i>{/if}
         {item.label}
       </button>
     {/if}
@@ -159,6 +163,17 @@
   .menu-item.danger:hover:not(:disabled) {
     background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
     color: #fff;
+  }
+
+  .menu-icon {
+    font-size: 14px;
+    margin-right: 6px;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+
+  .menu-label {
+    flex: 1;
   }
 
   .has-children {

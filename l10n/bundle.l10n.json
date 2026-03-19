@@ -43,6 +43,7 @@
   "remoteTagDeleted": "Tag '{0}' deleted from {1}",
   "noRemotes": "No remotes configured",
   "deleteBranchConfirm": "Delete branch '{0}'?",
+  "mergeBranchConfirm": "Merge branch '{0}' into current branch?",
   "deleteBranchForcedConfirm": "Branch '{0}' is not fully merged. Force delete?",
   "deleteBranchFailed": "Delete branch failed: {0}",
   "enterNewBranchName": "Enter new name for branch '{0}'",

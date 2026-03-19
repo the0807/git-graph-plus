@@ -361,6 +361,7 @@ export function parseWorktreeList(raw: string): WorktreeInfo[] {
 
     const lines = block.split('\n');
     let wtPath = '';
+    let hash = '';
     let branch = '';
     let detached = false;
     let locked = false;
@@ -369,6 +370,8 @@ export function parseWorktreeList(raw: string): WorktreeInfo[] {
     for (const line of lines) {
       if (line.startsWith('worktree ')) {
         wtPath = line.substring(9);
+      } else if (line.startsWith('HEAD ')) {
+        hash = line.substring(5);
       } else if (line.startsWith('branch ')) {
         // refs/heads/main -> main
         branch = line.substring(7).replace(/^refs\/heads\//, '');
@@ -384,6 +387,7 @@ export function parseWorktreeList(raw: string): WorktreeInfo[] {
     if (wtPath) {
       worktrees.push({
         path: wtPath,
+        hash,
         branch,
         detached,
         locked,

@@ -57,7 +57,8 @@ export const ko: Record<string, string> = {
 
   // Rename branch modal
   'renameBranch.title': '브랜치 이름 변경',
-  'renameBranch.newName': '"{name}"의 새 이름',
+  'renameBranch.desc': '브랜치 {name} 이름 변경',
+  'renameBranch.newName': '새 이름',
   'renameBranch.rename': '이름 변경',
 
   // Add remote modal
@@ -121,8 +122,10 @@ export const ko: Record<string, string> = {
   'graph.copyBranchName': '브랜치 이름 복사',
   'graph.copyTagName': '태그 이름 복사',
   'graph.deleteTag': '태그 삭제',
-  'graph.rename': '이름 변경',
-  'graph.deleteBranch': '삭제',
+  'graph.rename': '브랜치 이름 변경',
+  'graph.deleteBranch': '브랜치 삭제',
+  'graph.deleteRemoteBranch': '리모트 브랜치 삭제',
+  'graph.removeWorktree': 'Worktree 삭제',
 
   // Reset modal
   'reset.title': '{hash}(으)로 Reset',
@@ -265,6 +268,8 @@ export const ko: Record<string, string> = {
   'deleteBranch.title': '브랜치 삭제',
   'deleteBranch.confirm': '브랜치 "{name}"을(를) 삭제하시겠습니까?',
   'deleteBranch.force': 'Merge되지 않은 브랜치도 강제 삭제 (-D)',
+  'deleteBranch.deleteRemote': '리모트 브랜치도 함께 삭제',
+  'deleteBranch.worktreeWarning': '연결된 worktree "{name}"도 함께 삭제됩니다.',
 
   // Delete tag confirmation
   'deleteTag.title': '태그 삭제',
@@ -275,9 +280,35 @@ export const ko: Record<string, string> = {
   'deleteRemoteTag.title': '리모트 태그 삭제',
   'deleteRemoteTag.confirm': '리모트에서 태그 "{name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
 
+  // Delete remote branch
+  'deleteRemoteBranch.title': '리모트 브랜치 삭제',
+  'deleteRemoteBranch.confirm': '리모트에서 브랜치 {name}을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+
   // Stash drop confirmation
   'stashDrop.title': 'Stash 삭제',
   'stashDrop.confirm': 'Stash "{message}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+
+  // Stash pop confirmation
+  'stashPop.title': 'Stash Pop',
+  'stashPop.confirm': 'Stash "{message}"을(를) 적용하고 삭제하시겠습니까? 적용 후 stash 항목이 삭제됩니다.',
+  'stashPop.pop': 'Pop',
+
+  // Stash save modal
+  'stashSave.title': '변경사항 Stash',
+  'stashSave.message': '메시지 (선택)',
+  'stashSave.placeholder': 'Stash 메시지',
+  'stashSave.save': 'Stash',
+
+  // Worktree modals
+  'worktree.addTitle': 'Worktree 추가',
+  'worktree.startAt': '시작점:',
+  'worktree.branchName': '브랜치 이름:',
+  'worktree.branchPlaceholder': '브랜치 이름 입력',
+  'worktree.location': '위치:',
+  'worktree.add': 'Worktree 추가',
+  'worktree.removeTitle': 'Worktree 삭제',
+  'worktree.removeConfirm': '"{path}"의 worktree를 삭제하시겠습니까?',
+  'worktree.deleteBranch': '연결된 브랜치 "{name}"도 함께 삭제',
 
   // Common
   'common.cancel': '취소',

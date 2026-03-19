@@ -43,6 +43,7 @@
   "remoteTagDeleted": "태그 '{0}'이(가) {1}에서 삭제되었습니다",
   "noRemotes": "설정된 리모트가 없습니다",
   "deleteBranchConfirm": "브랜치 '{0}'을(를) 삭제하시겠습니까?",
+  "mergeBranchConfirm": "브랜치 '{0}'을(를) 현재 브랜치에 merge하시겠습니까?",
   "deleteBranchForcedConfirm": "브랜치 '{0}'이(가) 아직 merge되지 않았습니다. 강제 삭제하시겠습니까?",
   "deleteBranchFailed": "브랜치 삭제 실패: {0}",
   "enterNewBranchName": "브랜치 '{0}'의 새 이름 입력",

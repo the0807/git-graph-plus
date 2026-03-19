@@ -1,10 +1,11 @@
-import type { BranchInfo, TagInfo, RemoteInfo, StashEntry, BranchData } from '../types';
+import type { BranchInfo, TagInfo, RemoteInfo, StashEntry, WorktreeInfo, BranchData } from '../types';
 
 class BranchStore {
   branches = $state<BranchInfo[]>([]);
   tags = $state<TagInfo[]>([]);
   remotes = $state<RemoteInfo[]>([]);
   stashes = $state<StashEntry[]>([]);
+  worktrees = $state<WorktreeInfo[]>([]);
 
   get localBranches(): BranchInfo[] {
     return this.branches.filter((b) => !b.remote);
@@ -23,6 +24,7 @@ class BranchStore {
     this.tags = data.tags;
     this.remotes = data.remotes;
     this.stashes = data.stashes;
+    this.worktrees = data.worktrees ?? [];
   }
 }
 

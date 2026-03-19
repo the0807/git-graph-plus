@@ -63,7 +63,8 @@
       },
       {
         "command": "gitGraphPlus.checkoutBranch",
-        "title": "Checkout Branch"
+        "title": "Checkout Branch",
+        "icon": "$(arrow-right)"
       },
       {
         "command": "gitGraphPlus.createBranch",
@@ -119,6 +120,16 @@
         "command": "gitGraphPlus.showRemoteBranchMenu",
         "title": "%command.checkoutRemoteBranch%",
         "icon": "$(git-branch)"
+      },
+      {
+        "command": "gitGraphPlus.checkoutRemoteBranch",
+        "title": "Checkout Remote Branch",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "gitGraphPlus.deleteRemoteBranch",
+        "title": "Delete Remote Branch",
+        "icon": "$(trash)"
       },
       {
         "command": "gitGraphPlus.stashApply",
@@ -211,7 +222,17 @@
         },
         {
           "command": "gitGraphPlus.fetch",
-          "when": "view =~ /^gitGraphPlus/",
+          "when": "view == gitGraphPlus.branches || view == gitGraphPlus.remotes",
+          "group": "navigation@3"
+        },
+        {
+          "command": "gitGraphPlus.createBranch",
+          "when": "view == gitGraphPlus.branches",
+          "group": "navigation@4"
+        },
+        {
+          "command": "gitGraphPlus.createTag",
+          "when": "view == gitGraphPlus.tags",
           "group": "navigation@3"
         },
         {
@@ -220,22 +241,22 @@
           "group": "navigation@4"
         },
         {
+          "command": "gitGraphPlus.stashSave",
+          "when": "view == gitGraphPlus.stashes",
+          "group": "navigation@3"
+        },
+        {
           "command": "gitGraphPlus.addWorktree",
           "when": "view == gitGraphPlus.worktrees",
-          "group": "navigation@4"
+          "group": "navigation@3"
         },
         {
           "command": "gitGraphPlus.pruneWorktrees",
           "when": "view == gitGraphPlus.worktrees",
-          "group": "navigation@5"
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
-        {
-          "command": "gitGraphPlus.createBranch",
-          "when": "view == gitGraphPlus.branches",
-          "group": "inline"
-        },
         {
           "command": "gitGraphPlus.checkoutBranch",
           "when": "view == gitGraphPlus.branches && viewItem == branch",
@@ -257,9 +278,14 @@
           "group": "2_danger@1"
         },
         {
-          "command": "gitGraphPlus.showRemoteBranchMenu",
+          "command": "gitGraphPlus.checkoutRemoteBranch",
           "when": "view == gitGraphPlus.remotes && viewItem == remote-branch",
           "group": "1_branch@1"
+        },
+        {
+          "command": "gitGraphPlus.deleteRemoteBranch",
+          "when": "view == gitGraphPlus.remotes && viewItem == remote-branch",
+          "group": "2_danger@1"
         },
         {
           "command": "gitGraphPlus.checkoutBranch",
@@ -270,11 +296,6 @@
           "command": "gitGraphPlus.pushTag",
           "when": "view == gitGraphPlus.tags && viewItem == tag",
           "group": "1_push@1"
-        },
-        {
-          "command": "gitGraphPlus.pushAllTags",
-          "when": "view == gitGraphPlus.tags && viewItem == tag",
-          "group": "1_push@2"
         },
         {
           "command": "gitGraphPlus.deleteRemoteTag",

@@ -57,7 +57,8 @@ export const en: Record<string, string> = {
 
   // Rename branch modal
   'renameBranch.title': 'Rename Branch',
-  'renameBranch.newName': 'New name for "{name}"',
+  'renameBranch.desc': 'Rename branch {name}',
+  'renameBranch.newName': 'New name',
   'renameBranch.rename': 'Rename',
 
   // Add remote modal
@@ -121,8 +122,10 @@ export const en: Record<string, string> = {
   'graph.copyBranchName': 'Copy Branch Name',
   'graph.copyTagName': 'Copy Tag Name',
   'graph.deleteTag': 'Delete Tag',
-  'graph.rename': 'Rename',
-  'graph.deleteBranch': 'Delete',
+  'graph.rename': 'Rename Branch',
+  'graph.deleteBranch': 'Delete Branch',
+  'graph.deleteRemoteBranch': 'Delete Remote Branch',
+  'graph.removeWorktree': 'Remove Worktree',
 
   // Reset modal
   'reset.title': 'Reset to {hash}',
@@ -265,6 +268,8 @@ export const en: Record<string, string> = {
   'deleteBranch.title': 'Delete Branch',
   'deleteBranch.confirm': 'Are you sure you want to delete branch "{name}"?',
   'deleteBranch.force': 'Force delete even if not fully merged (-D)',
+  'deleteBranch.deleteRemote': 'Also delete remote branch',
+  'deleteBranch.worktreeWarning': 'Linked worktree "{name}" will also be removed.',
 
   // Delete tag confirmation
   'deleteTag.title': 'Delete Tag',
@@ -275,9 +280,35 @@ export const en: Record<string, string> = {
   'deleteRemoteTag.title': 'Delete Remote Tag',
   'deleteRemoteTag.confirm': 'Are you sure you want to delete tag "{name}" from the remote? This cannot be undone.',
 
+  // Delete remote branch
+  'deleteRemoteBranch.title': 'Delete Remote Branch',
+  'deleteRemoteBranch.confirm': 'Are you sure you want to delete branch {name} from the remote? This cannot be undone.',
+
   // Stash drop confirmation
   'stashDrop.title': 'Drop Stash',
   'stashDrop.confirm': 'Are you sure you want to drop stash "{message}"? This cannot be undone.',
+
+  // Stash pop confirmation
+  'stashPop.title': 'Pop Stash',
+  'stashPop.confirm': 'Apply and remove stash "{message}"? The stash entry will be deleted after applying.',
+  'stashPop.pop': 'Pop',
+
+  // Stash save modal
+  'stashSave.title': 'Stash Changes',
+  'stashSave.message': 'Message (optional)',
+  'stashSave.placeholder': 'Stash message',
+  'stashSave.save': 'Stash',
+
+  // Worktree modals
+  'worktree.addTitle': 'Add Worktree',
+  'worktree.startAt': 'Start at:',
+  'worktree.branchName': 'Branch name:',
+  'worktree.branchPlaceholder': 'Enter Branch Name',
+  'worktree.location': 'Location:',
+  'worktree.add': 'Add Worktree',
+  'worktree.removeTitle': 'Remove Worktree',
+  'worktree.removeConfirm': 'Are you sure you want to remove the worktree at "{path}"?',
+  'worktree.deleteBranch': 'Also delete branch "{name}"',
 
   // Common
   'common.cancel': 'Cancel',

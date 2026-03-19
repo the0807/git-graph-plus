@@ -100,6 +100,7 @@ export interface BranchData {
   tags: TagInfo[];
   remotes: RemoteInfo[];
   stashes: StashEntry[];
+  worktrees: WorktreeInfo[];
 }
 
 export interface DiffData {
@@ -127,6 +128,7 @@ export interface DiffLine {
 
 export interface WorktreeInfo {
   path: string;
+  hash: string;
   branch: string;
   detached: boolean;
   locked: boolean;

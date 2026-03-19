@@ -22,6 +22,8 @@ export class GitService {
 
   constructor(private repoPath: string) {}
 
+  get rootPath(): string { return this.repoPath; }
+
   getActivityLog() {
     return this.activityLog;
   }
@@ -934,6 +936,11 @@ export class GitService {
   async pushAllTags(remote?: string): Promise<string> {
     const r = remote || 'origin';
     return this.exec(['push', r, '--tags']);
+  }
+
+  async deleteRemoteBranch(name: string, remote?: string): Promise<string> {
+    const r = remote || 'origin';
+    return this.exec(['push', r, '--delete', name]);
   }
 
   async deleteRemoteTag(name: string, remote?: string): Promise<string> {

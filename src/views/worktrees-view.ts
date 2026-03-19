@@ -28,7 +28,7 @@ export class WorktreesViewProvider implements vscode.TreeDataProvider<WorktreeIt
 
     try {
       const worktrees = await this.gitService.worktreeList();
-      return worktrees.map(w => new WorktreeItem(w));
+      return worktrees.map(w => new WorktreeItem(w, this.gitService.rootPath));
     } catch {
       return [];
     }
@@ -36,7 +36,7 @@ export class WorktreesViewProvider implements vscode.TreeDataProvider<WorktreeIt
 }
 
 class WorktreeItem extends vscode.TreeItem {
-  constructor(public readonly worktree: WorktreeInfo) {
+  constructor(public readonly worktree: WorktreeInfo, repoPath: string) {
     const label = worktree.isMain
       ? `${worktree.branch} (main)`
       : worktree.branch || '(detached)';
@@ -46,7 +46,17 @@ class WorktreeItem extends vscode.TreeItem {
     this.iconPath = new vscode.ThemeIcon(
       worktree.locked ? 'lock' : worktree.isMain ? 'home' : 'folder-opened'
     );
-    this.description = worktree.path;
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    const repoPathWithSlash = repoPath.endsWith('/') ? repoPath : repoPath + '/';
+    let displayPath: string;
+    if (worktree.path.startsWith(repoPathWithSlash)) {
+      displayPath = './' + worktree.path.substring(repoPathWithSlash.length);
+    } else if (homeDir) {
+      displayPath = worktree.path.replace(homeDir, '~');
+    } else {
+      displayPath = worktree.path;
+    }
+    this.description = worktree.isMain ? '' : displayPath;
     this.tooltip = [
       `Path: ${worktree.path}`,
       `Branch: ${worktree.branch || '(detached)'}`,

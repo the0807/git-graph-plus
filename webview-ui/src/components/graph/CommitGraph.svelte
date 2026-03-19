@@ -72,6 +72,7 @@
 
   let contextMenu = $state<{ x: number; y: number; items: any[] } | null>(null);
   let contextMenuHash = $state<string | null>(null);
+  const worktreeBranches = $derived(new Set(branchStore.worktrees.filter(w => !w.isMain).map(w => w.branch)));
   let compareBase = $state<string | null>(null);
   let clickTimer: ReturnType<typeof setTimeout> | null = null;
   let interactiveRebaseBase = $state<string | null>(null);
@@ -103,6 +104,15 @@
 
   let showDeleteBranchModal = $state(false);
   let deleteBranchName = $state('');
+
+  let showDeleteRemoteBranchModal = $state(false);
+  let deleteRemoteBranchRemote = $state('');
+  let deleteRemoteBranchName = $state('');
+
+  let showRemoveWorktreeModal = $state(false);
+  let removeWorktreePath = $state('');
+  let removeWorktreeBranch = $state('');
+  let deleteWorktreeBranch = $state(false);
 
   let showCheckoutRemoteModal = $state(false);
   let checkoutRemoteName = $state('');
@@ -232,45 +242,94 @@
       return true;
     }).sort((a, b) => {
       const order = { head: 0, branch: 1, 'remote-branch': 2, tag: 3, stash: 4 };
-      return (order[a.type] ?? 4) - (order[b.type] ?? 4);
+      const typeOrder = (order[a.type] ?? 4) - (order[b.type] ?? 4);
+      if (typeOrder !== 0) return typeOrder;
+      // Alphabetical within same type for branches, tags, worktrees
+      const nameA = a.type === 'remote-branch' ? `${a.remote}/${a.name}` : a.name;
+      const nameB = b.type === 'remote-branch' ? `${b.remote}/${b.name}` : b.name;
+      return nameA.localeCompare(nameB);
     });
 
     for (const ref of refs) {
       if (ref.type === 'head' || ref.type === 'branch') {
         const branchName = ref.name;
-        items.push({
-          label: branchName,
-          action: () => {},
-          children: [
-            {
-              label: t('sidebar.checkout'),
-              action: () => doCheckout(branchName),
-            },
-            {
-              label: t('graph.mergeInto', { branch: currentBranch }),
-              action: () => { mergeTarget = branchName; showMergeModal = true; },
-            },
-            { separator: true, label: '', action: () => {} },
-            {
-              label: t('graph.rename'),
-              action: () => { renameBranchOld = branchName; renameBranchNew = branchName; showRenameBranchModal = true; },
-            },
-            {
-              label: t('graph.deleteBranch'),
-              action: () => { deleteBranchName = branchName; showDeleteBranchModal = true; },
-              danger: true,
-            },
-            { separator: true, label: '', action: () => {} },
-            {
-              label: t('graph.copyBranchName'),
-              action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: branchName } }),
-            },
-          ],
-        });
+        const linkedWt = branchStore.worktrees.find(w => !w.isMain && w.branch === branchName);
+
+        if (linkedWt) {
+          // Worktree-linked branch: show worktree menu
+          items.push({
+            label: branchName,
+            icon: 'folder-opened',
+            action: () => {},
+            children: [
+              {
+                label: t('sidebar.checkout'),
+                action: () => doCheckout(branchName),
+              },
+              {
+                label: t('graph.mergeInto', { branch: currentBranch }),
+                action: () => { mergeTarget = branchName; showMergeModal = true; },
+              },
+              { separator: true, label: '', action: () => {} },
+              {
+                label: t('graph.rename'),
+                action: () => { renameBranchOld = branchName; renameBranchNew = branchName; showRenameBranchModal = true; },
+              },
+              {
+                label: t('graph.removeWorktree'),
+                action: () => { removeWorktreePath = linkedWt.path; removeWorktreeBranch = branchName; deleteWorktreeBranch = false; showRemoveWorktreeModal = true; },
+                danger: true,
+              },
+              {
+                label: t('graph.deleteBranch'),
+                action: () => { deleteBranchName = branchName; showDeleteBranchModal = true; },
+                danger: true,
+              },
+              { separator: true, label: '', action: () => {} },
+              {
+                label: t('graph.copyBranchName'),
+                action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: branchName } }),
+              },
+            ],
+          });
+        } else {
+          // Regular branch
+          items.push({
+            label: branchName,
+            icon: 'git-branch',
+            action: () => {},
+            children: [
+              {
+                label: t('sidebar.checkout'),
+                action: () => doCheckout(branchName),
+              },
+              {
+                label: t('graph.mergeInto', { branch: currentBranch }),
+                action: () => { mergeTarget = branchName; showMergeModal = true; },
+              },
+              { separator: true, label: '', action: () => {} },
+              {
+                label: t('graph.rename'),
+                action: () => { renameBranchOld = branchName; renameBranchNew = branchName; showRenameBranchModal = true; },
+              },
+              {
+                label: t('graph.deleteBranch'),
+                action: () => { deleteBranchName = branchName; showDeleteBranchModal = true; },
+                danger: true,
+              },
+              { separator: true, label: '', action: () => {} },
+              {
+                label: t('graph.copyBranchName'),
+                action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: branchName } }),
+              },
+            ],
+          });
+        }
       } else if (ref.type === 'remote-branch') {
         const fullName = `${ref.remote}/${ref.name}`;
         items.push({
           label: fullName,
+          icon: 'cloud',
           action: () => {},
           children: [
             {
@@ -283,6 +342,12 @@
             },
             { separator: true, label: '', action: () => {} },
             {
+              label: t('graph.deleteRemoteBranch'),
+              action: () => { deleteRemoteBranchRemote = ref.remote!; deleteRemoteBranchName = ref.name; showDeleteRemoteBranchModal = true; },
+              danger: true,
+            },
+            { separator: true, label: '', action: () => {} },
+            {
               label: t('graph.copyBranchName'),
               action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: fullName } }),
             },
@@ -291,6 +356,7 @@
       } else if (ref.type === 'tag') {
         items.push({
           label: ref.name,
+          icon: 'tag',
           action: () => {},
           children: [
             {
@@ -313,6 +379,7 @@
         const stashEntry = branchStore.stashes.find((_s, i) => i === 0);
         items.push({
           label: `stash: ${stashEntry?.message ?? 'stash@{0}'}`,
+          icon: 'archive',
           action: () => {},
           children: [
             {
@@ -603,11 +670,12 @@
                     if (!localInfo?.upstream) return false;
                     return commit.refs.some(r => r.type === 'remote-branch' && `${r.remote}/${r.name}` === localInfo.upstream);
                   })()}
-                  {@const badgeColor = ref.type === 'tag' ? '#f0c040' : ref.type === 'stash' ? '#c24de0' : nodeColor}
+                  {@const isWtBranch = (ref.type === 'branch' || ref.type === 'head') && worktreeBranches.has(ref.name)}
+                  {@const badgeColor = ref.type === 'tag' ? '#f0c040' : ref.type === 'stash' ? '#c24de0' : isWtBranch ? '#4caf50' : nodeColor}
                   <span
                     class="ref-badge"
                     style="--badge-color: {badgeColor};"
-                    class:badge-bold={ref.type === 'head' || ref.type === 'tag' || ref.type === 'stash'}
+                    class:badge-bold={ref.type === 'head' || ref.type === 'tag' || ref.type === 'stash' || isWtBranch}
                     title="Double-click to checkout: {ref.type === 'remote-branch' ? `${ref.remote}/${ref.name}` : ref.name}"
                     ondblclick={(e) => {
                       e.stopPropagation();
@@ -638,6 +706,7 @@
                     {#if ref.type === 'head'}
                       <i class="codicon codicon-check ref-icon"></i>
                       {#if hasRemote}<i class="codicon codicon-cloud ref-icon"></i>{/if}
+                      {#if worktreeBranches.has(ref.name)}<i class="codicon codicon-folder-opened ref-icon"></i>{/if}
                       {ref.name}
                     {:else if ref.type === 'remote-branch'}
                       <i class="codicon codicon-cloud ref-icon"></i>
@@ -650,6 +719,7 @@
                       {ref.name}
                     {:else}
                       {#if hasRemote}<i class="codicon codicon-cloud ref-icon"></i>{/if}
+                      {#if (ref.type === 'branch') && worktreeBranches.has(ref.name)}<i class="codicon codicon-folder-opened ref-icon"></i>{/if}
                       {ref.name}
                     {/if}
                   </span>
@@ -686,7 +756,7 @@
     x={contextMenu.x}
     y={contextMenu.y}
     items={contextMenu.items}
-    onClose={() => { contextMenu = null; if (!showMergeModal && !showRebaseModal && !showCherryPickModal && !showRevertModal && !showResetModal && !showDeleteTagModal && !showDeleteBranchModal && !showCreateTagModal && !showCreateBranchModal) contextMenuHash = null; }}
+    onClose={() => { contextMenu = null; if (!showMergeModal && !showRebaseModal && !showCherryPickModal && !showRevertModal && !showResetModal && !showDeleteTagModal && !showDeleteBranchModal && !showDeleteRemoteBranchModal && !showRemoveWorktreeModal && !showCreateTagModal && !showCreateBranchModal) contextMenuHash = null; }}
   />
 {/if}
 
@@ -812,8 +882,36 @@
   <DeleteBranchModal
     branchName={deleteBranchName}
     onClose={() => { showDeleteBranchModal = false; contextMenuHash = null; }}
-    onDelete={(force) => { showDeleteBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteBranch', payload: { name: deleteBranchName, force } }); }}
+    onDelete={(force, deleteWorktreePath, deleteRemote) => { showDeleteBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteBranch', payload: { name: deleteBranchName, force, worktreePath: deleteWorktreePath, deleteRemote } }); }}
   />
+{/if}
+
+{#if showDeleteRemoteBranchModal}
+  <Modal title={t('deleteRemoteBranch.title')} onClose={() => { showDeleteRemoteBranchModal = false; contextMenuHash = null; }}>
+    <p class="modal-desc">{@html t('deleteRemoteBranch.confirm', { name: `<span class="modal-pill modal-pill--danger">${deleteRemoteBranchRemote}/${deleteRemoteBranchName}</span>` })}</p>
+    <div class="form-actions">
+      <button onclick={() => { showDeleteRemoteBranchModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
+      <button class="danger-btn" onclick={() => { showDeleteRemoteBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteRemoteBranch', payload: { remote: deleteRemoteBranchRemote, name: deleteRemoteBranchName } }); }}>{t('sidebar.delete')}</button>
+    </div>
+  </Modal>
+{/if}
+
+{#if showRemoveWorktreeModal}
+  <Modal title={t('worktree.removeTitle')} onClose={() => { showRemoveWorktreeModal = false; contextMenuHash = null; }}>
+    <p class="modal-desc">{t('worktree.removeConfirm', { path: removeWorktreePath })}</p>
+    {#if removeWorktreeBranch}
+      <div class="modal-form-group">
+        <label class="modal-checkbox modal-checkbox--danger">
+          <input type="checkbox" bind:checked={deleteWorktreeBranch} />
+          <span>{t('worktree.deleteBranch', { name: removeWorktreeBranch })}</span>
+        </label>
+      </div>
+    {/if}
+    <div class="form-actions">
+      <button onclick={() => { showRemoveWorktreeModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
+      <button class="danger-btn" onclick={() => { showRemoveWorktreeModal = false; contextMenuHash = null; vscode.postMessage({ type: 'worktreeRemove', payload: { path: removeWorktreePath, deleteBranch: deleteWorktreeBranch ? removeWorktreeBranch : undefined } }); }}>{t('sidebar.delete')}</button>
+    </div>
+  </Modal>
 {/if}
 
 {#if showCheckoutRemoteModal}

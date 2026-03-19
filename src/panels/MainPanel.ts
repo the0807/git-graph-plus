@@ -93,6 +93,30 @@ export class MainPanel {
     await this.refreshAll();
   }
 
+  public postShowModal(payload: { modal: string; [key: string]: any }): void {
+    this.panel.reveal();
+    this.panel.webview.postMessage({ type: 'showModal', payload });
+  }
+
+  private static pendingModal: { modal: string; [key: string]: any } | null = null;
+
+  public static showModalWithPanel(extensionUri: vscode.Uri, payload: { modal: string; [key: string]: any }): void {
+    if (MainPanel.currentPanel) {
+      MainPanel.currentPanel.postShowModal(payload);
+    } else {
+      MainPanel.pendingModal = payload;
+      MainPanel.createOrShow(extensionUri);
+    }
+  }
+
+  public processPendingModal(): void {
+    if (MainPanel.pendingModal) {
+      const payload = MainPanel.pendingModal;
+      MainPanel.pendingModal = null;
+      this.panel.webview.postMessage({ type: 'showModal', payload });
+    }
+  }
+
   private async handleMessage(message: WebviewMessage): Promise<void> {
     try {
       switch (message.type) {
@@ -117,16 +141,18 @@ export class MainPanel {
           break;
         }
         case 'getBranches': {
-          const [branches, tags, remotes, stashes] = await Promise.all([
+          const [branches, tags, remotes, stashes, worktrees] = await Promise.all([
             this.gitService.branches(),
             this.gitService.tags(),
             this.gitService.remotes(),
             this.gitService.stashList(),
+            this.gitService.worktreeList(),
           ]);
           this.panel.webview.postMessage({
             type: 'branchData',
-            payload: { branches, tags, remotes, stashes },
+            payload: { branches, tags, remotes, stashes, worktrees },
           });
+          this.processPendingModal();
           break;
         }
         case 'getCommitDiff': {
@@ -164,10 +190,35 @@ export class MainPanel {
           break;
         }
         case 'deleteBranch': {
+          // Remove linked worktree first (branch can't be deleted while in use by a worktree)
+          if (message.payload.worktreePath) {
+            await this.gitService.worktreeRemove(message.payload.worktreePath, true);
+          }
           await this.gitService.deleteBranch(message.payload.name, message.payload.force);
+          // Delete remote branch if requested
+          if (message.payload.deleteRemote) {
+            const branches = await this.gitService.branches();
+            const localInfo = branches.find(b => !b.remote && b.name === message.payload.name);
+            if (localInfo?.upstream) {
+              const [remote, ...rest] = localInfo.upstream.split('/');
+              await this.gitService.deleteRemoteBranch(rest.join('/'), remote);
+            } else {
+              // Fallback: try origin
+              try { await this.gitService.deleteRemoteBranch(message.payload.name); } catch { /* ignore */ }
+            }
+          }
           this.panel.webview.postMessage({
             type: 'operationComplete',
             payload: { operation: 'deleteBranch', success: true },
+          });
+          await this.refreshAll();
+          break;
+        }
+        case 'deleteRemoteBranch': {
+          await this.gitService.deleteRemoteBranch(message.payload.name, message.payload.remote);
+          this.panel.webview.postMessage({
+            type: 'operationComplete',
+            payload: { operation: 'deleteRemoteBranch', success: true },
           });
           await this.refreshAll();
           break;
@@ -330,6 +381,25 @@ export class MainPanel {
         case 'stashDrop': {
           await this.gitService.stashDrop(message.payload.index);
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'stashDrop', success: true } });
+          await this.refreshAll();
+          break;
+        }
+        case 'worktreeAdd': {
+          const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+          const wtPath = message.payload.path.replace(/^~/, homeDir);
+          await this.gitService.worktreeAdd(wtPath, message.payload.branch, message.payload.newBranch);
+          this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'worktreeAdd', success: true } });
+          await this.refreshAll();
+          // Also refresh worktrees view in activity bar
+          break;
+        }
+        case 'worktreeRemove': {
+          await this.gitService.worktreeRemove(message.payload.path);
+          // Delete linked branch after worktree is removed
+          if (message.payload.deleteBranch) {
+            await this.gitService.deleteBranch(message.payload.deleteBranch, true);
+          }
+          this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'worktreeRemove', success: true } });
           await this.refreshAll();
           break;
         }
@@ -502,25 +572,10 @@ export class MainPanel {
           this.panel.webview.postMessage({ type: 'worktreeData', payload: worktrees });
           break;
         }
-        case 'addWorktree': {
-          await this.gitService.worktreeAdd(message.payload.path, message.payload.branch, message.payload.newBranch);
-          this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'addWorktree', success: true } });
-          const wtAfterAdd = await this.gitService.worktreeList();
-          this.panel.webview.postMessage({ type: 'worktreeData', payload: wtAfterAdd });
-          break;
-        }
-        case 'removeWorktree': {
-          await this.gitService.worktreeRemove(message.payload.path, message.payload.force);
-          this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'removeWorktree', success: true } });
-          const wtAfterRemove = await this.gitService.worktreeList();
-          this.panel.webview.postMessage({ type: 'worktreeData', payload: wtAfterRemove });
-          break;
-        }
         case 'pruneWorktrees': {
           await this.gitService.worktreePrune();
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'pruneWorktrees', success: true } });
-          const wtAfterPrune = await this.gitService.worktreeList();
-          this.panel.webview.postMessage({ type: 'worktreeData', payload: wtAfterPrune });
+          await this.refreshAll();
           break;
         }
         // --- Tag Push ---
@@ -671,17 +726,24 @@ export class MainPanel {
 
   private async refreshAll(): Promise<void> {
     try {
-      const [allCommits, branches, tags, remotes, stashes] = await Promise.all([
+      const [allCommits, branches, tags, remotes, stashes, worktrees] = await Promise.all([
         this.gitService.log({ limit: 1000 }),
         this.gitService.branches(),
         this.gitService.tags(),
         this.gitService.remotes(),
         this.gitService.stashList(),
+        this.gitService.worktreeList(),
       ]);
       const graph = buildGraph(allCommits, branches);
       const fg = buildFullGraph(allCommits, branches);
-      this.panel.webview.postMessage({ type: 'logData', payload: { commits: allCommits, graph, paths: fg.paths, links: fg.links, dots: fg.dots, commitLeftMargin: fg.commitLeftMargin } });
-      this.panel.webview.postMessage({ type: 'branchData', payload: { branches, tags, remotes, stashes } });
+      // Send as single combined message to ensure atomic update
+      this.panel.webview.postMessage({
+        type: 'fullRefresh',
+        payload: {
+          logData: { commits: allCommits, graph, paths: fg.paths, links: fg.links, dots: fg.dots, commitLeftMargin: fg.commitLeftMargin },
+          branchData: { branches, tags, remotes, stashes, worktrees },
+        },
+      });
     } catch (err) {
       console.warn('Git Graph+: refresh failed:', err instanceof Error ? err.message : err);
     }
@@ -711,31 +773,7 @@ export class MainPanel {
     });
 
     if (what === 'refs' || what === 'unknown') {
-      try {
-        const [repoCommits, repoBranches] = await Promise.all([
-          this.gitService.log({ limit: 1000 }),
-          this.gitService.branches(),
-        ]);
-        const graph = buildGraph(repoCommits, repoBranches);
-        const fg = buildFullGraph(repoCommits, repoBranches);
-        this.panel.webview.postMessage({
-          type: 'logData',
-          payload: { commits: repoCommits, graph, paths: fg.paths, links: fg.links, dots: fg.dots, commitLeftMargin: fg.commitLeftMargin },
-        });
-
-        const [branches, tags, remotes, stashes] = await Promise.all([
-          this.gitService.branches(),
-          this.gitService.tags(),
-          this.gitService.remotes(),
-          this.gitService.stashList(),
-        ]);
-        this.panel.webview.postMessage({
-          type: 'branchData',
-          payload: { branches, tags, remotes, stashes },
-        });
-      } catch (err) {
-        console.warn('Git Graph+: auto-refresh failed:', err instanceof Error ? err.message : err);
-      }
+      await this.refreshAll();
     }
   }
 
