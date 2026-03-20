@@ -162,17 +162,8 @@
         "icon": "$(clear-all)"
       }
     ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "git-graph-plus",
-          "title": "Git Graph+",
-          "icon": "resources/icon.svg"
-        }
-      ]
-    },
     "views": {
-      "git-graph-plus": [
+      "scm": [
         {
           "id": "gitGraphPlus.branches",
           "name": "Branches"

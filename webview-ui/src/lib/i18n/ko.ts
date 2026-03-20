@@ -7,6 +7,7 @@ export const ko: Record<string, string> = {
   'toolbar.pull': 'Pull',
   'toolbar.push': 'Push',
   'toolbar.refresh': '새로고침',
+  'toolbar.stashDesc': 'Stash (커밋되지 않은 변경 사항 저장)',
   'toolbar.fetchAll': 'Fetch All (원격 변경 사항 다운로드)',
   'toolbar.pullDesc': 'Pull (fetch + merge)',
   'toolbar.pushDesc': 'Push (로컬 commit 업로드)',

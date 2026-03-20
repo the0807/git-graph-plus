@@ -18,8 +18,14 @@
   const linkedWorktree = $derived(branchStore.worktrees.find(w => !w.isMain && w.branch === branchName));
   const hasRemote = $derived((() => {
     const localInfo = branchStore.branches.find(b => !b.remote && b.name === branchName);
-    if (localInfo?.upstream) return true;
-    return branchStore.branches.some(b => b.remote && b.name.endsWith('/' + branchName));
+    if (localInfo?.upstream) {
+      // Check if the upstream remote branch actually exists in the branch list
+      return branchStore.branches.some(b => b.remote && b.name === localInfo.upstream);
+    }
+    // Fallback: check if any remote has a branch with this exact name
+    return branchStore.remotes.some(r =>
+      branchStore.branches.some(b => b.remote && b.name === `${r.name}/${branchName}`)
+    );
   })());
 
   onMount(() => { deleteBtn?.focus(); });

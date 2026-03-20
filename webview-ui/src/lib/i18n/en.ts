@@ -7,6 +7,7 @@ export const en: Record<string, string> = {
   'toolbar.pull': 'Pull',
   'toolbar.push': 'Push',
   'toolbar.refresh': 'Refresh',
+  'toolbar.stashDesc': 'Stash (save uncommitted changes)',
   'toolbar.fetchAll': 'Fetch All (download remote changes)',
   'toolbar.pullDesc': 'Pull (fetch + merge)',
   'toolbar.pushDesc': 'Push (upload local commits)',

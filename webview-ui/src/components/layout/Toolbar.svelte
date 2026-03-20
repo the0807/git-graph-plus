@@ -19,6 +19,10 @@
   let pullRebase = $state(false);
   let pullStash = $state(false);
   let showAddRemote = $state(false);
+  let showStashSave = $state(false);
+  let stashMessage = $state('');
+  let stashIncludeUntracked = $state(true);
+  let stashKeepIndex = $state(false);
 
   function refresh() {
     operating = 'refresh';
@@ -137,6 +141,15 @@
   <div class="toolbar-right">
     <button
       class="toolbar-btn"
+      onclick={() => { showStashSave = true; stashMessage = ''; stashIncludeUntracked = true; stashKeepIndex = false; }}
+      disabled={operating !== null}
+      title={t('toolbar.stashDesc')}
+    >
+      <i class="codicon codicon-archive"></i>
+    </button>
+    <span class="separator"></span>
+    <button
+      class="toolbar-btn"
       onclick={doFetch}
       disabled={operating !== null}
       title={t('toolbar.fetchAll')}
@@ -244,6 +257,36 @@
   </Modal>
 {/if}
 
+{#if showStashSave}
+  <Modal title={t('stashSave.title')} onClose={() => { showStashSave = false; }}>
+    <div class="modal-form-group">
+      <label class="modal-field-label" for="stash-msg">{t('stashSave.message')}</label>
+      <!-- svelte-ignore a11y_autofocus -->
+      <input id="stash-msg" class="modal-input" type="text" bind:value={stashMessage} placeholder={t('stashSave.placeholder')} autofocus
+        onkeydown={(e) => { if (e.key === 'Enter') { showStashSave = false; vscode.postMessage({ type: 'stashSave', payload: { message: stashMessage || undefined, includeUntracked: stashIncludeUntracked, keepIndex: stashKeepIndex } }); } }} />
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={stashIncludeUntracked} />
+        <span>{t('stash.includeUntracked')}</span>
+      </label>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={stashKeepIndex} />
+        <span>{t('stash.keepIndex')}</span>
+      </label>
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { showStashSave = false; }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => {
+        showStashSave = false;
+        vscode.postMessage({ type: 'stashSave', payload: { message: stashMessage || undefined, includeUntracked: stashIncludeUntracked, keepIndex: stashKeepIndex } });
+      }}>{t('stash.stash')}</button>
+    </div>
+  </Modal>
+{/if}
+
 {#if showAddRemote}
   <AddRemoteModal
     onClose={() => { showAddRemote = false; }}
@@ -256,8 +299,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 36px;
-    padding: 0 10px;
+    height: 42px;
+    padding: 0 12px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
@@ -271,13 +314,13 @@
 
   .toolbar-title {
     font-weight: 600;
-    font-size: 12px;
+    font-size: 13px;
     opacity: 0.7;
   }
 
   .repo-selector {
-    padding: 2px 6px;
-    font-size: 11px;
+    padding: 3px 8px;
+    font-size: 12px;
     background: var(--input-bg);
     color: var(--input-fg);
     border: 1px solid var(--input-border, var(--border-color));
@@ -289,16 +332,16 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    padding: 2px 10px;
+    padding: 3px 12px;
     background: var(--button-bg);
     color: var(--button-fg);
     border-radius: 10px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
   }
 
   .branch-icon {
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .toolbar-center {
@@ -314,8 +357,8 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 3px 12px;
-    font-size: 11px;
+    padding: 4px 14px;
+    font-size: 12px;
     border-radius: 4px;
     background: transparent;
     color: var(--text-secondary);
@@ -345,12 +388,12 @@
     justify-content: center;
     gap: 4px;
     padding: 4px 10px;
-    font-size: 16px;
+    font-size: 18px;
     border-radius: 4px;
     background: transparent;
     color: var(--text-secondary);
-    min-width: 32px;
-    height: 32px;
+    min-width: 34px;
+    height: 34px;
   }
 
   .toolbar-btn:hover {
