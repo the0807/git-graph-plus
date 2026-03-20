@@ -153,14 +153,7 @@
   let fastForwardRemote = $state('');
 
   function doCheckout(ref: string) {
-    const branch = branchStore.branches.find(b => !b.remote && b.name === ref);
-    if (branch && branch.behind > 0) {
-      pullAfterCheckoutRef = ref;
-      pullAfterCheckoutBehind = branch.behind;
-      showPullAfterCheckoutModal = true;
-    } else {
-      vscode.postMessage({ type: 'checkout', payload: { ref } });
-    }
+    vscode.postMessage({ type: 'checkout', payload: { ref } });
   }
 
   function doCheckoutRemote(remoteName: string, branchName: string) {

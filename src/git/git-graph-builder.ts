@@ -331,7 +331,7 @@ export function buildFullGraph(commits: Commit[], branches: BranchInfo[] = []): 
     // New branch head
     if (major === null) {
       offsetX += UNIT_W;
-      if (commit.parents.length > 0 && !remoteTipSet.has(commit.hash)) {
+      if (commit.parents.length > 0) {
         major = new PathHelper(commit.parents[0], colorPicker.next(), { x: offsetX, y: offsetY });
         unsolved.push(major);
         result.paths.push(major.path);
