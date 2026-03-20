@@ -19,6 +19,7 @@
   import CheckoutRemoteModal from './components/modals/CheckoutRemoteModal.svelte';
   import AddWorktreeModal from './components/modals/AddWorktreeModal.svelte';
   import Modal from './components/common/Modal.svelte';
+  import { modalStore } from './lib/stores/modals.svelte';
   import type { CommitGraphData } from './lib/types';
 
   const vscode = getVsCodeApi();
@@ -28,40 +29,22 @@
   let conflict = $state<{ operation: string; files: Array<{ path: string; resolved: boolean }> } | null>(null);
   let showAbortConfirmModal = $state(false);
 
-  // Modals triggered from Activity Bar
-  let showDeleteBranchModal = $state(false);
-  let deleteBranchName = $state('');
-  let showDeleteTagModal = $state(false);
-  let deleteTagName = $state('');
+  // Non-shared modals (unique to Activity Bar)
   let showStashDropModal = $state(false);
   let stashDropIndex = $state(0);
   let stashDropMessage = $state('');
   let showStashPopModal = $state(false);
   let stashPopIndex = $state(0);
   let stashPopMessage = $state('');
-  let showRenameBranchModal = $state(false);
-  let renameBranchOld = $state('');
-  let renameBranchNew = $state('');
-  let showMergeModal = $state(false);
-  let mergeTarget = $state('');
-  let showCreateBranchModal = $state(false);
-  let showCreateTagModal = $state(false);
-  let showStashSaveModal = $state(false);
-  let stashSaveMessage = $state('');
-  let showCheckoutRemoteModal = $state(false);
-  let checkoutRemoteName = $state('');
-  let checkoutRemoteLocalName = $state('');
   let showDeleteRemoteTagModal = $state(false);
   let deleteRemoteTagName = $state('');
-  let showDeleteRemoteBranchModal = $state(false);
-  let deleteRemoteBranchRemote = $state('');
-  let deleteRemoteBranchName = $state('');
-  let showRemoveWorktreeModal = $state(false);
-  let removeWorktreePath = $state('');
-  let removeWorktreeBranch = $state('');
-  let deleteWorktreeBranch = $state(false);
   let showAddWorktreeModal = $state(false);
   let addWorktreeDefaultPath = $state('');
+  let renameBranchNew = $state('');
+  let stashSaveMessage = $state('');
+  let stashSaveIncludeUntracked = $state(true);
+  let stashSaveKeepIndex = $state(false);
+  let deleteWorktreeBranch = $state(false);
 
   onMount(() => {
     function handleMessage(event: MessageEvent) {
@@ -95,11 +78,9 @@
           break;
         case 'showModal':
           if (msg.payload.modal === 'deleteBranch') {
-            deleteBranchName = msg.payload.branchName;
-            showDeleteBranchModal = true;
+            modalStore.openDeleteBranch(msg.payload.branchName);
           } else if (msg.payload.modal === 'deleteTag') {
-            deleteTagName = msg.payload.tagName;
-            showDeleteTagModal = true;
+            modalStore.openDeleteTag(msg.payload.tagName);
           } else if (msg.payload.modal === 'stashDrop') {
             stashDropIndex = msg.payload.index;
             stashDropMessage = msg.payload.message;
@@ -109,35 +90,27 @@
             stashPopMessage = msg.payload.message;
             showStashPopModal = true;
           } else if (msg.payload.modal === 'renameBranch') {
-            renameBranchOld = msg.payload.branchName;
             renameBranchNew = msg.payload.branchName;
-            showRenameBranchModal = true;
+            modalStore.openRenameBranch(msg.payload.branchName);
           } else if (msg.payload.modal === 'mergeBranch') {
-            mergeTarget = msg.payload.branchName;
-            showMergeModal = true;
+            modalStore.openMerge(msg.payload.branchName, branchStore.currentBranch?.name ?? 'HEAD');
           } else if (msg.payload.modal === 'createBranch') {
-            showCreateBranchModal = true;
+            modalStore.openCreateBranch('HEAD');
           } else if (msg.payload.modal === 'createTag') {
-            showCreateTagModal = true;
+            modalStore.openCreateTag('HEAD');
           } else if (msg.payload.modal === 'stashSave') {
-            stashSaveMessage = '';
-            showStashSaveModal = true;
+            stashSaveMessage = ''; stashSaveIncludeUntracked = true; stashSaveKeepIndex = false;
+            modalStore.openStashSave();
           } else if (msg.payload.modal === 'checkoutRemote') {
-            checkoutRemoteName = msg.payload.remoteName;
-            checkoutRemoteLocalName = msg.payload.localName;
-            showCheckoutRemoteModal = true;
+            modalStore.openCheckoutRemote(msg.payload.remoteName, msg.payload.localName);
           } else if (msg.payload.modal === 'deleteRemoteTag') {
             deleteRemoteTagName = msg.payload.tagName;
             showDeleteRemoteTagModal = true;
           } else if (msg.payload.modal === 'deleteRemoteBranch') {
-            deleteRemoteBranchRemote = msg.payload.remote;
-            deleteRemoteBranchName = msg.payload.name;
-            showDeleteRemoteBranchModal = true;
+            modalStore.openDeleteRemoteBranch(msg.payload.remote, msg.payload.name);
           } else if (msg.payload.modal === 'removeWorktree') {
-            removeWorktreePath = msg.payload.path;
-            removeWorktreeBranch = msg.payload.branch;
             deleteWorktreeBranch = false;
-            showRemoveWorktreeModal = true;
+            modalStore.openRemoveWorktree(msg.payload.path, msg.payload.branch);
           } else if (msg.payload.modal === 'addWorktree') {
             addWorktreeDefaultPath = msg.payload.defaultPath;
             showAddWorktreeModal = true;
@@ -333,21 +306,21 @@
   </div>
 </div>
 
-<!-- Modals triggered from Activity Bar -->
-{#if showDeleteBranchModal}
+<!-- Shared modals (via modalStore) -->
+{#if modalStore.deleteBranch.show}
   <DeleteBranchModal
-    branchName={deleteBranchName}
-    onClose={() => { showDeleteBranchModal = false; }}
-    onDelete={(force, deleteWorktreePath, deleteRemote) => { showDeleteBranchModal = false; vscode.postMessage({ type: 'deleteBranch', payload: { name: deleteBranchName, force, worktreePath: deleteWorktreePath, deleteRemote } }); }}
+    branchName={modalStore.deleteBranch.name}
+    onClose={() => { modalStore.closeDeleteBranch(); }}
+    onDelete={(force, deleteWorktreePath, deleteRemote) => { const name = modalStore.deleteBranch.name; modalStore.closeDeleteBranch(); vscode.postMessage({ type: 'deleteBranch', payload: { name, force, worktreePath: deleteWorktreePath, deleteRemote } }); }}
   />
 {/if}
 
-{#if showDeleteTagModal}
+{#if modalStore.deleteTag.show}
   <DeleteTagModal
-    tagName={deleteTagName}
+    tagName={modalStore.deleteTag.name}
     hasRemote={branchStore.remotes.length > 0}
-    onClose={() => { showDeleteTagModal = false; }}
-    onDelete={(deleteRemote) => { showDeleteTagModal = false; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); if (deleteRemote) vscode.postMessage({ type: 'deleteRemoteTag', payload: { name: deleteTagName } }); }}
+    onClose={() => { modalStore.closeDeleteTag(); }}
+    onDelete={(deleteRemote) => { const name = modalStore.deleteTag.name; modalStore.closeDeleteTag(); vscode.postMessage({ type: 'deleteTag', payload: { name } }); if (deleteRemote) vscode.postMessage({ type: 'deleteRemoteTag', payload: { name } }); }}
   />
 {/if}
 
@@ -371,71 +344,85 @@
   </Modal>
 {/if}
 
-{#if showRenameBranchModal}
-  <Modal title={t('renameBranch.title')} onClose={() => { showRenameBranchModal = false; }}>
+{#if modalStore.renameBranch.show}
+  <Modal title={t('renameBranch.title')} onClose={() => { modalStore.closeRenameBranch(); }}>
     <div class="modal-context-card">
       <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--source">{renameBranchOld}</span>
+      <span class="modal-pill modal-pill--source">{modalStore.renameBranch.oldName}</span>
     </div>
     <div class="modal-form-group">
       <label class="modal-field-label" for="rename-branch-input">{t('renameBranch.newName')}</label>
       <!-- svelte-ignore a11y_autofocus -->
       <input id="rename-branch-input" class="modal-input" type="text" bind:value={renameBranchNew} autofocus
-        onkeydown={(e) => { if (e.key === 'Enter' && renameBranchNew.trim() && renameBranchNew !== renameBranchOld) { showRenameBranchModal = false; vscode.postMessage({ type: 'renameBranch', payload: { oldName: renameBranchOld, newName: renameBranchNew } }); } }} />
+        onkeydown={(e) => { if (e.key === 'Enter' && renameBranchNew.trim() && renameBranchNew !== modalStore.renameBranch.oldName) { const old = modalStore.renameBranch.oldName; modalStore.closeRenameBranch(); vscode.postMessage({ type: 'renameBranch', payload: { oldName: old, newName: renameBranchNew } }); } }} />
     </div>
     <div class="form-actions">
-      <button onclick={() => { showRenameBranchModal = false; }}>{t('common.cancel')}</button>
-      <button class="primary" disabled={!renameBranchNew.trim() || renameBranchNew === renameBranchOld} onclick={() => { showRenameBranchModal = false; vscode.postMessage({ type: 'renameBranch', payload: { oldName: renameBranchOld, newName: renameBranchNew } }); }}>{t('renameBranch.rename')}</button>
+      <button onclick={() => { modalStore.closeRenameBranch(); }}>{t('common.cancel')}</button>
+      <button class="primary" disabled={!renameBranchNew.trim() || renameBranchNew === modalStore.renameBranch.oldName} onclick={() => { const old = modalStore.renameBranch.oldName; modalStore.closeRenameBranch(); vscode.postMessage({ type: 'renameBranch', payload: { oldName: old, newName: renameBranchNew } }); }}>{t('renameBranch.rename')}</button>
     </div>
   </Modal>
 {/if}
 
-{#if showMergeModal}
+{#if modalStore.merge.show}
   <MergeBranchModal
-    source={mergeTarget}
-    target={branchStore.currentBranch?.name ?? 'HEAD'}
-    onClose={() => { showMergeModal = false; }}
-    onMerge={(options) => { showMergeModal = false; vscode.postMessage({ type: 'merge', payload: { branch: mergeTarget, ...options } }); }}
+    source={modalStore.merge.source}
+    target={modalStore.merge.target}
+    onClose={() => { modalStore.closeMerge(); }}
+    onMerge={(options) => { const branch = modalStore.merge.source; modalStore.closeMerge(); vscode.postMessage({ type: 'merge', payload: { branch, ...options } }); }}
   />
 {/if}
 
-{#if showCreateBranchModal}
+{#if modalStore.createBranch.show}
   <CreateBranchModal
-    startPoint="HEAD"
-    subject=""
-    onClose={() => { showCreateBranchModal = false; }}
-    onCreate={(name, _msg, startPoint) => { showCreateBranchModal = false; vscode.postMessage({ type: 'createBranch', payload: { name, startPoint, checkout: true } }); }}
+    startPoint={modalStore.createBranch.startPoint}
+    subject={modalStore.createBranch.subject}
+    onClose={() => { modalStore.closeCreateBranch(); }}
+    onCreate={(name, _msg, startPoint) => { modalStore.closeCreateBranch(); vscode.postMessage({ type: 'createBranch', payload: { name, startPoint, checkout: true } }); }}
   />
 {/if}
 
-{#if showCreateTagModal}
+{#if modalStore.createTag.show}
   <CreateTagModal
-    startPoint="HEAD"
-    subject=""
-    onClose={() => { showCreateTagModal = false; }}
-    onCreate={(name, message, startPoint, push) => { showCreateTagModal = false; vscode.postMessage({ type: 'createTag', payload: { name, ref: startPoint, message: message || undefined } }); if (push) vscode.postMessage({ type: 'pushTag', payload: { name } }); }}
+    startPoint={modalStore.createTag.ref}
+    subject={modalStore.createTag.subject}
+    onClose={() => { modalStore.closeCreateTag(); }}
+    onCreate={(name, message, startPoint, push) => { modalStore.closeCreateTag(); vscode.postMessage({ type: 'createTag', payload: { name, ref: startPoint, message: message || undefined } }); if (push) vscode.postMessage({ type: 'pushTag', payload: { name } }); }}
   />
 {/if}
 
-{#if showStashSaveModal}
-  <Modal title={t('stashSave.title')} onClose={() => { showStashSaveModal = false; }}>
+{#if modalStore.stashSave.show}
+  <Modal title={t('stashSave.title')} onClose={() => { modalStore.closeStashSave(); }}>
     <div class="modal-form-group">
       <label class="modal-field-label" for="stash-save-input">{t('stashSave.message')}</label>
-      <input id="stash-save-input" class="modal-input" type="text" bind:value={stashSaveMessage} placeholder={t('stashSave.placeholder')} />
+      <!-- svelte-ignore a11y_autofocus -->
+      <input id="stash-save-input" class="modal-input" type="text" bind:value={stashSaveMessage} placeholder={t('stashSave.placeholder')} autofocus
+        onkeydown={(e) => { if (e.key === 'Enter') { modalStore.closeStashSave(); vscode.postMessage({ type: 'stashSave', payload: { message: stashSaveMessage || undefined, includeUntracked: stashSaveIncludeUntracked, keepIndex: stashSaveKeepIndex } }); } }} />
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={stashSaveIncludeUntracked} />
+        <span>{t('stash.includeUntracked')}</span>
+      </label>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={stashSaveKeepIndex} />
+        <span>{t('stash.keepIndex')}</span>
+      </label>
     </div>
     <div class="form-actions">
-      <button onclick={() => { showStashSaveModal = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showStashSaveModal = false; vscode.postMessage({ type: 'stashSave', payload: { message: stashSaveMessage || undefined, includeUntracked: true } }); }}>{t('stashSave.save')}</button>
+      <button onclick={() => { modalStore.closeStashSave(); }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => { modalStore.closeStashSave(); vscode.postMessage({ type: 'stashSave', payload: { message: stashSaveMessage || undefined, includeUntracked: stashSaveIncludeUntracked, keepIndex: stashSaveKeepIndex } }); }}>{t('stash.stash')}</button>
     </div>
   </Modal>
 {/if}
 
-{#if showCheckoutRemoteModal}
+{#if modalStore.checkoutRemote.show}
   <CheckoutRemoteModal
-    remoteName={checkoutRemoteName}
-    defaultLocalName={checkoutRemoteLocalName}
-    onClose={() => { showCheckoutRemoteModal = false; }}
-    onCheckout={(localName) => { showCheckoutRemoteModal = false; vscode.postMessage({ type: 'createBranch', payload: { name: localName, startPoint: checkoutRemoteName, checkout: true } }); }}
+    remoteName={modalStore.checkoutRemote.remoteName}
+    defaultLocalName={modalStore.checkoutRemote.localName}
+    onClose={() => { modalStore.closeCheckoutRemote(); }}
+    onCheckout={(localName) => { const remote = modalStore.checkoutRemote.remoteName; modalStore.closeCheckoutRemote(); vscode.postMessage({ type: 'createBranch', payload: { name: localName, startPoint: remote, checkout: true } }); }}
   />
 {/if}
 
@@ -457,30 +444,30 @@
   />
 {/if}
 
-{#if showDeleteRemoteBranchModal}
-  <Modal title={t('deleteRemoteBranch.title')} onClose={() => { showDeleteRemoteBranchModal = false; }}>
-    <p class="modal-desc">{@html t('deleteRemoteBranch.confirm', { name: `<span class="modal-pill modal-pill--danger">${deleteRemoteBranchRemote}/${deleteRemoteBranchName}</span>` })}</p>
+{#if modalStore.deleteRemoteBranch.show}
+  <Modal title={t('deleteRemoteBranch.title')} onClose={() => { modalStore.closeDeleteRemoteBranch(); }}>
+    <p class="modal-desc">{@html t('deleteRemoteBranch.confirm', { name: `<span class="modal-pill modal-pill--danger">${modalStore.deleteRemoteBranch.remote}/${modalStore.deleteRemoteBranch.name}</span>` })}</p>
     <div class="form-actions">
-      <button onclick={() => { showDeleteRemoteBranchModal = false; }}>{t('common.cancel')}</button>
-      <button class="danger-btn" onclick={() => { showDeleteRemoteBranchModal = false; vscode.postMessage({ type: 'deleteRemoteBranch', payload: { remote: deleteRemoteBranchRemote, name: deleteRemoteBranchName } }); }}>{t('sidebar.delete')}</button>
+      <button onclick={() => { modalStore.closeDeleteRemoteBranch(); }}>{t('common.cancel')}</button>
+      <button class="danger-btn" onclick={() => { const { remote, name } = modalStore.deleteRemoteBranch; modalStore.closeDeleteRemoteBranch(); vscode.postMessage({ type: 'deleteRemoteBranch', payload: { remote, name } }); }}>{t('sidebar.delete')}</button>
     </div>
   </Modal>
 {/if}
 
-{#if showRemoveWorktreeModal}
-  <Modal title={t('worktree.removeTitle')} onClose={() => { showRemoveWorktreeModal = false; }}>
-    <p class="modal-desc">{t('worktree.removeConfirm', { path: removeWorktreePath })}</p>
-    {#if removeWorktreeBranch}
+{#if modalStore.removeWorktree.show}
+  <Modal title={t('worktree.removeTitle')} onClose={() => { modalStore.closeRemoveWorktree(); }}>
+    <p class="modal-desc">{t('worktree.removeConfirm', { path: modalStore.removeWorktree.path })}</p>
+    {#if modalStore.removeWorktree.branch}
       <div class="modal-form-group">
         <label class="modal-checkbox modal-checkbox--danger">
           <input type="checkbox" bind:checked={deleteWorktreeBranch} />
-          <span>{t('worktree.deleteBranch', { name: removeWorktreeBranch })}</span>
+          <span>{t('worktree.deleteBranch', { name: modalStore.removeWorktree.branch })}</span>
         </label>
       </div>
     {/if}
     <div class="form-actions">
-      <button onclick={() => { showRemoveWorktreeModal = false; }}>{t('common.cancel')}</button>
-      <button class="danger-btn" onclick={() => { showRemoveWorktreeModal = false; vscode.postMessage({ type: 'worktreeRemove', payload: { path: removeWorktreePath, deleteBranch: deleteWorktreeBranch ? removeWorktreeBranch : undefined } }); }}>{t('sidebar.delete')}</button>
+      <button onclick={() => { modalStore.closeRemoveWorktree(); }}>{t('common.cancel')}</button>
+      <button class="danger-btn" onclick={() => { const { path, branch } = modalStore.removeWorktree; modalStore.closeRemoveWorktree(); vscode.postMessage({ type: 'worktreeRemove', payload: { path, deleteBranch: deleteWorktreeBranch ? branch : undefined } }); }}>{t('sidebar.delete')}</button>
     </div>
   </Modal>
 {/if}

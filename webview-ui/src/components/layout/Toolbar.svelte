@@ -6,6 +6,7 @@
   import { t } from '../../lib/i18n/index.svelte';
   import Modal from '../common/Modal.svelte';
   import AddRemoteModal from '../modals/AddRemoteModal.svelte';
+  import { modalStore } from '../../lib/stores/modals.svelte';
 
   const vscode = getVsCodeApi();
 
@@ -19,10 +20,6 @@
   let pullRebase = $state(false);
   let pullStash = $state(false);
   let showAddRemote = $state(false);
-  let showStashSave = $state(false);
-  let stashMessage = $state('');
-  let stashIncludeUntracked = $state(true);
-  let stashKeepIndex = $state(false);
 
   function refresh() {
     operating = 'refresh';
@@ -141,7 +138,7 @@
   <div class="toolbar-right">
     <button
       class="toolbar-btn"
-      onclick={() => { showStashSave = true; stashMessage = ''; stashIncludeUntracked = true; stashKeepIndex = false; }}
+      onclick={() => { modalStore.openStashSave(); }}
       disabled={operating !== null}
       title={t('toolbar.stashDesc')}
     >
@@ -253,36 +250,6 @@
     <div class="form-actions">
       <button onclick={() => { showPullConfirm = false; }}>{t('common.cancel')}</button>
       <button class="primary" onclick={confirmPull}>{t('pull.pull')}</button>
-    </div>
-  </Modal>
-{/if}
-
-{#if showStashSave}
-  <Modal title={t('stashSave.title')} onClose={() => { showStashSave = false; }}>
-    <div class="modal-form-group">
-      <label class="modal-field-label" for="stash-msg">{t('stashSave.message')}</label>
-      <!-- svelte-ignore a11y_autofocus -->
-      <input id="stash-msg" class="modal-input" type="text" bind:value={stashMessage} placeholder={t('stashSave.placeholder')} autofocus
-        onkeydown={(e) => { if (e.key === 'Enter') { showStashSave = false; vscode.postMessage({ type: 'stashSave', payload: { message: stashMessage || undefined, includeUntracked: stashIncludeUntracked, keepIndex: stashKeepIndex } }); } }} />
-    </div>
-    <div class="modal-form-group">
-      <label class="modal-checkbox">
-        <input type="checkbox" bind:checked={stashIncludeUntracked} />
-        <span>{t('stash.includeUntracked')}</span>
-      </label>
-    </div>
-    <div class="modal-form-group">
-      <label class="modal-checkbox">
-        <input type="checkbox" bind:checked={stashKeepIndex} />
-        <span>{t('stash.keepIndex')}</span>
-      </label>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showStashSave = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => {
-        showStashSave = false;
-        vscode.postMessage({ type: 'stashSave', payload: { message: stashMessage || undefined, includeUntracked: stashIncludeUntracked, keepIndex: stashKeepIndex } });
-      }}>{t('stash.stash')}</button>
     </div>
   </Modal>
 {/if}

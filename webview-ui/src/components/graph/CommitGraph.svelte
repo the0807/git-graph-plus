@@ -9,14 +9,9 @@
   import InteractiveRebase from '../rebase/InteractiveRebase.svelte';
   import Modal from '../common/Modal.svelte';
   import ColorSelect from '../common/ColorSelect.svelte';
-  import DeleteTagModal from '../modals/DeleteTagModal.svelte';
-  import DeleteBranchModal from '../modals/DeleteBranchModal.svelte';
   import PullAfterCheckoutModal from '../modals/PullAfterCheckoutModal.svelte';
-  import CheckoutRemoteModal from '../modals/CheckoutRemoteModal.svelte';
-  import MergeBranchModal from '../modals/MergeBranchModal.svelte';
   import RebaseBranchModal from '../modals/RebaseBranchModal.svelte';
-  import CreateBranchModal from '../modals/CreateBranchModal.svelte';
-  import CreateTagModal from '../modals/CreateTagModal.svelte';
+  import { modalStore } from '../../lib/stores/modals.svelte';
   import type { Commit, CommitGraphData } from '../../lib/types';
 
   const COLOR_PALETTE = [
@@ -127,14 +122,9 @@
   let resetTarget = $state('');
   let resetMode = $state<'soft' | 'mixed' | 'hard'>('mixed');
 
-  let showRenameBranchModal = $state(false);
-  let renameBranchOld = $state('');
   let renameBranchNew = $state('');
 
   // Confirmation modals
-  let showMergeModal = $state(false);
-  let mergeTarget = $state('');
-
   let showRebaseModal = $state(false);
   let rebaseTarget = $state('');
 
@@ -146,35 +136,8 @@
   let revertTarget = $state('');
   let revertNoCommit = $state(false);
 
-  let showDeleteTagModal = $state(false);
-  let deleteTagName = $state('');
-
-  let showDeleteBranchModal = $state(false);
-  let deleteBranchName = $state('');
-
-  let showDeleteRemoteBranchModal = $state(false);
-  let deleteRemoteBranchRemote = $state('');
-  let deleteRemoteBranchName = $state('');
-
-  let showRemoveWorktreeModal = $state(false);
-  let removeWorktreePath = $state('');
-  let removeWorktreeBranch = $state('');
-  let deleteWorktreeBranch = $state(false);
-
-  let showCheckoutRemoteModal = $state(false);
-  let checkoutRemoteName = $state('');
-  let checkoutRemoteLocalName = $state('');
-
   let showCheckoutCommitModal = $state(false);
   let checkoutCommitHash = $state('');
-
-  let showCreateTagModal = $state(false);
-  let createTagRef = $state('');
-  let createTagSubject = $state('');
-
-  let showCreateBranchModal = $state(false);
-  let createBranchStartPoint = $state('');
-  let createBranchSubject = $state('');
 
   let showPullAfterCheckoutModal = $state(false);
   let pullAfterCheckoutRef = $state('');
@@ -202,9 +165,7 @@
       doCheckout(localBranch.name);
     } else {
       // No local branch → show create modal
-      checkoutRemoteName = remoteName;
-      checkoutRemoteLocalName = branchName;
-      showCheckoutRemoteModal = true;
+      modalStore.openCheckoutRemote(remoteName, branchName);
     }
   }
 
@@ -318,21 +279,21 @@
               },
               {
                 label: t('graph.mergeInto', { branch: currentBranch }),
-                action: () => { mergeTarget = branchName; showMergeModal = true; },
+                action: () => { modalStore.openMerge(branchName, branchStore.currentBranch?.name ?? 'current branch'); },
               },
               { separator: true, label: '', action: () => {} },
               {
                 label: t('graph.rename'),
-                action: () => { renameBranchOld = branchName; renameBranchNew = branchName; showRenameBranchModal = true; },
+                action: () => { renameBranchNew = branchName; modalStore.openRenameBranch(branchName); },
               },
               {
                 label: t('graph.removeWorktree'),
-                action: () => { removeWorktreePath = linkedWt.path; removeWorktreeBranch = branchName; deleteWorktreeBranch = false; showRemoveWorktreeModal = true; },
+                action: () => { modalStore.openRemoveWorktree(linkedWt.path, branchName); },
                 danger: true,
               },
               {
                 label: t('graph.deleteBranch'),
-                action: () => { deleteBranchName = branchName; showDeleteBranchModal = true; },
+                action: () => { modalStore.openDeleteBranch(branchName); },
                 danger: true,
               },
               { separator: true, label: '', action: () => {} },
@@ -355,16 +316,16 @@
               },
               {
                 label: t('graph.mergeInto', { branch: currentBranch }),
-                action: () => { mergeTarget = branchName; showMergeModal = true; },
+                action: () => { modalStore.openMerge(branchName, branchStore.currentBranch?.name ?? 'current branch'); },
               },
               { separator: true, label: '', action: () => {} },
               {
                 label: t('graph.rename'),
-                action: () => { renameBranchOld = branchName; renameBranchNew = branchName; showRenameBranchModal = true; },
+                action: () => { renameBranchNew = branchName; modalStore.openRenameBranch(branchName); },
               },
               {
                 label: t('graph.deleteBranch'),
-                action: () => { deleteBranchName = branchName; showDeleteBranchModal = true; },
+                action: () => { modalStore.openDeleteBranch(branchName); },
                 danger: true,
               },
               { separator: true, label: '', action: () => {} },
@@ -388,12 +349,12 @@
             },
             {
               label: t('graph.mergeInto', { branch: currentBranch }),
-              action: () => { mergeTarget = fullName; showMergeModal = true; },
+              action: () => { modalStore.openMerge(fullName, branchStore.currentBranch?.name ?? 'current branch'); },
             },
             { separator: true, label: '', action: () => {} },
             {
               label: t('graph.deleteRemoteBranch'),
-              action: () => { deleteRemoteBranchRemote = ref.remote!; deleteRemoteBranchName = ref.name; showDeleteRemoteBranchModal = true; },
+              action: () => { modalStore.openDeleteRemoteBranch(ref.remote!, ref.name); },
               danger: true,
             },
             { separator: true, label: '', action: () => {} },
@@ -415,7 +376,7 @@
             },
             {
               label: t('graph.deleteTag'),
-              action: () => { deleteTagName = ref.name; showDeleteTagModal = true; },
+              action: () => { modalStore.openDeleteTag(ref.name); },
               danger: true,
             },
             { separator: true, label: '', action: () => {} },
@@ -460,11 +421,11 @@
     items.push(
       {
         label: t('graph.createBranchHere'),
-        action: () => { createBranchStartPoint = commit.hash; createBranchSubject = commit.subject; showCreateBranchModal = true; },
+        action: () => { modalStore.openCreateBranch(commit.hash, commit.subject); },
       },
       {
         label: t('graph.newTag'),
-        action: () => { createTagRef = commit.hash; createTagSubject = commit.subject; showCreateTagModal = true; },
+        action: () => { modalStore.openCreateTag(commit.hash, commit.subject); },
       },
     );
 
@@ -473,7 +434,7 @@
       { separator: true, label: '', action: () => {} },
       {
         label: t('graph.mergeInto', { branch: currentBranch }),
-        action: () => { mergeTarget = commit.hash; showMergeModal = true; },
+        action: () => { modalStore.openMerge(commit.hash, branchStore.currentBranch?.name ?? 'current branch'); },
       },
       {
         label: t('graph.rebaseTo', { branch: currentBranch }),
@@ -862,7 +823,7 @@
     x={contextMenu.x}
     y={contextMenu.y}
     items={contextMenu.items}
-    onClose={() => { contextMenu = null; if (!showMergeModal && !showRebaseModal && !showCherryPickModal && !showRevertModal && !showResetModal && !showDeleteTagModal && !showDeleteBranchModal && !showDeleteRemoteBranchModal && !showRemoveWorktreeModal && !showCreateTagModal && !showCreateBranchModal) contextMenuHash = null; }}
+    onClose={() => { contextMenu = null; if (!showRebaseModal && !showCherryPickModal && !showRevertModal && !showResetModal) contextMenuHash = null; }}
   />
 {/if}
 
@@ -906,15 +867,6 @@
         }}>{t('reset.resetBtn')}</button>
     </div>
   </Modal>
-{/if}
-
-{#if showMergeModal}
-  <MergeBranchModal
-    source={mergeTarget}
-    target={branchStore.currentBranch?.name ?? 'current branch'}
-    onClose={() => { showMergeModal = false; contextMenuHash = null; }}
-    onMerge={(options) => { showMergeModal = false; contextMenuHash = null; vscode.postMessage({ type: 'merge', payload: { branch: mergeTarget, ...options } }); }}
-  />
 {/if}
 
 {#if showRebaseModal}
@@ -970,78 +922,6 @@
       <button class="primary" onclick={() => { showRevertModal = false; contextMenuHash = null; vscode.postMessage({ type: 'revert', payload: { commit: revertTarget, noCommit: revertNoCommit } }); }}>{t('revert.revert')}</button>
     </div>
   </Modal>
-{/if}
-
-{#if showDeleteTagModal}
-  <DeleteTagModal
-    tagName={deleteTagName}
-    hasRemote={branchStore.remotes.length > 0}
-    onClose={() => { showDeleteTagModal = false; contextMenuHash = null; }}
-    onDelete={(deleteRemote) => { showDeleteTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteTag', payload: { name: deleteTagName } }); if (deleteRemote) vscode.postMessage({ type: 'deleteRemoteTag', payload: { name: deleteTagName } }); }}
-  />
-{/if}
-
-{#if showCreateTagModal}
-  <CreateTagModal
-    startPoint={createTagRef}
-    subject={createTagSubject}
-    onClose={() => { showCreateTagModal = false; contextMenuHash = null; }}
-    onCreate={(name, message, startPoint, push) => { showCreateTagModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createTag', payload: { name, ref: startPoint, message: message || undefined } }); if (push) vscode.postMessage({ type: 'pushTag', payload: { name } }); }}
-  />
-{/if}
-
-{#if showCreateBranchModal}
-  <CreateBranchModal
-    startPoint={createBranchStartPoint}
-    subject={createBranchSubject}
-    onClose={() => { showCreateBranchModal = false; contextMenuHash = null; }}
-    onCreate={(name, startPoint, checkout) => { showCreateBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'createBranch', payload: { name, startPoint, checkout } }); }}
-  />
-{/if}
-
-{#if showDeleteBranchModal}
-  <DeleteBranchModal
-    branchName={deleteBranchName}
-    onClose={() => { showDeleteBranchModal = false; contextMenuHash = null; }}
-    onDelete={(force, deleteWorktreePath, deleteRemote) => { showDeleteBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteBranch', payload: { name: deleteBranchName, force, worktreePath: deleteWorktreePath, deleteRemote } }); }}
-  />
-{/if}
-
-{#if showDeleteRemoteBranchModal}
-  <Modal title={t('deleteRemoteBranch.title')} onClose={() => { showDeleteRemoteBranchModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">{@html t('deleteRemoteBranch.confirm', { name: `<span class="modal-pill modal-pill--danger">${deleteRemoteBranchRemote}/${deleteRemoteBranchName}</span>` })}</p>
-    <div class="form-actions">
-      <button onclick={() => { showDeleteRemoteBranchModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="danger-btn" onclick={() => { showDeleteRemoteBranchModal = false; contextMenuHash = null; vscode.postMessage({ type: 'deleteRemoteBranch', payload: { remote: deleteRemoteBranchRemote, name: deleteRemoteBranchName } }); }}>{t('sidebar.delete')}</button>
-    </div>
-  </Modal>
-{/if}
-
-{#if showRemoveWorktreeModal}
-  <Modal title={t('worktree.removeTitle')} onClose={() => { showRemoveWorktreeModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">{t('worktree.removeConfirm', { path: removeWorktreePath })}</p>
-    {#if removeWorktreeBranch}
-      <div class="modal-form-group">
-        <label class="modal-checkbox modal-checkbox--danger">
-          <input type="checkbox" bind:checked={deleteWorktreeBranch} />
-          <span>{t('worktree.deleteBranch', { name: removeWorktreeBranch })}</span>
-        </label>
-      </div>
-    {/if}
-    <div class="form-actions">
-      <button onclick={() => { showRemoveWorktreeModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="danger-btn" onclick={() => { showRemoveWorktreeModal = false; contextMenuHash = null; vscode.postMessage({ type: 'worktreeRemove', payload: { path: removeWorktreePath, deleteBranch: deleteWorktreeBranch ? removeWorktreeBranch : undefined } }); }}>{t('sidebar.delete')}</button>
-    </div>
-  </Modal>
-{/if}
-
-{#if showCheckoutRemoteModal}
-  <CheckoutRemoteModal
-    remoteName={checkoutRemoteName}
-    defaultLocalName={checkoutRemoteLocalName}
-    onClose={() => { showCheckoutRemoteModal = false; }}
-    onCheckout={(localName) => { showCheckoutRemoteModal = false; vscode.postMessage({ type: 'createBranch', payload: { name: localName, startPoint: checkoutRemoteName, checkout: true } }); }}
-  />
 {/if}
 
 {#if showCheckoutCommitModal}
@@ -1139,26 +1019,6 @@
     onCheckoutOnly={() => { showPullAfterCheckoutModal = false; vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef } }); }}
     onCheckoutAndPull={() => { showPullAfterCheckoutModal = false; vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef, pullAfter: true } }); }}
   />
-{/if}
-
-{#if showRenameBranchModal}
-  <Modal title={t('renameBranch.title')} onClose={() => { showRenameBranchModal = false; }}>
-    <div class="modal-context-card">
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--source">{renameBranchOld}</span>
-    </div>
-    <div class="modal-form-group">
-      <label class="modal-field-label" for="ctx-rename-input">{t('renameBranch.newName', { name: renameBranchOld })}</label>
-      <!-- svelte-ignore a11y_autofocus -->
-      <input id="ctx-rename-input" class="modal-input" type="text" bind:value={renameBranchNew} autofocus
-        onkeydown={(e) => { if (e.key === 'Enter' && renameBranchNew.trim() && renameBranchNew !== renameBranchOld) { showRenameBranchModal = false; vscode.postMessage({ type: 'renameBranch', payload: { oldName: renameBranchOld, newName: renameBranchNew.trim() } }); } }} />
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showRenameBranchModal = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showRenameBranchModal = false; vscode.postMessage({ type: 'renameBranch', payload: { oldName: renameBranchOld, newName: renameBranchNew.trim() } }); }}
-        disabled={!renameBranchNew.trim() || renameBranchNew === renameBranchOld}>{t('renameBranch.rename')}</button>
-    </div>
-  </Modal>
 {/if}
 
 <style>

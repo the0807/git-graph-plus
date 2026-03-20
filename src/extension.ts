@@ -34,12 +34,21 @@ export function activate(context: vscode.ExtensionContext) {
   const worktreesProvider = new WorktreesViewProvider(gitService);
 
   context.subscriptions.push(
-    vscode.window.registerTreeDataProvider('gitGraphPlus.branches', branchesProvider),
-    vscode.window.registerTreeDataProvider('gitGraphPlus.remotes', remotesProvider),
-    vscode.window.registerTreeDataProvider('gitGraphPlus.tags', tagsProvider),
-    vscode.window.registerTreeDataProvider('gitGraphPlus.stashes', stashesProvider),
-    vscode.window.registerTreeDataProvider('gitGraphPlus.worktrees', worktreesProvider),
+    vscode.window.createTreeView('gitGraphPlus.branches', { treeDataProvider: branchesProvider }),
+    vscode.window.createTreeView('gitGraphPlus.remotes', { treeDataProvider: remotesProvider }),
+    vscode.window.createTreeView('gitGraphPlus.tags', { treeDataProvider: tagsProvider }),
+    vscode.window.createTreeView('gitGraphPlus.stashes', { treeDataProvider: stashesProvider }),
+    vscode.window.createTreeView('gitGraphPlus.worktrees', { treeDataProvider: worktreesProvider }),
   );
+
+  // Prefetch all tree view data in parallel so first expand is instant
+  Promise.all([
+    branchesProvider.prefetch(),
+    remotesProvider.prefetch(),
+    tagsProvider.prefetch(),
+    stashesProvider.prefetch(),
+    worktreesProvider.prefetch(),
+  ]).catch(() => {});
 
   // --- Status Bar ---
   const statusBar = new StatusBarManager();

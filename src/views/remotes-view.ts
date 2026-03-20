@@ -7,10 +7,26 @@ type RemoteTreeItem = RemoteItem | RemoteBranchItem;
 export class RemotesViewProvider implements vscode.TreeDataProvider<RemoteTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<RemoteTreeItem | undefined | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private rootCache: RemoteTreeItem[] | null = null;
+  private branchCache: Map<string, RemoteTreeItem[]> = new Map();
+  private pending: Promise<void> | null = null;
 
   constructor(private gitService: GitService) {}
 
   refresh(): void {
+    this.branchCache.clear();
+    this.prefetch();
+  }
+
+  prefetch(): Promise<void> {
+    if (!this.pending) this.pending = this.doFetch();
+    return this.pending;
+  }
+
+  private async doFetch(): Promise<void> {
+    try { this.rootCache = (await this.gitService.remotes()).map(r => new RemoteItem(r)); }
+    catch { /* keep old cache */ }
+    this.pending = null;
     this._onDidChangeTreeData.fire();
   }
 
@@ -20,18 +36,18 @@ export class RemotesViewProvider implements vscode.TreeDataProvider<RemoteTreeIt
 
   async getChildren(element?: RemoteTreeItem): Promise<RemoteTreeItem[]> {
     if (!element) {
-      try {
-        const remotes = await this.gitService.remotes();
-        return remotes.map(r => new RemoteItem(r));
-      } catch {
-        return [];
-      }
+      if (this.rootCache) return this.rootCache;
+      await this.prefetch();
+      return this.rootCache ?? [];
     }
 
     if (element instanceof RemoteItem) {
+      const remoteName = element.remote.name;
+      const cached = this.branchCache.get(remoteName);
+      if (cached) return cached;
+
       try {
         const branches = await this.gitService.branches();
-        const remoteName = element.remote.name;
         const remoteBranches = branches.filter(b =>
           b.remote === remoteName || (b.name.startsWith(`${remoteName}/`) && b.name !== remoteName)
         );
@@ -46,7 +62,9 @@ export class RemotesViewProvider implements vscode.TreeDataProvider<RemoteTreeIt
           if (orderA !== orderB) { return orderA - orderB; }
           return lowerA.localeCompare(lowerB);
         });
-        return remoteBranches.map(b => new RemoteBranchItem(b));
+        const items = remoteBranches.map(b => new RemoteBranchItem(b));
+        this.branchCache.set(remoteName, items);
+        return items;
       } catch {
         return [];
       }

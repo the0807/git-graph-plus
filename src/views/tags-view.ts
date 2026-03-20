@@ -5,28 +5,32 @@ import type { TagInfo } from '../git/types';
 export class TagsViewProvider implements vscode.TreeDataProvider<TagItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<TagItem | undefined | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private cache: TagItem[] | null = null;
+  private pending: Promise<void> | null = null;
 
   constructor(private gitService: GitService) {}
 
-  refresh(): void {
+  refresh(): void { this.prefetch(); }
+
+  prefetch(): Promise<void> {
+    if (!this.pending) this.pending = this.doFetch();
+    return this.pending;
+  }
+
+  private async doFetch(): Promise<void> {
+    try { this.cache = (await this.gitService.tags()).map(t => new TagItem(t)); }
+    catch { /* keep old cache */ }
+    this.pending = null;
     this._onDidChangeTreeData.fire();
   }
 
-  getTreeItem(element: TagItem): vscode.TreeItem {
-    return element;
-  }
+  getTreeItem(element: TagItem): vscode.TreeItem { return element; }
 
   async getChildren(element?: TagItem): Promise<TagItem[]> {
-    if (element) {
-      return [];
-    }
-
-    try {
-      const tags = await this.gitService.tags();
-      return tags.map(t => new TagItem(t));
-    } catch {
-      return [];
-    }
+    if (element) return [];
+    if (this.cache) return this.cache;
+    await this.prefetch();
+    return this.cache ?? [];
   }
 }
 

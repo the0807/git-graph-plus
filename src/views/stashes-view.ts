@@ -5,28 +5,32 @@ import type { StashEntry } from '../git/types';
 export class StashesViewProvider implements vscode.TreeDataProvider<StashItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<StashItem | undefined | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private cache: StashItem[] | null = null;
+  private pending: Promise<void> | null = null;
 
   constructor(private gitService: GitService) {}
 
-  refresh(): void {
+  refresh(): void { this.prefetch(); }
+
+  prefetch(): Promise<void> {
+    if (!this.pending) this.pending = this.doFetch();
+    return this.pending;
+  }
+
+  private async doFetch(): Promise<void> {
+    try { this.cache = (await this.gitService.stashList()).map(s => new StashItem(s)); }
+    catch { /* keep old cache */ }
+    this.pending = null;
     this._onDidChangeTreeData.fire();
   }
 
-  getTreeItem(element: StashItem): vscode.TreeItem {
-    return element;
-  }
+  getTreeItem(element: StashItem): vscode.TreeItem { return element; }
 
   async getChildren(element?: StashItem): Promise<StashItem[]> {
-    if (element) {
-      return [];
-    }
-
-    try {
-      const stashes = await this.gitService.stashList();
-      return stashes.map(s => new StashItem(s));
-    } catch {
-      return [];
-    }
+    if (element) return [];
+    if (this.cache) return this.cache;
+    await this.prefetch();
+    return this.cache ?? [];
   }
 }
 
