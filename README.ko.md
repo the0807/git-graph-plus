@@ -15,20 +15,24 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 ### 커밋 그래프
 - 브랜치/머지 시각화 및 색상 구분이 적용된 인터랙티브 커밋 그래프
 - Fork와 같은 위상순 커밋 정렬 (topo-order)
+- 세 가지 뷰: **그래프**, **로그**, **통계**
 - 커밋을 클릭하여 상세 정보, 변경된 파일, diff 확인
 - 우클릭 컨텍스트 메뉴: checkout, cherry-pick, revert, reset, merge, rebase 등
 - 두 커밋 비교: 기준 커밋 선택 후 다른 커밋 클릭으로 diff 확인
 - 커밋과 로컬 작업 변경사항 비교
-- 메시지, 작성자, 날짜 범위, 해시로 검색
+- 메시지, 작성자, 날짜 범위, 해시로 검색 — 결과 하이라이트 및 탐색
 - 작성자명 옆에 Gravatar 아바타 표시
 - 크기 조절 가능한 하단 패널 (Escape로 닫기)
 - 로컬 전용 커밋 표시 (파란 점 — push 안 됨)
 - 리모트 전용 커밋 표시 (회색 점 — 리모트가 앞서감)
+- 라이트, 다크, 고대비 테마 지원
 
 ### 브랜치 & 태그 관리
 - 브랜치 생성, 이름 변경, 삭제, checkout
 - Merge (default, no-ff, ff-only, squash) 및 rebase (interactive 포함)
-- Cherry-pick 및 revert
+- Interactive rebase UI: 드래그로 순서 변경, 액션 드롭다운 (pick, reword, edit, squash, fixup, drop), drop 경고
+- Cherry-pick 및 revert (--no-commit 옵션 포함)
+- 임의의 커밋으로 reset (soft, mixed, hard)
 - 경량 태그 및 주석 태그 생성
 - 리모트 태그 push, 삭제, 관리 (리모트에서도 삭제 옵션)
 - upstream 추적 기반 로컬/리모트 브랜치 매칭
@@ -45,12 +49,19 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 - Merge, rebase, cherry-pick, revert 시 자동 충돌 감지
 - 충돌 배너에 파일 목록 및 상태 표시
 - 충돌 파일 클릭으로 VS Code 에디터에서 열기 (3-way 병합 편집기 지원)
-- Continue 및 Abort 버튼 (해결된 파일 자동 스테이징)
+- 파일별 "해결 완료 표시" 및 자동 스테이징
+- Continue 및 Abort 버튼
 
 ### Stash & Worktree
-- Stash 저장, 적용, pop, 삭제
+- Stash 저장, 적용, pop, 삭제 (untracked 파일 및 keep-index 옵션 포함)
 - 커밋 그래프에 stash 배지 및 전용 컨텍스트 메뉴
-- Worktree 관리 (목록, 추가, 제거, 정리)
+- Worktree 관리 (목록, 추가, 제거, 정리) 및 연결된 브랜치 정리
+
+### Diff 뷰어
+- 상태 표시가 있는 파일 트리 (Added, Modified, Deleted, Renamed, Copied)
+- Shiki 기반 구문 강조 diff
+- 이미지 diff 시각적 미리보기
+- 커밋을 `.patch` 파일로 저장
 
 ### 고급 기능
 - Git Flow 지원 (feature, release, hotfix)

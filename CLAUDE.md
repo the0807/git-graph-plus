@@ -36,7 +36,7 @@ npm run package                # vsce package
 
 ### Communication Flow
 
-Extension and webview communicate exclusively via `postMessage()`. All message types are defined in `src/utils/message-bus.ts` as TypeScript union types (`WebviewMessage` for webview→extension, `ExtensionMessage` for extension→webview).
+Extension and webview communicate exclusively via `postMessage()`. All message types are defined in `src/utils/message-bus.ts` as TypeScript union types (`WebviewMessage` for webview→extension, `ExtensionMessage` for extension→webview). Types are intentionally duplicated in `webview-ui/src/lib/types.ts` (no shared code package).
 
 ### Extension Side (`src/`)
 
@@ -45,16 +45,16 @@ Extension and webview communicate exclusively via `postMessage()`. All message t
 - **`git/git-service.ts`**: All git operations via `child_process.spawn`. 80+ methods. Maintains activity log (last 200 commands). Caches remote names for 30s.
 - **`git/git-graph-builder.ts`**: Computes graph layout (paths, links, dots) from commit data for canvas rendering.
 - **`git/git-parser.ts`**: Parses raw git log output into structured commit objects.
-- **`services/file-watcher.ts`**: Watches `.git/HEAD`, `.git/refs/**`, `.git/index`. Debounces at 500ms with 1s cooldown.
+- **`services/file-watcher.ts`**: Watches `.git/HEAD`, `.git/MERGE_HEAD`, `.git/REBASE_HEAD`, `.git/refs/**`, `.git/refs/stash`, `.git/index`, plus working tree (excluding `node_modules`, `.git`, `dist`, etc.). Debounces at 500ms with 1s cooldown.
 - **`views/`**: Five `TreeDataProvider` implementations for Activity Bar sidebar (branches, remotes, tags, stashes, worktrees).
 
 ### Webview Side (`webview-ui/`)
 
 - **Framework**: Svelte 5 with `$state`/`$derived` runes, built with Vite 6.
 - **`App.svelte`**: Root component. Handles all extension messages, keyboard shortcuts, layout.
-- **Stores** (`lib/stores/`): `commits.svelte.ts` (graph data), `branches.svelte.ts` (refs), `ui.svelte.ts` (selection, view mode, panel height). All use Svelte 5 class-based `$state`.
-- **`components/graph/CommitGraph.svelte`**: Canvas-based commit graph with interactive selection and context menus.
-- **`lib/i18n/`**: Custom store-based i18n. English (`en.ts`) and Korean (`ko.ts`). Git terms (commit, merge, rebase, push, pull, fetch, stash, tag, checkout, cherry-pick, revert, blame, reflog, bisect) stay untranslated in both languages.
+- **`components/graph/CommitGraph.svelte`**: Canvas-based commit graph with interactive selection and context menus. Uses `shiki` for syntax-highlighted diffs.
+- **`lib/i18n/`**: Custom class-based i18n using `$state`. English (`en.ts`) and Korean (`ko.ts`). `t()` supports parameter interpolation with `{paramName}` syntax. Git terms (commit, merge, rebase, push, pull, fetch, stash, tag, checkout, cherry-pick, revert, blame, reflog, bisect) stay untranslated in both languages.
+- **`lib/stores/`**: All stores use Svelte 5 class-based `$state` pattern — `CommitStore` (graph data + lookup methods), `BranchStore` (refs with computed getters), `UIStore` (selection, view mode, repos), `ModalStore` (8 modal types with dynamic payloads).
 
 ### Build Tooling
 
@@ -78,4 +78,5 @@ Extension and webview communicate exclusively via `postMessage()`. All message t
 - **MainPanel singleton**: One instance per workspace. Uses `pendingModal` pattern to queue modals triggered before the panel is created.
 - **Activity log**: GitService logs every command (args, timestamp, success, duration) in a 200-entry ring buffer, viewable in the webview.
 - **No linter/formatter config**: No eslint or prettier. `npm run lint` runs `tsc --noEmit` only. Webview type checking: `cd webview-ui && npm run check` (runs `svelte-check`).
-- **Tests**: Only parser and graph builder have unit tests (`src/git/__tests__/`). Run with vitest.
+- **Tests**: Only parser and graph builder have unit tests (`src/git/__tests__/`). Run with vitest. Tests use `makeCommit()` helper to create test data. Parser tests cover `parseLog`, `parseRefs`, `parseBranches`, `parseTags`, `parseRemotes`, `parseStashList`, `parseDiff`.
+- **TypeScript targets**: Extension uses `ES2022`/`commonjs` (Node 18); webview uses `ESNext`/`bundler` module resolution.

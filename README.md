@@ -15,20 +15,24 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 ### Commit Graph
 - Interactive commit graph with branch/merge visualization and color-coded rails
 - Topological commit ordering like Fork
+- Three views: **Graph**, **Log**, and **Statistics**
 - Click any commit to view details, changed files, and diffs
 - Right-click context menus: checkout, cherry-pick, revert, reset, merge, rebase, and more
 - Compare two commits: select a base commit, then click another to see the diff
 - Compare any commit to local working tree changes
-- Search by message, author, date range, or hash
+- Search by message, author, date range, or hash — with result highlighting and navigation
 - Gravatar avatars next to author names
 - Resizable bottom panel for commit details (Escape to close)
 - Local-only commit indicator (blue dot — not pushed)
 - Remote-only commit indicator (gray dot — remote ahead)
+- Light, dark, and high-contrast theme support
 
 ### Branch & Tag Management
 - Create, rename, delete, and checkout branches
 - Merge (default, no-ff, ff-only, squash) and rebase (including interactive)
-- Cherry-pick and revert commits
+- Interactive rebase UI with drag-to-reorder, action dropdown (pick, reword, edit, squash, fixup, drop), and drop warning
+- Cherry-pick and revert commits (with --no-commit option)
+- Reset to any commit (soft, mixed, hard)
 - Create lightweight and annotated tags
 - Push, delete, and manage remote tags (delete from remote option)
 - Upstream tracking-based local/remote branch matching
@@ -45,12 +49,19 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 - Automatic conflict detection on merge, rebase, cherry-pick, and revert
 - Conflict banner with file list and status indicators
 - Click conflict files to open in VS Code editor (supports 3-way merge editor)
-- Continue and Abort buttons with auto-staging of resolved files
+- Per-file "Mark as Resolved" with auto-staging
+- Continue and Abort buttons
 
 ### Stash & Worktree
-- Save, apply, pop, and drop stashes
+- Save, apply, pop, and drop stashes (with untracked files and keep-index options)
 - Stash badges in commit graph with dedicated context menu
-- Worktree management (list, add, remove, prune)
+- Worktree management (list, add, remove, prune) with linked branch cleanup
+
+### Diff Viewer
+- File tree with status indicators (Added, Modified, Deleted, Renamed, Copied)
+- Syntax-highlighted diffs powered by Shiki
+- Image diff with visual preview
+- Save commits as `.patch` files
 
 ### Advanced
 - Git Flow support (feature, release, hotfix)

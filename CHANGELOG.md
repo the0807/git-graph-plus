@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.1.5 (2026-03-20)
+
+### New Features
+- **Dim unmerged branch commits**: Commits not on the current branch are visually dimmed for clarity
+- **Search redesign**: Local filtering with result highlighting and Enter/Shift+Enter navigation
+- **Toolbar UI overhaul**: Compact repo selector, refined icon sizing, and improved refresh behavior
+- **Stash button**: Quick stash save from toolbar with SCM integration
+
+### UI/UX Improvements
+- **Centralized modal system**: All modals managed via modalStore for consistent behavior
+- **Tree view caching and prefetch**: Sidebar tree views load instantly on first expand
+- **Row height and badge styling**: Refined graph row height, remote cloud badges, and fast-forward modal
+- **Modal icon consistency**: Unified icon usage across all modal dialogs
+- **Unified text styling**: Consistent text rendering across graph and log views
+
+### Bug Fixes
+- Fix remote-ahead branches not connecting in graph
+- Fix race conditions in data loading and tree view reliability
+- Fix search debounce causing missed keystrokes
+- Fix checkout flow: simplified logic for local, remote, and detached HEAD cases
+- Fix delete branch from stash button and SCM integration issues
+
+### Docs
+- Improve README with missing features (3 views, interactive rebase UI, reset modes, diff viewer, image diff, patch export, theme support)
+- Update CLAUDE.md with additional architecture details
+
 ## 0.1.4 (2026-03-20)
 
 ### New Features

@@ -137,7 +137,7 @@ describe('buildFullGraph remote-tip detection', () => {
     expect(graph.dots[0].remoteTip).toBe(false);
   });
 
-  it('should not generate paths for remote-tip commits', () => {
+  it('should generate paths for remote-tip commits at branch head', () => {
     const commits = [
       makeCommit('c3', ['c2'], [{ type: 'remote-branch', name: 'feature', remote: 'origin' }]),
       makeCommit('c2', ['c1'], [{ type: 'branch', name: 'feature' }]),
@@ -150,7 +150,7 @@ describe('buildFullGraph remote-tip detection', () => {
     const pathsStartingAtTip = graph.paths.filter(p =>
       p.points.length > 0 && p.points[0].y === remoteTipY
     );
-    expect(pathsStartingAtTip).toHaveLength(0);
+    expect(pathsStartingAtTip).toHaveLength(1);
   });
 
   it('should not generate links for remote-tip merge commits', () => {
