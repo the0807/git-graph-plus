@@ -13,6 +13,7 @@ export class BranchesViewProvider implements vscode.TreeDataProvider<BranchTreeI
   constructor(private gitService: GitService) {}
 
   refresh(): void {
+    this.pending = null;
     this.prefetch();
   }
 
@@ -24,12 +25,16 @@ export class BranchesViewProvider implements vscode.TreeDataProvider<BranchTreeI
   }
 
   private async doFetch(): Promise<void> {
+    const thisRequest = this.pending;
     try {
       const branches = await this.gitService.branches();
+      if (this.pending !== thisRequest) return;
       this.cache = buildBranchTree(branches.filter(b => !b.remote));
     } catch { /* keep old cache */ }
-    this.pending = null;
-    this._onDidChangeTreeData.fire();
+    if (this.pending === thisRequest) {
+      this.pending = null;
+      this._onDidChangeTreeData.fire();
+    }
   }
 
   getTreeItem(element: BranchTreeItem): vscode.TreeItem {
@@ -43,8 +48,11 @@ export class BranchesViewProvider implements vscode.TreeDataProvider<BranchTreeI
 
     if (this.cache) return this.cache;
 
-    // Wait for pending prefetch or start one — VS Code shows spinner while waiting
-    await this.prefetch();
+    // Direct fetch as fallback — always returns data
+    try {
+      const branches = await this.gitService.branches();
+      this.cache = buildBranchTree(branches.filter(b => !b.remote));
+    } catch { /* ignore */ }
     return this.cache ?? [];
   }
 }

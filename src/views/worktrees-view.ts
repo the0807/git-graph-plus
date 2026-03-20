@@ -16,7 +16,7 @@ export class WorktreesViewProvider implements vscode.TreeDataProvider<WorktreeIt
   private cache: WorktreeItem[] | null = null;
   private pending: Promise<void> | null = null;
 
-  refresh(): void { this.prefetch(); }
+  refresh(): void { this.pending = null; this.prefetch(); }
 
   prefetch(): Promise<void> {
     if (!this.pending) this.pending = this.doFetch();
@@ -24,10 +24,10 @@ export class WorktreesViewProvider implements vscode.TreeDataProvider<WorktreeIt
   }
 
   private async doFetch(): Promise<void> {
+    const thisRequest = this.pending;
     try { this.cache = (await this.gitService.worktreeList()).map(w => new WorktreeItem(w, this.gitService.rootPath)); }
     catch { /* keep old cache */ }
-    this.pending = null;
-    this._onDidChangeTreeData.fire();
+    if (this.pending === thisRequest) { this.pending = null; this._onDidChangeTreeData.fire(); }
   }
 
   getTreeItem(element: WorktreeItem): vscode.TreeItem { return element; }
@@ -35,7 +35,8 @@ export class WorktreesViewProvider implements vscode.TreeDataProvider<WorktreeIt
   async getChildren(element?: WorktreeItem): Promise<WorktreeItem[]> {
     if (element) return [];
     if (this.cache) return this.cache;
-    await this.prefetch();
+    try { this.cache = (await this.gitService.worktreeList()).map(w => new WorktreeItem(w, this.gitService.rootPath)); }
+    catch { /* ignore */ }
     return this.cache ?? [];
   }
 }

@@ -795,7 +795,17 @@ export class MainPanel {
     }
   }
 
-  private async sendRepoList(): Promise<void> {
+  private repoListPending: Promise<void> | null = null;
+
+  private sendRepoList(): Promise<void> {
+    // Deduplicate concurrent calls
+    if (!this.repoListPending) {
+      this.repoListPending = this.doSendRepoList().finally(() => { this.repoListPending = null; });
+    }
+    return this.repoListPending;
+  }
+
+  private async doSendRepoList(): Promise<void> {
     try {
       RepoDiscoveryService.clearCache();
       const workspacePaths = new Set<string>();

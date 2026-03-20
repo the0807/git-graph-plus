@@ -70,7 +70,7 @@
   let contextMenuHash = $state<string | null>(null);
   const worktreeBranches = $derived(new Set(branchStore.worktrees.filter(w => !w.isMain).map(w => w.branch)));
 
-  // Set of commit hashes on the current branch's first-parent line
+  // Set of all commit hashes reachable from HEAD (includes merged-in commits)
   const currentBranchCommits = $derived.by(() => {
     const set = new Set<string>();
     const commits = commitStore.commits;

@@ -81,12 +81,15 @@
     onResults(null);
   }
 
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
   function onInput() {
     if (!query.trim()) {
       clear();
       return;
     }
-    doSearch();
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => doSearch(), 150);
   }
 </script>
 
