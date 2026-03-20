@@ -20,11 +20,13 @@
   let pullRebase = $state(false);
   let pullStash = $state(false);
   let showAddRemote = $state(false);
+  let showRepoDropdown = $state(false);
 
   function refresh() {
     operating = 'refresh';
     vscode.postMessage({ type: 'getLog', payload: { limit: 1000 } });
     vscode.postMessage({ type: 'getBranches' });
+    vscode.postMessage({ type: 'getRepoList' });
   }
 
   function switchToGraph() {
@@ -91,18 +93,37 @@
 
 <div class="toolbar">
   <div class="toolbar-left">
-    <span class="toolbar-title">Git Graph+</span>
-    {#if uiStore.repos.length > 1}
-      <select
-        class="repo-selector"
-        value={uiStore.activeRepo}
-        onchange={(e) => switchRepo((e.target as HTMLSelectElement).value)}
+    <div class="repo-pill-wrapper">
+      <button
+        class="repo-pill"
+        class:clickable={uiStore.repos.length > 1}
+        onclick={() => { if (uiStore.repos.length > 1) showRepoDropdown = !showRepoDropdown; }}
       >
-        {#each uiStore.repos as repo}
-          <option value={repo.path}>{repo.name}</option>
-        {/each}
-      </select>
-    {/if}
+        <i class="codicon codicon-repo repo-icon"></i>
+        <span class="repo-name">
+          {uiStore.repos.find(r => r.path === uiStore.activeRepo)?.name ?? uiStore.repos[0]?.name ?? 'Repository'}
+        </span>
+        {#if uiStore.repos.length > 1}
+          <i class="codicon codicon-chevron-down repo-chevron"></i>
+        {/if}
+      </button>
+      {#if showRepoDropdown}
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="repo-dropdown-backdrop" onclick={() => { showRepoDropdown = false; }}></div>
+        <div class="repo-dropdown">
+          {#each uiStore.repos as repo}
+            <button
+              class="repo-dropdown-item"
+              class:active={repo.path === uiStore.activeRepo}
+              onclick={() => { showRepoDropdown = false; switchRepo(repo.path); }}
+            >
+              <i class="codicon {repo.path === uiStore.activeRepo ? 'codicon-check' : 'codicon-repo'}"></i>
+              {repo.name}
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
     {#if branchStore.currentBranch}
       <span class="current-branch">
         <i class="codicon codicon-git-branch branch-icon"></i>
@@ -266,8 +287,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 42px;
-    padding: 0 12px;
+    height: 44px;
+    padding: 0 14px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
@@ -279,30 +300,104 @@
     gap: 8px;
   }
 
-  .toolbar-title {
-    font-weight: 600;
-    font-size: 13px;
+  .repo-pill-wrapper {
+    position: relative;
+  }
+
+  .repo-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 10px;
+    height: 26px;
+    background: rgba(128, 128, 128, 0.12);
+    border: 1px solid rgba(128, 128, 128, 0.15);
+    color: var(--text-primary);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: default;
+  }
+
+  .repo-pill.clickable {
+    cursor: pointer;
+  }
+
+  .repo-pill.clickable:hover {
+    background: rgba(128, 128, 128, 0.2);
+  }
+
+  .repo-icon {
+    font-size: 14px;
     opacity: 0.7;
   }
 
-  .repo-selector {
-    padding: 3px 8px;
+  .repo-name {
+    white-space: nowrap;
+  }
+
+  .repo-chevron {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-left: -2px;
+  }
+
+  .repo-dropdown-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+  }
+
+  .repo-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 160px;
+    background: var(--vscode-menu-background, var(--bg-secondary));
+    border: 1px solid var(--vscode-menu-border, var(--border-color));
+    border-radius: 6px;
+    padding: 4px;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .repo-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 5px 10px;
     font-size: 12px;
-    background: var(--input-bg);
-    color: var(--input-fg);
-    border: 1px solid var(--input-border, var(--border-color));
-    border-radius: 3px;
-    outline: none;
+    color: var(--vscode-menu-foreground, var(--text-primary));
+    background: transparent;
+    border-radius: 4px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .repo-dropdown-item:hover {
+    background: var(--vscode-menu-selectionBackground, rgba(128, 128, 128, 0.2));
+    color: var(--vscode-menu-selectionForeground, var(--text-primary));
+  }
+
+  .repo-dropdown-item.active {
+    font-weight: 600;
+  }
+
+  .repo-dropdown-item .codicon {
+    font-size: 14px;
+    width: 14px;
   }
 
   .current-branch {
     display: flex;
     align-items: center;
     gap: 5px;
-    padding: 3px 12px;
+    padding: 0 10px;
+    height: 26px;
     background: var(--button-bg);
     color: var(--button-fg);
-    border-radius: 10px;
+    border-radius: 6px;
     font-size: 12px;
     font-weight: 500;
   }
@@ -324,8 +419,8 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 4px 14px;
-    font-size: 12px;
+    padding: 3px 11px;
+    font-size: 11px;
     border-radius: 4px;
     background: transparent;
     color: var(--text-secondary);
@@ -345,7 +440,7 @@
   .toolbar-right {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
   }
 
   .toolbar-btn {
@@ -354,13 +449,13 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: 4px 10px;
-    font-size: 18px;
-    border-radius: 4px;
+    padding: 0;
+    font-size: 22px;
+    border-radius: 5px;
     background: transparent;
     color: var(--text-secondary);
-    min-width: 34px;
-    height: 34px;
+    min-width: 36px;
+    height: 36px;
   }
 
   .toolbar-btn:hover {

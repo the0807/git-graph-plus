@@ -156,6 +156,10 @@ export class MainPanel {
           this.processPendingModal();
           break;
         }
+        case 'getRepoList': {
+          await this.sendRepoList();
+          break;
+        }
         case 'getCommitDiff': {
           const commitDiffs = await this.gitService.showCommitDiff(message.payload.hash);
           const commitFiles = await this.gitService.showCommitFiles(message.payload.hash);
@@ -785,6 +789,7 @@ export class MainPanel {
           branchData: { branches, tags, remotes, stashes, worktrees },
         },
       });
+      this.sendRepoList();
     } catch (err) {
       console.warn('Git Graph+: refresh failed:', err instanceof Error ? err.message : err);
     }
@@ -792,6 +797,7 @@ export class MainPanel {
 
   private async sendRepoList(): Promise<void> {
     try {
+      RepoDiscoveryService.clearCache();
       const workspacePaths = new Set<string>();
       for (const f of vscode.workspace.workspaceFolders ?? []) {
         workspacePaths.add(f.uri.fsPath);

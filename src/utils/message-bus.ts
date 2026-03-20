@@ -4,6 +4,7 @@ import type { CommitGraphData, BranchData, DiffData, Commit, WorktreeInfo } from
 export type WebviewMessage =
   | { type: 'getLog'; payload: { branch?: string; limit?: number } }
   | { type: 'getBranches' }
+  | { type: 'getRepoList' }
   | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean } }
   | { type: 'getCommitDiff'; payload: { hash: string } }
   | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean } }
