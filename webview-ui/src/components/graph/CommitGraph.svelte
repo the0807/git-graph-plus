@@ -80,13 +80,17 @@
     // Find HEAD commit
     const headCommit = commits.find(c => c.refs.some(r => r.type === 'head'));
     if (!headCommit) return set;
-    // Walk first parents
-    let hash: string | undefined = headCommit.hash;
-    while (hash) {
+    // BFS: walk ALL parents from HEAD (includes merged-in commits)
+    const queue = [headCommit.hash];
+    while (queue.length > 0) {
+      const hash = queue.shift()!;
+      if (set.has(hash)) continue;
       set.add(hash);
       const idx = hashIndex.get(hash);
-      if (idx === undefined) break;
-      hash = commits[idx].parents[0]; // first parent
+      if (idx === undefined) continue;
+      for (const parent of commits[idx].parents) {
+        if (!set.has(parent)) queue.push(parent);
+      }
     }
     return set;
   });
@@ -661,6 +665,7 @@
             class:search-match={isSearchActive && searchMatchedHashes?.has(commit.hash)}
             class:search-dim={isSearchActive && !searchMatchedHashes?.has(commit.hash)}
             class:search-current={searchNavigateHash === commit.hash}
+            class:other-branch={!isSearchActive && !currentBranchCommits.has(commit.hash) && !currentBranchRemoteAhead.has(commit.hash)}
             class:compare-mode={compareBase !== null && compareBase !== commit.hash}
             class:compare-base={compareBase === commit.hash}
             class:compare-active={uiStore.comparing && (uiStore.compareRef1 === commit.hash || uiStore.compareRef2 === commit.hash)}
@@ -1071,7 +1076,7 @@
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.6px;
     color: var(--text-secondary);
@@ -1139,6 +1144,17 @@
   .commit-row:focus-visible {
     outline: 1px solid var(--vscode-focusBorder, #007fd4);
     outline-offset: -1px;
+  }
+
+  .commit-row:not(.other-branch) .commit-subject {
+    font-weight: 500;
+  }
+
+  .commit-row.other-branch .commit-subject,
+  .commit-row.other-branch .col-author,
+  .commit-row.other-branch .col-hash,
+  .commit-row.other-branch .col-date {
+    opacity: 0.6;
   }
 
   .commit-row.search-dim {
@@ -1224,7 +1240,6 @@
     font-size: 13px;
     font-family: var(--vscode-editor-font-family, monospace);
     color: var(--text-secondary);
-    opacity: 0.7;
   }
 
   .commit-subject {
@@ -1241,7 +1256,7 @@
     padding: 1px 7px;
     border-radius: 4px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     white-space: nowrap;
     flex-shrink: 0;
     line-height: 17px;
@@ -1325,7 +1340,7 @@
 
   .compare-hash {
     font-family: monospace;
-    font-weight: 600;
+    font-weight: 500;
     color: #63b0f4;
   }
 
