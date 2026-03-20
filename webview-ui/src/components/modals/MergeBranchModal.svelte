@@ -13,6 +13,7 @@
 
   let { source, target, onClose, onMerge }: Props = $props();
   let mergeMode = $state<'default' | 'no-ff' | 'ff-only' | 'squash'>('default');
+  const isHash = (ref: string) => /^[0-9a-f]{7,40}$/i.test(ref);
   const shortRef = (ref: string) => /^[0-9a-f]{40}$/i.test(ref) ? ref.substring(0, 7) : ref;
   let mergeBtn: HTMLButtonElement | undefined = $state();
 
@@ -22,8 +23,10 @@
 <Modal title={t('merge.title')} {onClose}>
   <p class="modal-desc">{t('merge.desc')}</p>
   <div class="modal-context-card">
+    <i class="codicon {isHash(source) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>
     <span class="modal-pill modal-pill--source">{shortRef(source)}</span>
     <span class="modal-arrow">&rarr;</span>
+    <i class="codicon {isHash(target) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>
     <span class="modal-pill modal-pill--target">{shortRef(target)}</span>
   </div>
   <div class="modal-form-group">

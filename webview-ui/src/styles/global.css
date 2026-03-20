@@ -32,7 +32,7 @@
   --scrollbar-hover-bg: var(--vscode-scrollbarSlider-hoverBackground);
 
   /* Extension-specific */
-  --row-height: 32px;
+  --row-height: 28px;
   --lane-width: 14px;
   --bottom-panel-height: 250px;
   --graph-node-radius: 4px;

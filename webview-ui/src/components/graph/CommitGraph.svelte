@@ -180,9 +180,19 @@
   let pullAfterCheckoutRef = $state('');
   let pullAfterCheckoutBehind = $state(0);
 
+  let showFastForwardModal = $state(false);
+  let fastForwardLocalBranch = $state('');
+  let fastForwardRemote = $state('');
+
   function doCheckout(ref: string) {
-    checkoutCommitHash = ref;
-    showCheckoutCommitModal = true;
+    const branch = branchStore.branches.find(b => !b.remote && b.name === ref);
+    if (branch && branch.behind > 0) {
+      pullAfterCheckoutRef = ref;
+      pullAfterCheckoutBehind = branch.behind;
+      showPullAfterCheckoutModal = true;
+    } else {
+      vscode.postMessage({ type: 'checkout', payload: { ref } });
+    }
   }
 
   function doCheckoutRemote(remoteName: string, branchName: string) {
@@ -207,7 +217,7 @@
   let displayLeftMargin = $derived(commitStore.commitLeftMargin);
 
 
-  const ROW_HEIGHT = 32;
+  const ROW_HEIGHT = 28;
   // SourceGit uses unitWidth=12 for X coordinates, we scale them up for display
   const X_SCALE = 1.2; // multiply SourceGit X coords by this for pixel positions
   const BUFFER_ROWS = 20; // Larger buffer to keep lines visible during scroll
@@ -697,7 +707,7 @@
               if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
               const localRef = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
               if (localRef) {
-                doCheckout(localRef.name);
+                vscode.postMessage({ type: 'checkout', payload: { ref: localRef.name } });
               } else {
                 const remoteRef = commit.refs.find(r => r.type === 'remote-branch' && r.name !== 'HEAD');
                 if (remoteRef) {
@@ -722,7 +732,7 @@
               {#each commit.refs.filter(r => {
                   if (r.type === 'remote-branch') {
                     if (r.name === 'HEAD') return false;
-                    // Hide remote badge only if a local branch explicitly tracks it
+                    // Tracked remote branches are shown as cloud-only badges after the local badge
                     const localRefs = commit.refs.filter(lr => lr.type === 'branch' || lr.type === 'head');
                     for (const lr of localRefs) {
                       const localInfo = branchStore.branches.find(b => !b.remote && b.name === lr.name);
@@ -739,8 +749,37 @@
                     if (!localInfo?.upstream) return false;
                     return commit.refs.some(r => r.type === 'remote-branch' && `${r.remote}/${r.name}` === localInfo.upstream);
                   })()}
+                  {@const trackedUpstream = (ref.type === 'branch' || ref.type === 'head') ? (() => {
+                    const localInfo = branchStore.branches.find(b => !b.remote && b.name === ref.name);
+                    return localInfo?.upstream ?? null;
+                  })() : null}
                   {@const isWtBranch = (ref.type === 'branch' || ref.type === 'head') && worktreeBranches.has(ref.name)}
                   {@const badgeColor = ref.type === 'tag' ? '#f0c040' : ref.type === 'stash' ? '#c24de0' : isWtBranch ? '#4caf50' : nodeColor}
+                  {#if hasRemote && trackedUpstream}
+                    <span
+                      class="ref-badge badge-cloud-only"
+                      style="--badge-color: {badgeColor};"
+                      class:badge-bold={ref.type === 'head' || isWtBranch}
+                      title={trackedUpstream}
+                      ondblclick={(e) => {
+                        e.stopPropagation();
+                        fastForwardLocalBranch = ref.name;
+                        fastForwardRemote = trackedUpstream!;
+                        showFastForwardModal = true;
+                      }}
+                      role="button"
+                      tabindex={0}
+                      onkeydown={(e) => {
+                        if (e.key === 'Enter') {
+                          fastForwardLocalBranch = ref.name;
+                          fastForwardRemote = trackedUpstream!;
+                          showFastForwardModal = true;
+                        }
+                      }}
+                    >
+                      <i class="codicon codicon-cloud ref-icon"></i>
+                    </span>
+                  {/if}
                   <span
                     class="ref-badge"
                     style="--badge-color: {badgeColor};"
@@ -774,7 +813,6 @@
                   >
                     {#if ref.type === 'head'}
                       <i class="codicon codicon-check ref-icon"></i>
-                      {#if hasRemote}<i class="codicon codicon-cloud ref-icon"></i>{/if}
                       {#if worktreeBranches.has(ref.name)}<i class="codicon codicon-folder-opened ref-icon"></i>{/if}
                       {ref.name}
                     {:else if ref.type === 'remote-branch'}
@@ -787,7 +825,6 @@
                       <i class="codicon codicon-archive ref-icon"></i>
                       {ref.name}
                     {:else}
-                      {#if hasRemote}<i class="codicon codicon-cloud ref-icon"></i>{/if}
                       {#if (ref.type === 'branch') && worktreeBranches.has(ref.name)}<i class="codicon codicon-folder-opened ref-icon"></i>{/if}
                       {ref.name}
                     {/if}
@@ -842,8 +879,10 @@
   <Modal title={t('reset.modalTitle')} onClose={() => { showResetModal = false; contextMenuHash = null; }}>
     <p class="modal-desc">{t('reset.desc')}</p>
     <div class="modal-context-card">
+      <i class="codicon codicon-git-branch"></i>
       <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
       <span class="modal-arrow">&rarr;</span>
+      <i class="codicon codicon-git-commit"></i>
       <span class="modal-pill modal-pill--target">{resetTarget.substring(0, 7)}</span>
     </div>
       <div class="modal-form-group">
@@ -891,8 +930,10 @@
   <Modal title={t('cherryPick.title')} onClose={() => { showCherryPickModal = false; contextMenuHash = null; }}>
     <p class="modal-desc">{t('cherryPick.desc')}</p>
     <div class="modal-context-card">
+      <i class="codicon codicon-git-commit"></i>
       <span class="modal-pill modal-pill--target">{cherryPickTarget.substring(0, 7)}</span>
       <span class="modal-arrow">&rarr;</span>
+      <i class="codicon codicon-git-branch"></i>
       <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
     <div class="modal-form-group">
@@ -912,8 +953,10 @@
   <Modal title={t('revert.title')} onClose={() => { showRevertModal = false; contextMenuHash = null; }}>
     <p class="modal-desc">{t('revert.desc')}</p>
     <div class="modal-context-card">
+      <i class="codicon codicon-git-commit"></i>
       <span class="modal-pill modal-pill--danger">{revertTarget.substring(0, 7)}</span>
       <span class="modal-arrow">↺</span>
+      <i class="codicon codicon-git-branch"></i>
       <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
     <div class="modal-form-group">
@@ -1044,15 +1087,7 @@
       {#if !isBranchName && linkedBranches.length > 0}
         <button class="primary" onclick={() => {
           showCheckoutCommitModal = false;
-          const ref = linkedBranches[0];
-          const branch = branchStore.branches.find(b => !b.remote && b.name === ref);
-          if (branch && branch.behind > 0) {
-            pullAfterCheckoutRef = ref;
-            pullAfterCheckoutBehind = branch.behind;
-            showPullAfterCheckoutModal = true;
-          } else {
-            vscode.postMessage({ type: 'checkout', payload: { ref } });
-          }
+          doCheckout(linkedBranches[0]);
         }}>{t('checkoutCommit.checkoutBranch', { name: linkedBranches[0] })}</button>
       {:else if !isBranchName && linkedRemoteBranches.length > 0}
         <button class="primary" onclick={() => {
@@ -1063,16 +1098,35 @@
       {:else}
         <button class="primary" onclick={() => {
           showCheckoutCommitModal = false;
-          const branch = branchStore.branches.find(b => !b.remote && b.name === checkoutCommitHash);
-          if (branch && branch.behind > 0) {
-            pullAfterCheckoutRef = checkoutCommitHash;
-            pullAfterCheckoutBehind = branch.behind;
-            showPullAfterCheckoutModal = true;
-          } else {
-            vscode.postMessage({ type: 'checkout', payload: { ref: checkoutCommitHash } });
-          }
+          doCheckout(checkoutCommitHash);
         }}>{t('checkoutCommit.checkout')}</button>
       {/if}
+    </div>
+  </Modal>
+{/if}
+
+{#if showFastForwardModal}
+  <Modal title={t('fastForward.title')} onClose={() => { showFastForwardModal = false; }}>
+    <p class="modal-desc">{t('fastForward.desc')}</p>
+    <div class="modal-context-card">
+      <span class="modal-label">{t('fastForward.switchTo')}</span>
+      <i class="codicon codicon-git-branch"></i>
+      <span class="modal-pill modal-pill--source">{fastForwardLocalBranch}</span>
+    </div>
+    <div class="modal-context-card">
+      <span class="modal-label">{t('fastForward.fastForwardTo')}</span>
+      <i class="codicon codicon-cloud"></i>
+      <span class="modal-pill modal-pill--target">{fastForwardRemote}</span>
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { showFastForwardModal = false; }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => {
+        showFastForwardModal = false;
+        vscode.postMessage({ type: 'checkout', payload: { ref: fastForwardLocalBranch } });
+        setTimeout(() => {
+          vscode.postMessage({ type: 'merge', payload: { branch: fastForwardRemote, ffOnly: true } });
+        }, 500);
+      }}>{t('fastForward.title')}</button>
     </div>
   </Modal>
 {/if}
@@ -1090,6 +1144,7 @@
 {#if showRenameBranchModal}
   <Modal title={t('renameBranch.title')} onClose={() => { showRenameBranchModal = false; }}>
     <div class="modal-context-card">
+      <i class="codicon codicon-git-branch"></i>
       <span class="modal-pill modal-pill--source">{renameBranchOld}</span>
     </div>
     <div class="modal-form-group">
@@ -1244,7 +1299,7 @@
     width: 120px;
     flex-shrink: 0;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
     display: flex;
     align-items: center;
@@ -1269,7 +1324,7 @@
     width: 140px;
     flex-shrink: 0;
     padding: 0 10px;
-    font-size: 11px;
+    font-size: 13px;
     color: var(--text-secondary);
     white-space: nowrap;
   }
@@ -1278,7 +1333,7 @@
     width: 75px;
     flex-shrink: 0;
     padding: 0 10px;
-    font-size: 11px;
+    font-size: 13px;
     font-family: var(--vscode-editor-font-family, monospace);
     color: var(--text-secondary);
     opacity: 0.7;
@@ -1287,7 +1342,7 @@
   .commit-subject {
     flex: 1;
     min-width: 0;
-    font-size: 13px;
+    font-size: 14px;
   }
 
   /* ---- Ref badges ---- */
@@ -1297,11 +1352,11 @@
     gap: 3px;
     padding: 1px 7px;
     border-radius: 4px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
     flex-shrink: 0;
-    line-height: 16px;
+    line-height: 17px;
     cursor: pointer;
     transition: filter 0.1s;
     /* Dark theme defaults */
@@ -1333,6 +1388,12 @@
     background: color-mix(in srgb, var(--badge-color) 30%, transparent);
     color: #fff;
     border: 1px solid var(--badge-color);
+  }
+
+  .badge-cloud-only {
+    padding: 1px 5px;
+    height: calc(17px + 2px + 2px); /* line-height + padding top/bottom + border */
+    box-sizing: border-box;
   }
 
   .ref-badge:hover {

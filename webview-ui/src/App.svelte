@@ -374,6 +374,7 @@
 {#if showRenameBranchModal}
   <Modal title={t('renameBranch.title')} onClose={() => { showRenameBranchModal = false; }}>
     <div class="modal-context-card">
+      <i class="codicon codicon-git-branch"></i>
       <span class="modal-pill modal-pill--source">{renameBranchOld}</span>
     </div>
     <div class="modal-form-group">

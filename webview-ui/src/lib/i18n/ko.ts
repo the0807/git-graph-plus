@@ -202,6 +202,12 @@ export const ko: Record<string, string> = {
   'checkoutCommit.checkoutRemote': '{name} Checkout',
   'checkoutCommit.detachedWarning': '이 커밋에 브랜치가 없습니다. Detached HEAD 상태가 됩니다.',
 
+  // Checkout and Fast-Forward modal
+  'fastForward.title': 'Checkout and Fast-Forward',
+  'fastForward.desc': '로컬 브랜치로 전환하고 리모트 브랜치로 fast-forward 합니다.',
+  'fastForward.switchTo': 'Switch to:',
+  'fastForward.fastForwardTo': 'Fast-Forward to:',
+
   // Checkout branch modal (pull after checkout)
   'checkoutBranch.title': '브랜치 Checkout',
   'checkoutBranch.desc': '이 브랜치는 리모트보다 {count}개의 commit이 뒤처져 있습니다. Checkout 후 pull 하시겠습니까?',

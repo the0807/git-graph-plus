@@ -199,6 +199,7 @@
   <Modal title={t('push.title')} onClose={() => { showPushConfirm = false; }}>
     <p class="modal-desc">{t('push.desc')}</p>
     <div class="modal-context-card">
+      <i class="codicon codicon-git-branch"></i>
       <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
     <div class="modal-form-group">
@@ -221,6 +222,7 @@
   <Modal title={t('pull.title')} onClose={() => { showPullConfirm = false; }}>
     <p class="modal-desc">{t('pull.desc')}</p>
     <div class="modal-context-card">
+      <i class="codicon codicon-git-branch"></i>
       <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
     <div class="modal-form-group">

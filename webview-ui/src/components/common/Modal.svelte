@@ -150,6 +150,13 @@
   :global(.modal-pill--danger) { background: rgba(244, 67, 54, 0.15); color: #f44336; }
   :global(.modal-pill--tag) { background: rgba(226, 160, 41, 0.15); color: #e2a029; }
 
+  :global(.modal-label) {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 90px;
+  }
+
   :global(.modal-arrow) {
     color: var(--text-secondary);
     font-size: 13px;
