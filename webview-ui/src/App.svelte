@@ -20,11 +20,11 @@
   import AddWorktreeModal from './components/modals/AddWorktreeModal.svelte';
   import Modal from './components/common/Modal.svelte';
   import { modalStore } from './lib/stores/modals.svelte';
-  import type { CommitGraphData } from './lib/types';
 
   const vscode = getVsCodeApi();
 
-  let searchResults = $state<CommitGraphData | null>(null);
+  let searchMatchedHashes = $state<Set<string> | null>(null);
+  let searchNavigateHash = $state<string | null>(null);
   let resizing = $state(false);
   let conflict = $state<{ operation: string; files: Array<{ path: string; resolved: boolean }> } | null>(null);
   let showAbortConfirmModal = $state(false);
@@ -172,8 +172,13 @@
     }
   }
 
-  function handleSearchResults(data: CommitGraphData | null) {
-    searchResults = data;
+  function handleSearchResults(hashes: Set<string> | null) {
+    searchMatchedHashes = hashes;
+    searchNavigateHash = null;
+  }
+
+  function handleSearchNavigate(hash: string) {
+    searchNavigateHash = hash;
   }
 
   // Draggable resize handle
@@ -277,9 +282,9 @@
 
   <div class="content-area">
     {#if uiStore.viewMode === 'graph'}
-      <SearchBar onResults={handleSearchResults} />
+      <SearchBar onResults={handleSearchResults} onNavigate={handleSearchNavigate} />
       <div class="graph-area">
-        <CommitGraph {searchResults} />
+        <CommitGraph {searchMatchedHashes} {searchNavigateHash} />
       </div>
       {#if uiStore.showBottomPanel && (uiStore.selectedCommitHash || uiStore.comparing)}
         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->

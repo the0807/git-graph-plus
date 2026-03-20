@@ -58,10 +58,11 @@
   }
 
   interface Props {
-    searchResults?: CommitGraphData | null;
+    searchMatchedHashes?: Set<string> | null;
+    searchNavigateHash?: string | null;
   }
 
-  let { searchResults = null }: Props = $props();
+  let { searchMatchedHashes = null, searchNavigateHash = null }: Props = $props();
 
   const vscode = getVsCodeApi();
 
@@ -169,9 +170,9 @@
     }
   }
 
-  let isSearchActive = $derived(searchResults !== null);
+  let isSearchActive = $derived(searchMatchedHashes !== null);
 
-  let displayCommits = $derived(searchResults?.commits ?? commitStore.commits);
+  let displayCommits = $derived(commitStore.commits);
   let displayPaths = $derived(commitStore.paths);
   let displayLinks = $derived(commitStore.links);
   let displayDots = $derived(commitStore.dots);
@@ -186,6 +187,21 @@
   let container: HTMLDivElement | undefined = $state();
   let scrollTop = $state(0);
   let viewportHeight = $state(600);
+
+  // Scroll to search result when navigating
+  $effect(() => {
+    if (searchNavigateHash && container) {
+      const idx = displayCommits.findIndex(c => c.hash === searchNavigateHash);
+      if (idx !== -1) {
+        const targetY = idx * ROW_HEIGHT;
+        const visibleTop = container.scrollTop;
+        const visibleBottom = visibleTop + viewportHeight;
+        if (targetY < visibleTop || targetY + ROW_HEIGHT > visibleBottom) {
+          container.scrollTop = targetY - viewportHeight / 2 + ROW_HEIGHT / 2;
+        }
+      }
+    }
+  });
 
   let totalHeight = $derived(displayCommits.length * ROW_HEIGHT);
 
@@ -566,11 +582,7 @@
   {:else if displayCommits.length === 0}
     <div class="empty">{isSearchActive ? t('graph.noResults') : t('graph.noCommits')}</div>
   {:else}
-    {#if isSearchActive}
-      <div class="search-info">
-        {t('graph.searchResults', { count: displayCommits.length, plural: displayCommits.length !== 1 ? 's' : '' })}
-      </div>
-    {/if}
+    {#if false}{/if}
 
     <!-- Column headers -->
     <div class="graph-header">
@@ -646,6 +658,9 @@
             class="commit-row"
             class:selected={uiStore.selectedCommitHash === commit.hash}
             class:highlighted={contextMenuHash === commit.hash}
+            class:search-match={isSearchActive && searchMatchedHashes?.has(commit.hash)}
+            class:search-dim={isSearchActive && !searchMatchedHashes?.has(commit.hash)}
+            class:search-current={searchNavigateHash === commit.hash}
             class:compare-mode={compareBase !== null && compareBase !== commit.hash}
             class:compare-base={compareBase === commit.hash}
             class:compare-active={uiStore.comparing && (uiStore.compareRef1 === commit.hash || uiStore.compareRef2 === commit.hash)}
@@ -1124,6 +1139,19 @@
   .commit-row:focus-visible {
     outline: 1px solid var(--vscode-focusBorder, #007fd4);
     outline-offset: -1px;
+  }
+
+  .commit-row.search-dim {
+    opacity: 0.3;
+  }
+
+  .commit-row.search-match {
+    opacity: 1;
+  }
+
+  .commit-row.search-current {
+    background: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 20%, transparent);
+    box-shadow: inset 3px 0 0 var(--vscode-focusBorder, #007fd4);
   }
 
   /* ---- Columns ---- */

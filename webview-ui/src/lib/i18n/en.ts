@@ -167,9 +167,12 @@ export const en: Record<string, string> = {
   'details.selectCommit': 'Select a commit to view details',
 
   // Search bar
-  'search.placeholder': 'Search commits (message, hash)',
+  'search.placeholder': 'Search commits (message, author, hash)',
   'search.search': 'Search',
   'search.clear': 'Clear',
+  'search.noResults': 'No results',
+  'search.prev': 'Previous match (Shift+Enter)',
+  'search.next': 'Next match (Enter)',
   'search.filters': 'Filters',
   'search.authorFilter': 'Author filter',
 

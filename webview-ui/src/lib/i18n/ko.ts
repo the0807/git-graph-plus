@@ -167,9 +167,12 @@ export const ko: Record<string, string> = {
   'details.selectCommit': '커밋을 선택하여 상세 정보 보기',
 
   // Search bar
-  'search.placeholder': 'Commit 검색 (메시지, 해시)',
+  'search.placeholder': 'Commit 검색 (메시지, 작성자, 해시)',
   'search.search': '검색',
   'search.clear': '지우기',
+  'search.noResults': '결과 없음',
+  'search.prev': '이전 결과 (Shift+Enter)',
+  'search.next': '다음 결과 (Enter)',
   'search.filters': '필터',
   'search.authorFilter': '작성자 필터',
 
