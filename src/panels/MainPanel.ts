@@ -32,7 +32,16 @@ export class MainPanel {
     this.fileWatcher = new FileWatcher(repoPath, (what) => {
       this.onRepoChanged(what);
     });
+    this.fileWatcher.enabled = vscode.workspace.getConfiguration('gitGraphPlus').get<boolean>('autoRefresh', true);
     this.disposables.push(this.fileWatcher);
+
+    this.disposables.push(
+      vscode.workspace.onDidChangeConfiguration(e => {
+        if (e.affectsConfiguration('gitGraphPlus.autoRefresh')) {
+          this.fileWatcher.enabled = vscode.workspace.getConfiguration('gitGraphPlus').get<boolean>('autoRefresh', true);
+        }
+      })
+    );
 
     this.panel.webview.html = this.getHtmlForWebview(this.panel.webview);
 
@@ -122,8 +131,10 @@ export class MainPanel {
     try {
       switch (message.type) {
         case 'getLog': {
+          const maxCommits = vscode.workspace.getConfiguration('gitGraphPlus').get<number>('maxCommits', 1000);
+          const logPayload = { ...message.payload, limit: message.payload.limit ?? maxCommits };
           const [commits, logBranches] = await Promise.all([
-            this.gitService.log(message.payload),
+            this.gitService.log(logPayload),
             this.gitService.branches(),
           ]);
           const graph = buildGraph(commits, logBranches);
@@ -700,6 +711,7 @@ export class MainPanel {
           this.fileWatcher = new FileWatcher(newPath, (what) => {
             this.onRepoChanged(what);
           });
+          this.fileWatcher.enabled = vscode.workspace.getConfiguration('gitGraphPlus').get<boolean>('autoRefresh', true);
           this.disposables.push(this.fileWatcher);
           await this.refreshAll();
           // Re-send cached repo list with updated active path
@@ -826,7 +838,7 @@ export class MainPanel {
   private async refreshAll(): Promise<void> {
     try {
       const [allCommits, branches, tags, remotes, stashes, worktrees] = await Promise.all([
-        this.gitService.log({ limit: 1000 }),
+        this.gitService.log({ limit: vscode.workspace.getConfiguration('gitGraphPlus').get<number>('maxCommits', 1000) }),
         this.gitService.branches(),
         this.gitService.tags(),
         this.gitService.remotes(),

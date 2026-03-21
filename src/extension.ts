@@ -58,6 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
   const fileWatcher = new FileWatcher(repoPath, () => {
     refreshAll();
   });
+  fileWatcher.enabled = vscode.workspace.getConfiguration('gitGraphPlus').get<boolean>('autoRefresh', true);
   context.subscriptions.push(fileWatcher);
 
   function refreshAll() {
@@ -103,6 +104,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('gitGraphPlus.autoFetch') || e.affectsConfiguration('gitGraphPlus.autoFetchInterval')) {
         startAutoFetch();
+      }
+      if (e.affectsConfiguration('gitGraphPlus.autoRefresh')) {
+        fileWatcher.enabled = vscode.workspace.getConfiguration('gitGraphPlus').get<boolean>('autoRefresh', true);
       }
     }),
   );

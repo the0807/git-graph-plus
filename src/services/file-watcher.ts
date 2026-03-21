@@ -7,6 +7,7 @@ export class FileWatcher implements vscode.Disposable {
   private readonly DEBOUNCE_MS = 500;
   private refreshing = false;
   private disposed = false;
+  public enabled = true;
 
   constructor(
     private repoPath: string,
@@ -80,8 +81,8 @@ export class FileWatcher implements vscode.Disposable {
   private pendingChanges = new Set<string>();
 
   private scheduleRefresh(what: string): void {
-    // Guard against refresh loops or post-dispose calls
-    if (this.refreshing || this.disposed) {
+    // Guard against refresh loops, post-dispose calls, or disabled state
+    if (this.refreshing || this.disposed || !this.enabled) {
       return;
     }
 

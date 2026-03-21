@@ -328,34 +328,10 @@
           "default": 1000,
           "description": "Maximum number of commits to load initially"
         },
-        "gitGraphPlus.defaultView": {
-          "type": "string",
-          "enum": [
-            "graph",
-            "log"
-          ],
-          "default": "graph",
-          "description": "Default view when opening Git Graph+"
-        },
-        "gitGraphPlus.graphRowHeight": {
-          "type": "number",
-          "default": 28,
-          "description": "Height of each row in the commit graph (pixels)"
-        },
         "gitGraphPlus.autoRefresh": {
           "type": "boolean",
           "default": true,
           "description": "Automatically refresh when repository changes are detected"
-        },
-        "gitGraphPlus.showRemoteBranches": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show remote branches in the sidebar"
-        },
-        "gitGraphPlus.confirmForcePush": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show confirmation dialog before force pushing"
         },
         "gitGraphPlus.autoFetch": {
           "type": "boolean",
