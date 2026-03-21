@@ -36,31 +36,31 @@
   <p class="modal-desc">{t('flow.init.desc')}</p>
 
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('flow.init.productionBranch')}</label>
-    <input class="modal-input" bind:this={firstInput} bind:value={productionBranch} />
+    <label class="modal-field-label" for="flow-production">{t('flow.init.productionBranch')}</label>
+    <input id="flow-production" class="modal-input" bind:this={firstInput} bind:value={productionBranch} />
   </div>
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('flow.init.developBranch')}</label>
-    <input class="modal-input" bind:value={developBranch} />
+    <label class="modal-field-label" for="flow-develop">{t('flow.init.developBranch')}</label>
+    <input id="flow-develop" class="modal-input" bind:value={developBranch} />
   </div>
 
   <div class="flow-separator"></div>
 
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('flow.init.featurePrefix')}</label>
-    <input class="modal-input" bind:value={featurePrefix} />
+    <label class="modal-field-label" for="flow-feature">{t('flow.init.featurePrefix')}</label>
+    <input id="flow-feature" class="modal-input" bind:value={featurePrefix} />
   </div>
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('flow.init.releasePrefix')}</label>
-    <input class="modal-input" bind:value={releasePrefix} />
+    <label class="modal-field-label" for="flow-release">{t('flow.init.releasePrefix')}</label>
+    <input id="flow-release" class="modal-input" bind:value={releasePrefix} />
   </div>
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('flow.init.hotfixPrefix')}</label>
-    <input class="modal-input" bind:value={hotfixPrefix} />
+    <label class="modal-field-label" for="flow-hotfix">{t('flow.init.hotfixPrefix')}</label>
+    <input id="flow-hotfix" class="modal-input" bind:value={hotfixPrefix} />
   </div>
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('flow.init.versionTagPrefix')}</label>
-    <input class="modal-input" bind:value={versionTagPrefix} />
+    <label class="modal-field-label" for="flow-versiontag">{t('flow.init.versionTagPrefix')}</label>
+    <input id="flow-versiontag" class="modal-input" bind:value={versionTagPrefix} />
   </div>
 
   <div class="form-actions">

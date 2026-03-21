@@ -400,6 +400,22 @@ export function parseWorktreeList(raw: string): WorktreeInfo[] {
   return worktrees;
 }
 
+export function parseLfsFiles(raw: string): Array<{ oid: string; path: string }> {
+  if (!raw.trim()) { return []; }
+  return raw.trim().split('\n').filter(Boolean).map(line => {
+    const parts = line.split(/\s+[-*]\s+/);
+    return { oid: parts[0]?.trim() ?? '', path: parts[1]?.trim() ?? '' };
+  });
+}
+
+export function parseLfsLocks(raw: string): Array<{ path: string; owner: string; id: string }> {
+  if (!raw.trim()) { return []; }
+  return raw.trim().split('\n').filter(Boolean).map(line => {
+    const parts = line.split('\t');
+    return { path: parts[0]?.trim() ?? '', owner: parts[1]?.trim() ?? '', id: parts[2]?.trim() ?? '' };
+  });
+}
+
 function unescapeGitPath(p: string): string {
   // Remove surrounding quotes if present
   if (p.startsWith('"') && p.endsWith('"')) {

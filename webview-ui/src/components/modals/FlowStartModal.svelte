@@ -39,10 +39,11 @@
   </div>
 
   <div class="modal-form-group">
-    <label class="modal-field-label">{t('flow.start.name')}</label>
+    <label class="modal-field-label" for="flow-name">{t('flow.start.name')}</label>
     <div class="flow-name-input">
       <span class="flow-prefix">{prefix}</span>
       <input
+        id="flow-name"
         class="flow-name"
         bind:this={nameInput}
         bind:value={name}

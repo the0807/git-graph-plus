@@ -315,25 +315,36 @@
                   ondblclick={() => { if (commit) vscode.postMessage({ type: 'openDiff', payload: { file: node.path, commitHash: commit.hash } }); }}
                   title="Double-click to open in editor"
                   oncontextmenu={(e) => {
-                    if (!lfsFileSet.has(node.path)) return;
                     e.preventDefault();
                     const items: Array<{ label: string; action: () => void; danger?: boolean; separator?: boolean }> = [];
-                    if (lfsLockMap.has(node.path)) {
-                      items.push({
-                        label: t('lfs.unlock'),
-                        action: () => { vscode.postMessage({ type: 'lfsUnlock', payload: { file: node.path } }); fileContextMenu = null; },
-                      });
-                      items.push({
-                        label: t('lfs.unlockForce'),
-                        action: () => { vscode.postMessage({ type: 'lfsUnlock', payload: { file: node.path, force: true } }); fileContextMenu = null; },
-                        danger: true,
-                      });
-                    } else {
-                      items.push({
-                        label: t('lfs.lock'),
-                        action: () => { vscode.postMessage({ type: 'lfsLock', payload: { file: node.path } }); fileContextMenu = null; },
-                      });
+
+                    // File history - always available
+                    items.push({
+                      label: t('lfs.fileHistory'),
+                      action: () => { vscode.postMessage({ type: 'searchByFile', payload: { file: node.path } }); fileContextMenu = null; },
+                    });
+
+                    // LFS actions - only for LFS files
+                    if (lfsFileSet.has(node.path)) {
+                      items.push({ separator: true, label: '', action: () => {} });
+                      if (lfsLockMap.has(node.path)) {
+                        items.push({
+                          label: t('lfs.unlock'),
+                          action: () => { vscode.postMessage({ type: 'lfsUnlock', payload: { file: node.path } }); fileContextMenu = null; },
+                        });
+                        items.push({
+                          label: t('lfs.unlockForce'),
+                          action: () => { vscode.postMessage({ type: 'lfsUnlock', payload: { file: node.path, force: true } }); fileContextMenu = null; },
+                          danger: true,
+                        });
+                      } else {
+                        items.push({
+                          label: t('lfs.lock'),
+                          action: () => { vscode.postMessage({ type: 'lfsLock', payload: { file: node.path } }); fileContextMenu = null; },
+                        });
+                      }
                     }
+
                     fileContextMenu = { x: e.clientX, y: e.clientY, items };
                   }}
                 >

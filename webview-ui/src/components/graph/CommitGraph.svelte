@@ -344,6 +344,12 @@
                 label: t('graph.mergeInto', { branch: currentBranch }),
                 action: () => { modalStore.openMerge(branchName, branchStore.currentBranch?.name ?? 'current branch'); },
               },
+              {
+                label: t('graph.setUpstream'),
+                action: () => {
+                  vscode.postMessage({ type: 'setUpstream', payload: { branch: branchName, remote: 'origin', remoteBranch: branchName } });
+                },
+              },
               { separator: true, label: '', action: () => {} },
               {
                 label: t('graph.rename'),
@@ -1122,14 +1128,6 @@
     height: 100%;
     color: var(--text-secondary);
     font-size: 13px;
-  }
-
-  .search-info {
-    padding: 6px 14px;
-    font-size: 11px;
-    color: var(--text-link);
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
   }
 
   /* ---- Header ---- */

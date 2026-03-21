@@ -127,6 +127,7 @@ export const ko: Record<string, string> = {
   'graph.deleteBranch': '브랜치 삭제',
   'graph.deleteRemoteBranch': '리모트 브랜치 삭제',
   'graph.removeWorktree': 'Worktree 삭제',
+  'graph.setUpstream': 'Upstream 설정',
 
   // Reset modal
   'reset.title': '{hash}(으)로 Reset',
@@ -391,12 +392,7 @@ export const ko: Record<string, string> = {
   'bisect.selectBad': 'Bisect: Bad로 선택',
   'bisect.startGood': 'Bisect: Good으로 시작',
   'bisect.cancelSelect': 'Bisect 선택 취소',
-  'bisect.selectGoodPrompt': 'Bad:',
   'bisect.clickGoodPrompt': 'Good commit을 클릭하세요',
-  'bisect.markGood': 'Bisect: Good',
-  'bisect.markBad': 'Bisect: Bad',
-  'bisect.skip': 'Bisect: Skip',
-  'bisect.reset': 'Bisect: Reset',
   'bisect.banner.title': 'Bisect 진행 중',
   'bisect.banner.remaining': '약 {count}단계 남음',
   'bisect.banner.current': '현재 커밋:',
@@ -405,13 +401,11 @@ export const ko: Record<string, string> = {
   'bisect.banner.bad': 'Bad',
   'bisect.banner.skip': 'Skip',
   'bisect.banner.reset': 'Reset',
-  'bisect.banner.viewCommit': '커밋 상세 보기',
-  'bisect.banner.checkout': 'Checkout',
 
   // LFS
-  'lfs.badge': 'LFS',
   'lfs.locked': '{owner}가 잠금',
   'lfs.lock': 'LFS 잠금',
   'lfs.unlock': 'LFS 잠금 해제',
   'lfs.unlockForce': 'LFS 강제 잠금 해제',
+  'lfs.fileHistory': '파일 변경 이력 보기',
 };

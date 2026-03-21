@@ -237,6 +237,12 @@ export class MainPanel {
           await this.refreshAll();
           break;
         }
+        case 'setUpstream': {
+          await this.gitService.setUpstream(message.payload.remote, message.payload.remoteBranch);
+          this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'setUpstream', success: true } });
+          await this.refreshAll();
+          break;
+        }
         case 'merge': {
           await this.gitService.merge(message.payload.branch, { noFf: message.payload.noFf, ffOnly: message.payload.ffOnly, squash: message.payload.squash });
           this.panel.webview.postMessage({
@@ -450,6 +456,12 @@ export class MainPanel {
           } else {
             this.panel.webview.postMessage({ type: 'searchResults', payload: { commits: [], graph: [] } });
           }
+          break;
+        }
+        case 'searchByFile': {
+          const results = await this.gitService.searchByFile(message.payload.file);
+          const searchGraph = buildGraph(results);
+          this.panel.webview.postMessage({ type: 'searchResults', payload: { commits: results, graph: searchGraph } });
           break;
         }
         case 'getActivityLog': {

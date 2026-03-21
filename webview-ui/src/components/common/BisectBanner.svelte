@@ -202,13 +202,6 @@
     white-space: nowrap;
   }
 
-  .bisect-author {
-    color: var(--text-secondary);
-    font-size: 11px;
-    white-space: nowrap;
-    margin-left: auto;
-  }
-
   .bisect-actions {
     display: flex;
     gap: 6px;

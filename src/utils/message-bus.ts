@@ -37,6 +37,7 @@ export type WebviewMessage =
   | { type: 'deleteTag'; payload: { name: string } }
   | { type: 'searchCommits'; payload: { query: string; author?: string; after?: string; before?: string } }
   | { type: 'searchByHash'; payload: { hash: string } }
+  | { type: 'searchByFile'; payload: { file: string } }
   | { type: 'getActivityLog' }
   | { type: 'bisectStart'; payload: { bad?: string; good?: string } }
   | { type: 'bisectGood'; payload: { ref?: string } }
@@ -69,7 +70,8 @@ export type WebviewMessage =
   | { type: 'refreshConflicts' }
   | { type: 'stageFile'; payload: { file: string } }
   | { type: 'abortOperation' }
-  | { type: 'openConflictFile'; payload: { file: string } };
+  | { type: 'openConflictFile'; payload: { file: string } }
+  | { type: 'setUpstream'; payload: { branch: string; remote: string; remoteBranch: string } };
 
 // Messages from Extension → Webview
 export type ExtensionMessage =

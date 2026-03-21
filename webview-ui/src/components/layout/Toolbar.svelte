@@ -123,6 +123,7 @@
       </button>
       {#if showRepoDropdown}
         <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div class="repo-dropdown-backdrop" onclick={() => { showRepoDropdown = false; }}></div>
         <div class="repo-dropdown">
           {#each uiStore.repos as repo}
@@ -224,6 +225,7 @@
       </button>
       {#if showFlowDropdown}
         <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div class="flow-dropdown-backdrop" onclick={() => { showFlowDropdown = false; }}></div>
         <div class="flow-dropdown">
           {#if !flowStatus}
@@ -650,8 +652,4 @@
     margin: 4px 0;
   }
 
-  .toolbar-btn-label {
-    font-size: 12px;
-    font-weight: 500;
-  }
 </style>

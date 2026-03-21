@@ -127,6 +127,7 @@ export const en: Record<string, string> = {
   'graph.deleteBranch': 'Delete Branch',
   'graph.deleteRemoteBranch': 'Delete Remote Branch',
   'graph.removeWorktree': 'Remove Worktree',
+  'graph.setUpstream': 'Set Upstream',
 
   // Reset modal
   'reset.title': 'Reset to {hash}',
@@ -391,12 +392,7 @@ export const en: Record<string, string> = {
   'bisect.selectBad': 'Bisect: Select as Bad',
   'bisect.startGood': 'Bisect: Start (Good)',
   'bisect.cancelSelect': 'Cancel Bisect Selection',
-  'bisect.selectGoodPrompt': 'Bad:',
   'bisect.clickGoodPrompt': 'Click a good commit',
-  'bisect.markGood': 'Bisect: Good',
-  'bisect.markBad': 'Bisect: Bad',
-  'bisect.skip': 'Bisect: Skip',
-  'bisect.reset': 'Bisect: Reset',
   'bisect.banner.title': 'Bisect in Progress',
   'bisect.banner.remaining': 'Roughly {count} steps remaining',
   'bisect.banner.current': 'Current commit:',
@@ -405,13 +401,11 @@ export const en: Record<string, string> = {
   'bisect.banner.bad': 'Bad',
   'bisect.banner.skip': 'Skip',
   'bisect.banner.reset': 'Reset',
-  'bisect.banner.viewCommit': 'View Commit',
-  'bisect.banner.checkout': 'Checkout',
 
   // LFS
-  'lfs.badge': 'LFS',
   'lfs.locked': 'Locked by {owner}',
   'lfs.lock': 'LFS Lock',
   'lfs.unlock': 'LFS Unlock',
   'lfs.unlockForce': 'LFS Force Unlock',
+  'lfs.fileHistory': 'Show File History',
 };

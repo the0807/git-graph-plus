@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
-import { parseLog, parseGraphLog, parseBranches, parseTags, parseRemotes, parseStashList, parseDiff, parseWorktreeList } from './git-parser';
+import { parseLog, parseBranches, parseTags, parseRemotes, parseStashList, parseDiff, parseWorktreeList, parseLfsFiles, parseLfsLocks } from './git-parser';
 import type { Commit, BranchInfo, TagInfo, RemoteInfo, StashEntry, LogOptions, DiffData, WorktreeInfo } from './types';
 
 export class GitError extends Error {
@@ -145,24 +145,6 @@ export class GitService {
    * Returns raw `git log --graph` output alongside structured commit data.
    * The graph characters are parsed to determine exact column positions.
    */
-  async logWithGraph(options?: LogOptions): Promise<{ commits: Commit[]; graphLines: string[] }> {
-    // Use printable delimiters since --graph mode doesn't support null bytes
-    const MARKER = '\x1E'; // record separator (RS)
-    const SEP = '\x1F';    // unit separator (US)
-    const format = `${MARKER}%H${SEP}%h${SEP}%an${SEP}%ae${SEP}%aI${SEP}%cn${SEP}%ce${SEP}%cI${SEP}%s${SEP}%P${SEP}%D`;
-
-    const args = ['log', '--graph', `--format=${format}`];
-
-    if (options?.all !== false) { args.push('--all'); }
-    args.push('--topo-order');
-    if (options?.limit) { args.push(`--max-count=${options.limit}`); }
-    if (options?.branch) { args.push(options.branch); }
-
-    const raw = await this.exec(args);
-    const remoteNames = await this.getRemoteNames();
-    return parseGraphLog(raw, MARKER, SEP, remoteNames);
-  }
-
   async branches(): Promise<BranchInfo[]> {
     const raw = await this.exec([
       'branch', '-a', '--format=%(HEAD)%(refname:short)%00%(objectname:short)%00%(upstream:short)%00%(upstream:track,nobracket)%00%(refname)',
@@ -286,12 +268,6 @@ export class GitService {
       const [status, ...rest] = line.split('\t');
       return { path: rest.join('\t'), status: status[0] };
     });
-  }
-
-  async diffStat(ref1: string, ref2?: string): Promise<string> {
-    const args = ['diff', '--stat', ref1];
-    if (ref2) { args.push(ref2); }
-    return this.exec(args);
   }
 
   async showCommitFiles(hash: string): Promise<Array<{ path: string; status: string }>> {
@@ -483,16 +459,6 @@ export class GitService {
     await this.exec(['reset', `--${mode}`, ref]);
   }
 
-  async getRebaseStatus(): Promise<{ active: boolean; onto?: string; head?: string }> {
-    try {
-      await this.exec(['rev-parse', '--verify', 'REBASE_HEAD']);
-      const ontoRaw = await this.exec(['rev-parse', '--short', 'refs/rebase-merge/onto']).catch(() => '');
-      return { active: true, onto: ontoRaw.trim() || undefined };
-    } catch {
-      return { active: false };
-    }
-  }
-
   async stageFile(filePath: string): Promise<void> {
     await this.exec(['add', filePath]);
   }
@@ -548,15 +514,6 @@ export class GitService {
     }
   }
 
-  async getMergeStatus(): Promise<{ active: boolean }> {
-    try {
-      await this.exec(['rev-parse', '--verify', 'MERGE_HEAD']);
-      return { active: true };
-    } catch {
-      return { active: false };
-    }
-  }
-
   // --- Phase 5: Stash, Cherry-pick, Revert, Tags ---
 
   async stashSave(message?: string, includeUntracked?: boolean, keepIndex?: boolean): Promise<void> {
@@ -594,10 +551,6 @@ export class GitService {
     await this.exec(args);
   }
 
-  async abortCherryPick(): Promise<void> {
-    await this.exec(['cherry-pick', '--abort']);
-  }
-
   async revert(hash: string, options?: { noCommit?: boolean }): Promise<void> {
     const args = ['revert'];
     if (options?.noCommit) {
@@ -605,14 +558,6 @@ export class GitService {
     }
     args.push(hash);
     await this.exec(args);
-  }
-
-  async abortRevert(): Promise<void> {
-    await this.exec(['revert', '--abort']);
-  }
-
-  async showFileAtRef(ref: string, file: string): Promise<string> {
-    return this.exec(['show', `${ref}:${file}`]);
   }
 
   async createTag(name: string, ref?: string, message?: string): Promise<void> {
@@ -691,16 +636,6 @@ export class GitService {
     }
   }
 
-  async getCurrentBranch(): Promise<string> {
-    const raw = await this.exec(['rev-parse', '--abbrev-ref', 'HEAD']);
-    return raw.trim();
-  }
-
-  async getRepoRoot(): Promise<string> {
-    const raw = await this.exec(['rev-parse', '--show-toplevel']);
-    return raw.trim();
-  }
-
   // --- Bisect ---
 
   async bisectStart(bad?: string, good?: string): Promise<string> {
@@ -752,24 +687,12 @@ export class GitService {
     return this.exec(args);
   }
 
-  async submoduleInit(): Promise<string> {
-    return this.exec(['submodule', 'init']);
-  }
-
   // --- Git LFS ---
-
-  async lfsStatus(): Promise<string> {
-    return this.exec(['lfs', 'status']);
-  }
 
   async lfsLsFiles(): Promise<Array<{ oid: string; path: string }>> {
     try {
       const raw = await this.exec(['lfs', 'ls-files']);
-      if (!raw.trim()) { return []; }
-      return raw.trim().split('\n').filter(Boolean).map(line => {
-        const parts = line.split(/\s+[-*]\s+/);
-        return { oid: parts[0]?.trim() ?? '', path: parts[1]?.trim() ?? '' };
-      });
+      return parseLfsFiles(raw);
     } catch { return []; }
   }
 
@@ -786,11 +709,7 @@ export class GitService {
   async lfsLocks(): Promise<Array<{ path: string; owner: string; id: string }>> {
     try {
       const raw = await this.exec(['lfs', 'locks']);
-      if (!raw.trim()) { return []; }
-      return raw.trim().split('\n').filter(Boolean).map(line => {
-        const parts = line.split('\t');
-        return { path: parts[0]?.trim() ?? '', owner: parts[1]?.trim() ?? '', id: parts[2]?.trim() ?? '' };
-      });
+      return parseLfsLocks(raw);
     } catch { return []; }
   }
 
@@ -820,19 +739,6 @@ export class GitService {
     });
   }
 
-  async statsCommitsByDate(): Promise<Array<{ date: string; count: number }>> {
-    const raw = await this.exec(['log', '--all', '--format=%aI', '--no-merges']);
-    if (!raw.trim()) { return []; }
-    const dateCounts = new Map<string, number>();
-    for (const line of raw.trim().split('\n').filter(Boolean)) {
-      const date = line.substring(0, 10); // YYYY-MM-DD
-      dateCounts.set(date, (dateCounts.get(date) ?? 0) + 1);
-    }
-    return Array.from(dateCounts.entries())
-      .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-  }
-
   async statsCommitsByWeekdayHour(): Promise<Array<{ weekday: number; hour: number; count: number }>> {
     const raw = await this.exec(['log', '--all', '--format=%aI', '--no-merges']);
     if (!raw.trim()) { return []; }
@@ -856,24 +762,6 @@ export class GitService {
 
   async diffCommitToWorking(hash: string): Promise<DiffData[]> {
     const raw = await this.exec(['diff', hash]);
-    return parseDiff(raw);
-  }
-
-  async createPatch(ref1: string, ref2?: string): Promise<string> {
-    const args = ['diff'];
-    if (ref1) { args.push(ref1); }
-    if (ref2) { args.push(ref2); }
-    return this.exec(args);
-  }
-
-  // --- Rename detection ---
-
-  async diffWithRenames(options?: { staged?: boolean; ref1?: string; ref2?: string }): Promise<DiffData[]> {
-    const args = ['diff', '--no-color', '-M', '-C']; // -M rename, -C copy detection
-    if (options?.staged) { args.push('--cached'); }
-    if (options?.ref1) { args.push(options.ref1); }
-    if (options?.ref2) { args.push(options.ref2); }
-    const raw = await this.exec(args);
     return parseDiff(raw);
   }
 

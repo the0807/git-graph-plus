@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseLog, parseRefs, parseBranches, parseTags, parseRemotes, parseStashList, parseDiff } from '../git-parser';
+import { parseLog, parseRefs, parseBranches, parseTags, parseRemotes, parseStashList, parseDiff, parseWorktreeList, parseLfsFiles, parseLfsLocks } from '../git-parser';
 
 describe('parseLog', () => {
   it('should return empty array for empty input', () => {
@@ -258,6 +258,120 @@ diff --git a/file2.ts b/file2.ts
     expect(result).toHaveLength(2);
     expect(result[0].file).toBe('file1.ts');
     expect(result[1].file).toBe('file2.ts');
+  });
+});
+
+describe('parseWorktreeList', () => {
+  it('should return empty array for empty input', () => {
+    expect(parseWorktreeList('')).toEqual([]);
+    expect(parseWorktreeList('   ')).toEqual([]);
+  });
+
+  it('should parse a main worktree', () => {
+    const raw = 'worktree /home/user/project\nHEAD abc123\nbranch refs/heads/main\n';
+    const result = parseWorktreeList(raw);
+    expect(result).toHaveLength(1);
+    expect(result[0].path).toBe('/home/user/project');
+    expect(result[0].hash).toBe('abc123');
+    expect(result[0].branch).toBe('main');
+    expect(result[0].isMain).toBe(true);
+    expect(result[0].detached).toBe(false);
+    expect(result[0].locked).toBe(false);
+  });
+
+  it('should parse multiple worktrees', () => {
+    const raw =
+      'worktree /home/user/project\nHEAD abc123\nbranch refs/heads/main\n\n' +
+      'worktree /home/user/project-feat\nHEAD def456\nbranch refs/heads/feat/login\n';
+    const result = parseWorktreeList(raw);
+    expect(result).toHaveLength(2);
+    expect(result[0].isMain).toBe(true);
+    expect(result[0].branch).toBe('main');
+    expect(result[1].isMain).toBe(false);
+    expect(result[1].branch).toBe('feat/login');
+  });
+
+  it('should parse detached worktree', () => {
+    const raw = 'worktree /home/user/project\nHEAD abc123\nbranch refs/heads/main\n\n' +
+      'worktree /tmp/wt\nHEAD 789abc\ndetached\n';
+    const result = parseWorktreeList(raw);
+    expect(result[1].detached).toBe(true);
+    expect(result[1].branch).toBe('');
+  });
+
+  it('should parse locked and prunable states', () => {
+    const raw = 'worktree /home/user/project\nHEAD abc123\nbranch refs/heads/main\n\n' +
+      'worktree /tmp/wt\nHEAD 789abc\nbranch refs/heads/test\nlocked\nprunable\n';
+    const result = parseWorktreeList(raw);
+    expect(result[1].locked).toBe(true);
+    expect(result[1].prunable).toBe(true);
+  });
+});
+
+describe('parseLfsFiles', () => {
+  it('should return empty array for empty input', () => {
+    expect(parseLfsFiles('')).toEqual([]);
+    expect(parseLfsFiles('   ')).toEqual([]);
+  });
+
+  it('should parse files with * delimiter (downloaded)', () => {
+    const raw = '7fa22a8f5f * banner.png\n5f70bf18a0 * data.bin\n';
+    const result = parseLfsFiles(raw);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ oid: '7fa22a8f5f', path: 'banner.png' });
+    expect(result[1]).toEqual({ oid: '5f70bf18a0', path: 'data.bin' });
+  });
+
+  it('should parse files with - delimiter (not downloaded)', () => {
+    const raw = '7fa22a8f5f - banner.png\n5f70bf18a0 - data.bin\n';
+    const result = parseLfsFiles(raw);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ oid: '7fa22a8f5f', path: 'banner.png' });
+    expect(result[1]).toEqual({ oid: '5f70bf18a0', path: 'data.bin' });
+  });
+
+  it('should parse files with mixed delimiters', () => {
+    const raw = '7fa22a8f5f * banner.png\n5f70bf18a0 - data.bin\n';
+    const result = parseLfsFiles(raw);
+    expect(result).toHaveLength(2);
+    expect(result[0].path).toBe('banner.png');
+    expect(result[1].path).toBe('data.bin');
+  });
+
+  it('should parse files in subdirectories', () => {
+    const raw = 'abc123 * assets/images/logo.png\n';
+    const result = parseLfsFiles(raw);
+    expect(result).toHaveLength(1);
+    expect(result[0].path).toBe('assets/images/logo.png');
+  });
+
+  it('should handle file names with spaces', () => {
+    const raw = 'abc123 * my file.png\n';
+    const result = parseLfsFiles(raw);
+    expect(result).toHaveLength(1);
+    expect(result[0].path).toBe('my file.png');
+  });
+});
+
+describe('parseLfsLocks', () => {
+  it('should return empty array for empty input', () => {
+    expect(parseLfsLocks('')).toEqual([]);
+    expect(parseLfsLocks('   ')).toEqual([]);
+  });
+
+  it('should parse a single lock', () => {
+    const raw = 'assets/logo.png\tuser1\tID:12345\n';
+    const result = parseLfsLocks(raw);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({ path: 'assets/logo.png', owner: 'user1', id: 'ID:12345' });
+  });
+
+  it('should parse multiple locks', () => {
+    const raw = 'logo.png\talice\tID:1\nbanner.png\tbob\tID:2\n';
+    const result = parseLfsLocks(raw);
+    expect(result).toHaveLength(2);
+    expect(result[0].owner).toBe('alice');
+    expect(result[1].owner).toBe('bob');
   });
 });
 
