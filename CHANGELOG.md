@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.1.6 (2026-03-21)
+
+### New Features
+- **Git Flow UI**: Toolbar dropdown with Initialize, Feature/Release/Hotfix Start and Finish modals
+- **Git Bisect UI**: Visual bisect with compare-style commit selection, status banner, and good/bad/skip/reset controls
+- **LFS file indicators**: LFS-tracked file badges in commit details with lock/unlock management
+- **Search by file**: Find all commits affecting a specific file via context menu "File History"
+- **Set upstream**: Set upstream tracking branch from branch context menu
+- **maxCommits setting**: Configurable maximum number of commits to load (default 1000)
+- **autoRefresh setting**: Toggle auto-refresh on repository file changes
+- **Stash graph display**: Stash entries now appear as separate rows in the commit graph, positioned above their parent commit
+- **Multiple stash support**: All stashes are displayed individually with `stash@{0}`, `stash@{1}`, etc. labels
+
+### Improvements
+- **Image diff**: Improved swipe comparison layout and added image metadata display (dimensions, file size)
+- **Stash sidebar redesign**: Stash index shown as label, message as description in lighter text
+- **Stash context menu**: Uses actual stash index instead of hardcoded index 0
+- **README overhaul**: Updated highlights, added 7 feature screenshots with side-by-side layout
+- Remove unused settings (`graphRowHeight`, `defaultView`, `showRemoteBranches`, `confirmForcePush`)
+
+### Bug Fixes
+- Fix `git log --all` exposing stash internal commits (`index on main`) in the graph
+- Fix stash context menu always operating on `stash@{0}` regardless of which stash was clicked
+
 ## 0.1.5 (2026-03-20)
 
 ### New Features
