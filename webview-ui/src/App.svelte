@@ -20,9 +20,14 @@
   import AddWorktreeModal from './components/modals/AddWorktreeModal.svelte';
   import Modal from './components/common/Modal.svelte';
   import { modalStore } from './lib/stores/modals.svelte';
+  import FlowInitModal from './components/modals/FlowInitModal.svelte';
+  import FlowStartModal from './components/modals/FlowStartModal.svelte';
+  import FlowFinishModal from './components/modals/FlowFinishModal.svelte';
+  import type { FlowConfig } from './lib/types';
 
   const vscode = getVsCodeApi();
 
+  let flowConfig = $state<FlowConfig | null>(null);
   let searchMatchedHashes = $state<Set<string> | null>(null);
   let searchNavigateHash = $state<string | null>(null);
   let resizing = $state(false);
@@ -76,6 +81,9 @@
         case 'error':
           uiStore.setError(msg.payload.message);
           break;
+        case 'flowStatus':
+          flowConfig = msg.payload.config;
+          break;
         case 'showModal':
           if (msg.payload.modal === 'deleteBranch') {
             modalStore.openDeleteBranch(msg.payload.branchName);
@@ -125,6 +133,7 @@
     commitStore.setLoading(true);
     vscode.postMessage({ type: 'getLog', payload: { limit: 1000 } });
     vscode.postMessage({ type: 'getBranches' });
+    vscode.postMessage({ type: 'checkFlowStatus' });
 
     // Refresh conflict status when webview becomes visible
     function handleVisibility() {
@@ -475,6 +484,50 @@
       <button class="danger-btn" onclick={() => { const { path, branch } = modalStore.removeWorktree; modalStore.closeRemoveWorktree(); vscode.postMessage({ type: 'worktreeRemove', payload: { path, deleteBranch: deleteWorktreeBranch ? branch : undefined } }); }}>{t('sidebar.delete')}</button>
     </div>
   </Modal>
+{/if}
+
+{#if modalStore.flowInit.show}
+  <FlowInitModal
+    onClose={() => { modalStore.closeFlowInit(); }}
+    onInit={(options) => {
+      modalStore.closeFlowInit();
+      vscode.postMessage({ type: 'flowInit', payload: options });
+    }}
+  />
+{/if}
+
+{#if modalStore.flowStart.show && flowConfig}
+  {@const flowType = modalStore.flowStart.flowType}
+  {@const prefix = flowType === 'feature' ? flowConfig.featurePrefix : flowType === 'release' ? flowConfig.releasePrefix : flowConfig.hotfixPrefix}
+  {@const baseBranch = flowType === 'hotfix' ? flowConfig.productionBranch : flowConfig.developBranch}
+  <FlowStartModal
+    {flowType}
+    {prefix}
+    {baseBranch}
+    onClose={() => { modalStore.closeFlowStart(); }}
+    onStart={(name) => {
+      const ft = flowType;
+      modalStore.closeFlowStart();
+      vscode.postMessage({ type: 'flowAction', payload: { flowType: ft, action: 'start', name } });
+    }}
+  />
+{/if}
+
+{#if modalStore.flowFinish.show && flowConfig}
+  <FlowFinishModal
+    flowType={modalStore.flowFinish.flowType}
+    branchName={modalStore.flowFinish.branchName}
+    config={flowConfig}
+    onClose={() => { modalStore.closeFlowFinish(); }}
+    onFinish={() => {
+      const ft = modalStore.flowFinish.flowType;
+      const bn = modalStore.flowFinish.branchName;
+      const prefix = ft === 'feature' ? flowConfig!.featurePrefix : ft === 'release' ? flowConfig!.releasePrefix : flowConfig!.hotfixPrefix;
+      const name = bn.replace(prefix, '');
+      modalStore.closeFlowFinish();
+      vscode.postMessage({ type: 'flowAction', payload: { flowType: ft, action: 'finish', name } });
+    }}
+  />
 {/if}
 
 <style>

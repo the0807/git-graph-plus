@@ -44,8 +44,10 @@ export type WebviewMessage =
   | { type: 'bisectReset' }
   | { type: 'getStats' }
   | { type: 'lsTree'; payload: { ref: string; path?: string } }
-  | { type: 'flowInit' }
+  | { type: 'checkFlowStatus' }
+  | { type: 'flowInit'; payload: { productionBranch: string; developBranch: string; featurePrefix: string; releasePrefix: string; hotfixPrefix: string; versionTagPrefix: string } }
   | { type: 'flowAction'; payload: { flowType: string; action: string; name: string } }
+  | { type: 'getFlowBranches' }
   | { type: 'getSubmodules' }
   | { type: 'submoduleUpdate' }
   | { type: 'getLfsFiles' }
@@ -88,6 +90,8 @@ export type ExtensionMessage =
   | { type: 'worktreeData'; payload: WorktreeInfo[] }
   | { type: 'imageData'; payload: { ref: string; path: string; base64: string; mimeType: string } }
   | { type: 'conflictData'; payload: { operation: string; files: Array<{ path: string; resolved: boolean }> } }
+  | { type: 'flowStatus'; payload: { installed: boolean; initialized: boolean; config: { productionBranch: string; developBranch: string; featurePrefix: string; releasePrefix: string; hotfixPrefix: string; versionTagPrefix: string } | null } }
+  | { type: 'flowBranches'; payload: { features: string[]; releases: string[]; hotfixes: string[] } }
   | { type: 'showModal'; payload:
     | { modal: 'deleteBranch'; branchName: string }
     | { modal: 'deleteTag'; tagName: string }

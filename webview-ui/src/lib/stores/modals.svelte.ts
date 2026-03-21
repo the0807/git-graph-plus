@@ -54,6 +54,21 @@ class ModalStore {
   stashSave = $state({ show: false });
   openStashSave() { this.stashSave = { show: true }; }
   closeStashSave() { this.stashSave = { show: false }; }
+
+  // ── Flow Init ──
+  flowInit = $state({ show: false });
+  openFlowInit() { this.flowInit = { show: true }; }
+  closeFlowInit() { this.flowInit = { show: false }; }
+
+  // ── Flow Start ──
+  flowStart = $state({ show: false, flowType: '' as string });
+  openFlowStart(flowType: string) { this.flowStart = { show: true, flowType }; }
+  closeFlowStart() { this.flowStart = { show: false, flowType: '' }; }
+
+  // ── Flow Finish ──
+  flowFinish = $state({ show: false, flowType: '' as string, branchName: '' });
+  openFlowFinish(flowType: string, branchName: string) { this.flowFinish = { show: true, flowType, branchName }; }
+  closeFlowFinish() { this.flowFinish = { show: false, flowType: '', branchName: '' }; }
 }
 
 export const modalStore = new ModalStore();

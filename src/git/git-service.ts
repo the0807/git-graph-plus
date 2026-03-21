@@ -36,7 +36,7 @@ export class GitService {
     return new Promise((resolve, reject) => {
       const proc = spawn('git', args, {
         cwd: this.repoPath,
-        env: { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' },
+        env: { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C', GIT_MERGE_AUTOEDIT: 'no', GIT_EDITOR: 'true', EDITOR: 'true' },
       });
 
       const timer = setTimeout(() => {
@@ -437,6 +437,9 @@ export class GitService {
             ...process.env,
             GIT_TERMINAL_PROMPT: '0',
             LC_ALL: 'C',
+            GIT_MERGE_AUTOEDIT: 'no',
+            GIT_EDITOR: 'true',
+            EDITOR: 'true',
             GIT_SEQUENCE_EDITOR: process.platform === 'win32'
               ? `copy "${todoFile.replace(/"/g, '""')}"`
               : `cp '${todoFile.replace(/'/g, "'\\''")}'`,
@@ -872,8 +875,42 @@ export class GitService {
 
   // --- Git Flow ---
 
-  async flowInit(): Promise<string> {
-    return this.exec(['flow', 'init', '-d']);
+  async flowInit(options: {
+    productionBranch: string;
+    developBranch: string;
+    featurePrefix: string;
+    releasePrefix: string;
+    hotfixPrefix: string;
+    versionTagPrefix: string;
+  }): Promise<string> {
+    // production 브랜치 존재 여부 검증
+    try {
+      await this.exec(['rev-parse', '--verify', options.productionBranch]);
+    } catch {
+      throw new GitError(
+        `Branch '${options.productionBranch}' does not exist. Create the production branch first or ensure at least one commit exists.`,
+        1,
+        ['flow', 'init']
+      );
+    }
+
+    // git flow init -d로 기본 초기화 후 커스텀 설정 덮어쓰기
+    await this.exec(['flow', 'init', '-d']);
+    await this.exec(['config', 'gitflow.branch.master', options.productionBranch]);
+    await this.exec(['config', 'gitflow.branch.develop', options.developBranch]);
+    await this.exec(['config', 'gitflow.prefix.feature', options.featurePrefix]);
+    await this.exec(['config', 'gitflow.prefix.release', options.releasePrefix]);
+    await this.exec(['config', 'gitflow.prefix.hotfix', options.hotfixPrefix]);
+    await this.exec(['config', 'gitflow.prefix.versiontag', options.versionTagPrefix]);
+
+    // develop 브랜치가 없으면 생성
+    try {
+      await this.exec(['rev-parse', '--verify', options.developBranch]);
+    } catch {
+      await this.exec(['branch', options.developBranch, options.productionBranch]);
+    }
+
+    return 'Git Flow initialized';
   }
 
   async flowFeatureStart(name: string): Promise<string> {
@@ -889,7 +926,7 @@ export class GitService {
   }
 
   async flowReleaseFinish(version: string): Promise<string> {
-    return this.exec(['flow', 'release', 'finish', version]);
+    return this.exec(['flow', 'release', 'finish', '-m', version, version]);
   }
 
   async flowHotfixStart(version: string): Promise<string> {
@@ -897,7 +934,49 @@ export class GitService {
   }
 
   async flowHotfixFinish(version: string): Promise<string> {
-    return this.exec(['flow', 'hotfix', 'finish', version]);
+    return this.exec(['flow', 'hotfix', 'finish', '-m', version, version]);
+  }
+
+  async getFlowConfig(): Promise<{
+    productionBranch: string;
+    developBranch: string;
+    featurePrefix: string;
+    releasePrefix: string;
+    hotfixPrefix: string;
+    versionTagPrefix: string;
+  } | null> {
+    try {
+      const [production, develop, feature, release, hotfix, versionTag] = await Promise.all([
+        this.exec(['config', '--get', 'gitflow.branch.master']).then(s => s.trim()),
+        this.exec(['config', '--get', 'gitflow.branch.develop']).then(s => s.trim()),
+        this.exec(['config', '--get', 'gitflow.prefix.feature']).then(s => s.trim()),
+        this.exec(['config', '--get', 'gitflow.prefix.release']).then(s => s.trim()),
+        this.exec(['config', '--get', 'gitflow.prefix.hotfix']).then(s => s.trim()),
+        this.exec(['config', '--get', 'gitflow.prefix.versiontag']).then(s => s.trim()).catch(() => ''),
+      ]);
+      return {
+        productionBranch: production,
+        developBranch: develop,
+        featurePrefix: feature,
+        releasePrefix: release,
+        hotfixPrefix: hotfix,
+        versionTagPrefix: versionTag,
+      };
+    } catch { return null; }
+  }
+
+  async getFlowBranches(): Promise<{ features: string[]; releases: string[]; hotfixes: string[] }> {
+    const config = await this.getFlowConfig();
+    if (!config) return { features: [], releases: [], hotfixes: [] };
+
+    const raw = await this.exec(['branch', '--list']).then(s => s.trim());
+    const branches = raw.split('\n').map(b => b.replace(/^\*?\s+/, '').trim()).filter(Boolean);
+
+    return {
+      features: branches.filter(b => b.startsWith(config.featurePrefix)),
+      releases: branches.filter(b => b.startsWith(config.releasePrefix)),
+      hotfixes: branches.filter(b => b.startsWith(config.hotfixPrefix)),
+    };
   }
 
   // --- Worktree ---
@@ -958,7 +1037,7 @@ export class GitService {
     return new Promise((resolve, reject) => {
       const proc = spawn('git', ['show', `${ref}:${filePath}`], {
         cwd: this.repoPath,
-        env: { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' },
+        env: { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C', GIT_MERGE_AUTOEDIT: 'no', GIT_EDITOR: 'true', EDITOR: 'true' },
       });
 
       const chunks: Buffer[] = [];
@@ -979,6 +1058,13 @@ export class GitService {
         reject(new GitError(err.message, null, ['show', `${ref}:${filePath}`]));
       });
     });
+  }
+
+  async isFlowInstalled(): Promise<boolean> {
+    try {
+      await this.exec(['flow', 'version']);
+      return true;
+    } catch { return false; }
   }
 
   async isFlowInitialized(): Promise<boolean> {

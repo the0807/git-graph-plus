@@ -532,8 +532,21 @@ export class MainPanel {
           break;
         }
         // --- Git Flow ---
+        case 'checkFlowStatus': {
+          const installed = await this.gitService.isFlowInstalled();
+          let initialized = false;
+          let config = null;
+          if (installed) {
+            initialized = await this.gitService.isFlowInitialized();
+            if (initialized) {
+              config = await this.gitService.getFlowConfig();
+            }
+          }
+          this.panel.webview.postMessage({ type: 'flowStatus', payload: { installed, initialized, config } });
+          break;
+        }
         case 'flowInit': {
-          await this.gitService.flowInit();
+          await this.gitService.flowInit(message.payload);
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'flowInit', success: true } });
           await this.refreshAll();
           break;
@@ -551,6 +564,11 @@ export class MainPanel {
           }
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: `flow-${action}`, success: true } });
           await this.refreshAll();
+          break;
+        }
+        case 'getFlowBranches': {
+          const branches = await this.gitService.getFlowBranches();
+          this.panel.webview.postMessage({ type: 'flowBranches', payload: branches });
           break;
         }
         // --- Submodule ---

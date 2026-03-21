@@ -7,6 +7,7 @@
   import Modal from '../common/Modal.svelte';
   import AddRemoteModal from '../modals/AddRemoteModal.svelte';
   import { modalStore } from '../../lib/stores/modals.svelte';
+  import type { FlowStatus, FlowBranches } from '../../lib/types';
 
   const vscode = getVsCodeApi();
 
@@ -21,6 +22,9 @@
   let pullStash = $state(false);
   let showAddRemote = $state(false);
   let showRepoDropdown = $state(false);
+  let showFlowDropdown = $state(false);
+  let flowStatus = $state<FlowStatus | null>(null);
+  let flowBranches = $state<FlowBranches>({ features: [], releases: [], hotfixes: [] });
 
   function refresh() {
     operating = 'refresh';
@@ -68,6 +72,14 @@
     vscode.postMessage({ type: 'push', payload: { force: forcePush, setUpstream: true } });
   }
 
+  function openFlowDropdown() {
+    showFlowDropdown = !showFlowDropdown;
+    if (showFlowDropdown) {
+      vscode.postMessage({ type: 'checkFlowStatus' });
+      vscode.postMessage({ type: 'getFlowBranches' });
+    }
+  }
+
   function switchRepo(repoPath: string) {
     vscode.postMessage({ type: 'switchRepo', payload: { path: repoPath } });
   }
@@ -82,6 +94,8 @@
       if (msg.type === 'logData' && operating === 'refresh') {
         operating = null;
       }
+      if (msg.type === 'flowStatus') flowStatus = msg.payload;
+      if (msg.type === 'flowBranches') flowBranches = msg.payload;
     }
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
@@ -198,6 +212,60 @@
     <button class="toolbar-btn icon-only" onclick={refresh} disabled={operating !== null} title={t('toolbar.refreshDesc')}>
       {#if operating === 'refresh'}<span class="spinner"></span>{:else}<i class="codicon codicon-refresh"></i>{/if}
     </button>
+    <span class="separator"></span>
+    <div class="flow-wrapper">
+      <button
+        class="toolbar-btn"
+        onclick={openFlowDropdown}
+        title={t('flow.button')}
+      >
+        <i class="codicon codicon-source-control"></i>
+        <i class="codicon codicon-chevron-down flow-chevron"></i>
+      </button>
+      {#if showFlowDropdown}
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="flow-dropdown-backdrop" onclick={() => { showFlowDropdown = false; }}></div>
+        <div class="flow-dropdown">
+          {#if !flowStatus}
+            <div class="flow-dropdown-item disabled">Loading...</div>
+          {:else if !flowStatus.installed}
+            <div class="flow-dropdown-item disabled">{t('flow.notInstalled')}</div>
+          {:else if !flowStatus.initialized}
+            <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowInit(); }}>
+              {t('flow.initialize')}
+            </button>
+          {:else}
+            <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowStart('feature'); }}>
+              {t('flow.startFeature')}
+            </button>
+            <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowStart('release'); }}>
+              {t('flow.startRelease')}
+            </button>
+            <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowStart('hotfix'); }}>
+              {t('flow.startHotfix')}
+            </button>
+            {#if flowBranches.features.length || flowBranches.releases.length || flowBranches.hotfixes.length}
+              <div class="flow-dropdown-separator"></div>
+              {#each flowBranches.features as branch}
+                <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowFinish('feature', branch); }}>
+                  {t('flow.finish', { name: branch })}
+                </button>
+              {/each}
+              {#each flowBranches.releases as branch}
+                <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowFinish('release', branch); }}>
+                  {t('flow.finish', { name: branch })}
+                </button>
+              {/each}
+              {#each flowBranches.hotfixes as branch}
+                <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowFinish('hotfix', branch); }}>
+                  {t('flow.finish', { name: branch })}
+                </button>
+              {/each}
+            {/if}
+          {/if}
+        </div>
+      {/if}
+    </div>
   </div>
 </div>
 
@@ -521,4 +589,69 @@
     outline: none;
   }
   .modal-select:focus { border-color: var(--vscode-focusBorder, #007fd4); }
+
+  .flow-wrapper {
+    position: relative;
+  }
+
+  .flow-chevron {
+    font-size: 10px;
+    margin-left: -2px;
+    opacity: 0.7;
+  }
+
+  .flow-dropdown-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99;
+  }
+
+  .flow-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    min-width: 220px;
+    background: var(--vscode-menu-background, var(--bg-secondary));
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 0;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .flow-dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 6px 12px;
+    font-size: 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .flow-dropdown-item:hover:not(.disabled) {
+    background: var(--vscode-menu-selectionBackground, rgba(128, 128, 128, 0.2));
+  }
+
+  .flow-dropdown-item.disabled {
+    color: var(--text-secondary);
+    cursor: default;
+  }
+
+  .flow-dropdown-separator {
+    border-top: 1px solid var(--border-color);
+    margin: 4px 0;
+  }
+
+  .toolbar-btn-label {
+    font-size: 12px;
+    font-weight: 500;
+  }
 </style>

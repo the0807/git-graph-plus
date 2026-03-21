@@ -135,3 +135,26 @@ export interface WorktreeInfo {
   prunable: boolean;
   isMain: boolean;
 }
+
+export interface FlowConfig {
+  productionBranch: string;
+  developBranch: string;
+  featurePrefix: string;
+  releasePrefix: string;
+  hotfixPrefix: string;
+  versionTagPrefix: string;
+}
+
+export interface FlowStatus {
+  installed: boolean;
+  initialized: boolean;
+  config: FlowConfig | null;
+}
+
+export interface FlowBranches {
+  features: string[];
+  releases: string[];
+  hotfixes: string[];
+}
+
+export type FlowType = 'feature' | 'release' | 'hotfix';
