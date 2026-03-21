@@ -339,10 +339,14 @@ export function parseStashList(raw: string): StashEntry[] {
     const message = fields[1]?.trim() ?? '';
     const date = fields[2]?.trim() ?? '';
 
+    const parents = fields[3]?.trim() ?? '';
+    const parentHash = parents.split(' ')[0] || undefined;
+    const hash = fields[4]?.trim() || undefined;
+
     const indexMatch = refStr.match(/stash@\{(\d+)\}/);
     const index = indexMatch ? parseInt(indexMatch[1], 10) : 0;
 
-    return { index, message, date };
+    return { index, message, date, parentHash, hash };
   });
 }
 

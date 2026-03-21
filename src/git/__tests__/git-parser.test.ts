@@ -187,14 +187,18 @@ describe('parseStashList', () => {
     expect(parseStashList('')).toEqual([]);
   });
 
-  it('should parse stash entries', () => {
-    const raw = 'stash@{0}\x00WIP on main: abc1234 Fix bug\x002024-01-15T10:00:00+09:00\nstash@{1}\x00On feature: save work\x002024-01-14T09:00:00+09:00';
+  it('should parse stash entries with parent hash and hash', () => {
+    const raw = 'stash@{0}\x00WIP on main: abc1234 Fix bug\x002024-01-15T10:00:00+09:00\x00aaa111 bbb222\x00fff000\nstash@{1}\x00On feature: save work\x002024-01-14T09:00:00+09:00\x00ccc333 ddd444\x00fff111';
     const result = parseStashList(raw);
 
     expect(result).toHaveLength(2);
     expect(result[0].index).toBe(0);
     expect(result[0].message).toBe('WIP on main: abc1234 Fix bug');
+    expect(result[0].parentHash).toBe('aaa111');
+    expect(result[0].hash).toBe('fff000');
     expect(result[1].index).toBe(1);
+    expect(result[1].parentHash).toBe('ccc333');
+    expect(result[1].hash).toBe('fff111');
   });
 });
 

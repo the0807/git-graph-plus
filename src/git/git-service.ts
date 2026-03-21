@@ -101,7 +101,7 @@ export class GitService {
     ];
 
     if (options?.all !== false) {
-      args.push('--all');
+      args.push('--glob=refs/heads', '--glob=refs/remotes', '--glob=refs/tags');
     }
 
     args.push('--topo-order');
@@ -118,11 +118,45 @@ export class GitService {
       args.push(options.branch);
     }
 
-    const [raw, remoteNames] = await Promise.all([
+    const [raw, remoteNames, stashes] = await Promise.all([
       this.exec(args),
       this.getRemoteNames(),
+      this.stashList(),
     ]);
     const commits = parseLog(raw, remoteNames);
+
+    // Insert stash commits into the graph as separate rows
+    if (stashes.length > 0) {
+      const stashHashes = stashes.map(s => s.hash).filter(Boolean) as string[];
+      if (stashHashes.length > 0) {
+        try {
+          const stashRaw = await this.exec([
+            'log', '--no-walk',
+            '--format=%x01%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
+            ...stashHashes,
+          ]);
+          const stashCommits = parseLog(stashRaw, remoteNames);
+          for (let i = 0; i < stashCommits.length; i++) {
+            const sc = stashCommits[i];
+            const stash = stashes.find(s => s.hash === sc.hash);
+            // Keep only first parent (base commit), drop index/untracked parents
+            sc.parents = sc.parents.length > 0 ? [sc.parents[0]] : [];
+            // Replace refs with stash badge
+            sc.refs = [{ type: 'stash' as const, name: `stash@{${stash?.index ?? i}}` }];
+            // Use stash message as subject
+            if (stash?.message) sc.subject = stash.message;
+            // Insert after the parent commit
+            const parentIdx = commits.findIndex(c => c.hash === sc.parents[0]);
+            if (parentIdx >= 0) {
+              commits.splice(parentIdx, 0, sc);
+            } else {
+              commits.unshift(sc);
+            }
+          }
+        } catch { /* ignore stash log errors */ }
+      }
+    }
+
     return commits;
   }
 
@@ -167,7 +201,7 @@ export class GitService {
   async stashList(): Promise<StashEntry[]> {
     try {
       const raw = await this.exec([
-        'stash', 'list', '--format=%gd%x00%gs%x00%aI',
+        'stash', 'list', '--format=%gd%x00%gs%x00%aI%x00%P%x00%H',
       ]);
       return parseStashList(raw);
     } catch {

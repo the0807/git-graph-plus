@@ -90,6 +90,8 @@ export interface StashEntry {
   index: number;
   message: string;
   date: string;
+  hash?: string;
+  parentHash?: string;
 }
 
 export interface DiffData {

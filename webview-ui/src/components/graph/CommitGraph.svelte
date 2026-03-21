@@ -419,24 +419,25 @@
           ],
         });
       } else if (ref.type === 'stash') {
-        const stashEntry = branchStore.stashes.find((_s, i) => i === 0);
+        const stashIndex = parseInt(ref.name.match(/\{(\d+)\}/)?.[1] ?? '0', 10);
+        const stashEntry = branchStore.stashes.find(s => s.index === stashIndex);
         items.push({
-          label: `stash: ${stashEntry?.message ?? 'stash@{0}'}`,
+          label: ref.name,
           icon: 'archive',
           action: () => {},
           children: [
             {
               label: t('sidebar.apply'),
-              action: () => vscode.postMessage({ type: 'stashApply', payload: { index: 0, drop: false } }),
+              action: () => vscode.postMessage({ type: 'stashApply', payload: { index: stashIndex, drop: false } }),
             },
             {
               label: t('sidebar.pop'),
-              action: () => vscode.postMessage({ type: 'stashApply', payload: { index: 0, drop: true } }),
+              action: () => vscode.postMessage({ type: 'stashApply', payload: { index: stashIndex, drop: true } }),
             },
             { separator: true, label: '', action: () => {} },
             {
               label: t('sidebar.drop'),
-              action: () => vscode.postMessage({ type: 'stashDrop', payload: { index: 0 } }),
+              action: () => vscode.postMessage({ type: 'stashDrop', payload: { index: stashIndex } }),
               danger: true,
             },
           ],
