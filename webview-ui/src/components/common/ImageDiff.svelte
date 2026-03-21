@@ -14,10 +14,13 @@
 
   let oldImage = $state<string | null>(null);
   let newImage = $state<string | null>(null);
+  let oldImageInfo = $state<{ width: number; height: number; bytes: number } | null>(null);
+  let newImageInfo = $state<{ width: number; height: number; bytes: number } | null>(null);
   let mode = $state<'side-by-side' | 'swipe' | 'onion'>('side-by-side');
   let swipePosition = $state(50);
   let onionOpacity = $state(0.5);
   let dragging = $state(false);
+  let swipeContainerEl = $state<HTMLElement | null>(null);
 
   // Track which refs we expect so we can assign old/new correctly
   let oldRef = $state('');
@@ -26,6 +29,8 @@
   $effect(() => {
     oldImage = null;
     newImage = null;
+    oldImageInfo = null;
+    newImageInfo = null;
 
     if (commitHash) {
       oldRef = `${commitHash}~1`;
@@ -50,11 +55,21 @@
           ? `data:${msg.payload.mimeType};base64,${msg.payload.base64}`
           : null;
 
+        const bytes = msg.payload.base64
+          ? Math.floor(msg.payload.base64.length * 3 / 4)
+          : 0;
+
         // Match by ref to avoid race condition
         if (msg.payload.ref === oldRef) {
           oldImage = dataUrl;
+          if (dataUrl) {
+            loadImageInfo(dataUrl, bytes, (info) => { oldImageInfo = info; });
+          }
         } else if (msg.payload.ref === newRef) {
           newImage = dataUrl;
+          if (dataUrl) {
+            loadImageInfo(dataUrl, bytes, (info) => { newImageInfo = info; });
+          }
         }
       }
     }
@@ -62,10 +77,21 @@
     return () => window.removeEventListener('message', handleMessage);
   });
 
+  function loadImageInfo(src: string, bytes: number, cb: (info: { width: number; height: number; bytes: number }) => void) {
+    const img = new Image();
+    img.onload = () => cb({ width: img.naturalWidth, height: img.naturalHeight, bytes });
+    img.src = src;
+  }
+
+  function formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
   function handleSwipeMove(e: MouseEvent) {
-    if (!dragging) return;
-    const container = (e.currentTarget as HTMLElement);
-    const rect = container.getBoundingClientRect();
+    if (!dragging || !swipeContainerEl) return;
+    const rect = swipeContainerEl.getBoundingClientRect();
     swipePosition = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
   }
 
@@ -79,7 +105,7 @@
   }
 </script>
 
-<svelte:window onmouseup={handleSwipeEnd} />
+<svelte:window onmouseup={handleSwipeEnd} onmousemove={handleSwipeMove} />
 
 <div class="image-diff">
   <div class="image-diff-toolbar">
@@ -93,7 +119,12 @@
       <div class="sbs-panel">
         <div class="sbs-label">Before</div>
         {#if oldImage}
-          <img src={oldImage} alt="Before" class="diff-image" />
+          <div class="sbs-image-wrapper">
+            <img src={oldImage} alt="Before" class="diff-image" />
+            {#if oldImageInfo}
+              <div class="image-info">W: {oldImageInfo.width}px | H: {oldImageInfo.height}px ({formatBytes(oldImageInfo.bytes)})</div>
+            {/if}
+          </div>
         {:else}
           <div class="no-image">No image</div>
         {/if}
@@ -101,45 +132,52 @@
       <div class="sbs-panel">
         <div class="sbs-label">After</div>
         {#if newImage}
-          <img src={newImage} alt="After" class="diff-image" />
+          <div class="sbs-image-wrapper">
+            <img src={newImage} alt="After" class="diff-image" />
+            {#if newImageInfo}
+              <div class="image-info">W: {newImageInfo.width}px | H: {newImageInfo.height}px ({formatBytes(newImageInfo.bytes)})</div>
+            {/if}
+          </div>
         {:else}
           <div class="no-image">No image</div>
         {/if}
       </div>
     </div>
   {:else if mode === 'swipe'}
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div
-      class="swipe-container"
-      onmousemove={handleSwipeMove}
-    >
-      {#if newImage}
-        <img src={newImage} alt="After" class="swipe-image swipe-new" />
-      {/if}
-      {#if oldImage}
-        <img
-          src={oldImage}
-          alt="Before"
-          class="swipe-image swipe-old"
-          style="clip-path: inset(0 {100 - swipePosition}% 0 0);"
-        />
-      {/if}
-      <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-      <div
-        class="swipe-divider"
-        style="left: {swipePosition}%;"
-        onmousedown={handleSwipeStart}
-        role="separator"
-      >
-        <div class="swipe-handle"></div>
+    <div class="swipe-wrapper">
+      <div class="swipe-inner">
+        <div class="swipe-labels">
+          <span class="swipe-label-text">Before</span>
+          <span class="swipe-label-text">After</span>
+        </div>
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="swipe-container" bind:this={swipeContainerEl}>
+          {#if newImage}
+            <img src={newImage} alt="After" class="swipe-image swipe-new" />
+          {/if}
+          <div class="swipe-old-clip" style="clip-path: inset(0 {100 - swipePosition}% 0 0);">
+            {#if oldImage}
+              <img src={oldImage} alt="Before" class="swipe-image" />
+            {/if}
+          </div>
+          <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+          <div
+            class="swipe-divider"
+            style="left: {swipePosition}%;"
+            onmousedown={handleSwipeStart}
+            role="separator"
+          >
+            <div class="swipe-handle"></div>
+          </div>
+        </div>
       </div>
     </div>
   {:else}
     <div class="onion-container">
       <div class="onion-controls">
-        <span>Opacity:</span>
+        <span class="onion-label">Before</span>
         <input type="range" min="0" max="1" step="0.01" bind:value={onionOpacity} />
-        <span>{Math.round(onionOpacity * 100)}%</span>
+        <span class="onion-label">After</span>
       </div>
       <div class="onion-images">
         {#if oldImage}
@@ -161,7 +199,7 @@
   .image-diff-toolbar {
     display: flex;
     gap: 2px;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
     background: rgba(128, 128, 128, 0.15);
     border-radius: 4px;
     padding: 2px;
@@ -189,7 +227,17 @@
   .sbs-panel {
     flex: 1;
     min-width: 0;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .sbs-image-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .sbs-label {
@@ -197,6 +245,15 @@
     color: var(--text-secondary);
     margin-bottom: 4px;
     font-weight: 600;
+  }
+
+  .image-info {
+    margin-top: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: rgba(128, 128, 128, 0.15);
+    border-radius: 3px;
   }
 
   .diff-image {
@@ -216,27 +273,60 @@
     border-radius: 4px;
   }
 
+  .swipe-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+
+  .swipe-inner {
+    display: inline-flex;
+    flex-direction: column;
+    max-width: 100%;
+  }
+
   .swipe-container {
     position: relative;
     overflow: hidden;
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    max-height: 500px;
     background: repeating-conic-gradient(#808080 0% 25%, transparent 0% 50%) 50% / 16px 16px;
     cursor: ew-resize;
+    user-select: none;
   }
 
   .swipe-image {
     display: block;
-    max-width: 100%;
-    max-height: 500px;
-    object-fit: contain;
   }
 
-  .swipe-old {
+  .swipe-new {
+    max-width: 100%;
+    max-height: 400px;
+  }
+
+  .swipe-old-clip {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .swipe-old-clip .swipe-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .swipe-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .swipe-label-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
   }
 
   .swipe-divider {
@@ -273,7 +363,11 @@
     gap: 8px;
     justify-content: center;
     margin-bottom: 8px;
+  }
+
+  .onion-label {
     font-size: 11px;
+    font-weight: 600;
     color: var(--text-secondary);
   }
 
@@ -293,7 +387,7 @@
   .onion-image {
     display: block;
     max-width: 100%;
-    max-height: 500px;
+    max-height: 400px;
     object-fit: contain;
   }
 
@@ -301,5 +395,8 @@
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
 </style>
