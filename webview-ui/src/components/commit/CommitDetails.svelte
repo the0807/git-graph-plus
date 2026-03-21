@@ -8,6 +8,7 @@
   import { detectLanguage, highlightLine, escapeHtml } from '../../lib/utils/highlighter';
 
   import ImageDiff from '../common/ImageDiff.svelte';
+  import ContextMenu from '../common/ContextMenu.svelte';
 
   interface Props {
     commit?: Commit;
@@ -25,7 +26,12 @@
   let files = $state<CommitFile[]>([]);
   let diffs = $state<DiffData[]>([]);
   let selectedFile = $state<string | null>(null);
+  let lfsFiles = $state<Array<{ oid: string; path: string }>>([]);
+  let lfsLocks = $state<Array<{ path: string; owner: string; id: string }>>([]);
+  let fileContextMenu = $state<{ x: number; y: number; items: any[] } | null>(null);
   let selectedDiff = $derived(diffs.find(d => d.file === selectedFile));
+  const lfsFileSet = $derived(new Set(lfsFiles.map(f => f.path)));
+  const lfsLockMap = $derived(new Map(lfsLocks.map(l => [l.path, l.owner])));
   let diffMode = $state<'inline' | 'side-by-side'>('inline');
   // svelte-ignore state_referenced_locally
   let activeTab = $state<'commit' | 'changes'>(commit ? 'commit' : 'changes');
@@ -37,6 +43,7 @@
       diffs = [];
       selectedFile = null;
       vscode.postMessage({ type: 'getCommitDiff', payload: { hash: commit.hash } });
+      vscode.postMessage({ type: 'getLfsFiles' });
     }
   });
 
@@ -46,6 +53,10 @@
       if (msg.type === 'commitDiffData') {
         files = msg.payload.files;
         diffs = msg.payload.diffs;
+      }
+      if (msg.type === 'lfsData') {
+        lfsFiles = msg.payload.files;
+        lfsLocks = msg.payload.locks;
       }
     }
     window.addEventListener('message', handleMessage);
@@ -303,9 +314,37 @@
                   onclick={() => { selectedFile = selectedFile === node.path ? null : node.path; }}
                   ondblclick={() => { if (commit) vscode.postMessage({ type: 'openDiff', payload: { file: node.path, commitHash: commit.hash } }); }}
                   title="Double-click to open in editor"
+                  oncontextmenu={(e) => {
+                    if (!lfsFileSet.has(node.path)) return;
+                    e.preventDefault();
+                    const items: Array<{ label: string; action: () => void; danger?: boolean; separator?: boolean }> = [];
+                    if (lfsLockMap.has(node.path)) {
+                      items.push({
+                        label: t('lfs.unlock'),
+                        action: () => { vscode.postMessage({ type: 'lfsUnlock', payload: { file: node.path } }); fileContextMenu = null; },
+                      });
+                      items.push({
+                        label: t('lfs.unlockForce'),
+                        action: () => { vscode.postMessage({ type: 'lfsUnlock', payload: { file: node.path, force: true } }); fileContextMenu = null; },
+                        danger: true,
+                      });
+                    } else {
+                      items.push({
+                        label: t('lfs.lock'),
+                        action: () => { vscode.postMessage({ type: 'lfsLock', payload: { file: node.path } }); fileContextMenu = null; },
+                      });
+                    }
+                    fileContextMenu = { x: e.clientX, y: e.clientY, items };
+                  }}
                 >
                   <i class="codicon codicon-file"></i>
                   <span class="file-name truncate">{node.name}</span>
+                  {#if lfsFileSet.has(node.path)}
+                    <span class="lfs-badge" class:locked={lfsLockMap.has(node.path)} title={lfsLockMap.has(node.path) ? t('lfs.locked', { owner: lfsLockMap.get(node.path) ?? '' }) : 'LFS'}>
+                      {#if lfsLockMap.has(node.path)}<i class="codicon codicon-lock"></i>{/if}
+                      LFS
+                    </span>
+                  {/if}
                   {#if node.status}
                     <span class="file-status" style="color: {statusColor(node.status)}" title={statusLabel(node.status)}>{node.status}</span>
                   {/if}
@@ -420,6 +459,15 @@
 
   {/if}
 </div>
+
+{#if fileContextMenu}
+  <ContextMenu
+    x={fileContextMenu.x}
+    y={fileContextMenu.y}
+    items={fileContextMenu.items}
+    onClose={() => { fileContextMenu = null; }}
+  />
+{/if}
 
 <style>
   .commit-details {
@@ -790,5 +838,32 @@
   }
 
   .sbs-left { border-right: 1px solid var(--border-color); }
+
+  .lfs-badge {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 4px;
+    font-size: 9px;
+    font-weight: 600;
+    border-radius: 3px;
+    background: rgba(156, 39, 176, 0.15);
+    color: #ce93d8;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .lfs-badge + .file-status {
+    margin-left: 6px;
+  }
+
+  .lfs-badge.locked {
+    background: rgba(255, 152, 0, 0.15);
+    color: #ff9800;
+  }
+
+  .lfs-badge i {
+    font-size: 9px;
+  }
 
 </style>

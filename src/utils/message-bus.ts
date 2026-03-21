@@ -52,6 +52,8 @@ export type WebviewMessage =
   | { type: 'getSubmodules' }
   | { type: 'submoduleUpdate' }
   | { type: 'getLfsFiles' }
+  | { type: 'lfsLock'; payload: { file: string } }
+  | { type: 'lfsUnlock'; payload: { file: string; force?: boolean } }
   | { type: 'switchRepo'; payload: { path: string } }
   | { type: 'getWorktrees' }
   | { type: 'pruneWorktrees' }

@@ -767,7 +767,7 @@ export class GitService {
       const raw = await this.exec(['lfs', 'ls-files']);
       if (!raw.trim()) { return []; }
       return raw.trim().split('\n').filter(Boolean).map(line => {
-        const parts = line.split(/\s+-\s+/);
+        const parts = line.split(/\s+[-*]\s+/);
         return { oid: parts[0]?.trim() ?? '', path: parts[1]?.trim() ?? '' };
       });
     } catch { return []; }

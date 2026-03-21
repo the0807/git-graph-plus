@@ -407,4 +407,11 @@ export const en: Record<string, string> = {
   'bisect.banner.reset': 'Reset',
   'bisect.banner.viewCommit': 'View Commit',
   'bisect.banner.checkout': 'Checkout',
+
+  // LFS
+  'lfs.badge': 'LFS',
+  'lfs.locked': 'Locked by {owner}',
+  'lfs.lock': 'LFS Lock',
+  'lfs.unlock': 'LFS Unlock',
+  'lfs.unlockForce': 'LFS Force Unlock',
 };

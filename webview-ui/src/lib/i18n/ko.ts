@@ -407,4 +407,11 @@ export const ko: Record<string, string> = {
   'bisect.banner.reset': 'Reset',
   'bisect.banner.viewCommit': '커밋 상세 보기',
   'bisect.banner.checkout': 'Checkout',
+
+  // LFS
+  'lfs.badge': 'LFS',
+  'lfs.locked': '{owner}가 잠금',
+  'lfs.lock': 'LFS 잠금',
+  'lfs.unlock': 'LFS 잠금 해제',
+  'lfs.unlockForce': 'LFS 강제 잠금 해제',
 };
