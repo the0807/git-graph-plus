@@ -722,6 +722,10 @@ export class GitService {
     return this.exec(args);
   }
 
+  async bisectSkip(): Promise<string> {
+    return this.exec(['bisect', 'skip']);
+  }
+
   async bisectReset(): Promise<string> {
     return this.exec(['bisect', 'reset']);
   }

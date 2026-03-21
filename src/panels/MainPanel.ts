@@ -476,6 +476,12 @@ export class MainPanel {
           await this.refreshAll();
           break;
         }
+        case 'bisectSkip': {
+          const result = await this.gitService.bisectSkip();
+          this.panel.webview.postMessage({ type: 'bisectResult', payload: { message: result } });
+          await this.refreshAll();
+          break;
+        }
         case 'bisectReset': {
           await this.gitService.bisectReset();
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'bisectReset', success: true } });

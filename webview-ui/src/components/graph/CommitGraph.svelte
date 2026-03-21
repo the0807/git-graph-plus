@@ -60,9 +60,11 @@
   interface Props {
     searchMatchedHashes?: Set<string> | null;
     searchNavigateHash?: string | null;
+    bisectActive?: boolean;
+    bisectCulpritHash?: string | null;
   }
 
-  let { searchMatchedHashes = null, searchNavigateHash = null }: Props = $props();
+  let { searchMatchedHashes = null, searchNavigateHash = null, bisectActive = false, bisectCulpritHash = null }: Props = $props();
 
   const vscode = getVsCodeApi();
 
@@ -121,6 +123,17 @@
   });
 
   let compareBase = $state<string | null>(null);
+  let bisectBadCommit = $state<string | null>(null);
+  let bisectStartBad = $state<string | null>(null);
+  let bisectStartGood = $state<string | null>(null);
+
+  $effect(() => {
+    if (!bisectActive) {
+      bisectBadCommit = null;
+      bisectStartBad = null;
+      bisectStartGood = null;
+    }
+  });
   let clickTimer: ReturnType<typeof setTimeout> | null = null;
   let interactiveRebaseBase = $state<string | null>(null);
   let showResetModal = $state(false);
@@ -540,6 +553,34 @@
       });
     }
 
+    // ── Bisect ──
+    items.push({ separator: true, label: '', action: () => {} });
+    if (bisectBadCommit) {
+      items.push({
+        label: t('bisect.startGood'),
+        action: () => {
+          const bad = bisectBadCommit!;
+          bisectBadCommit = null;
+          bisectStartBad = bad;
+          bisectStartGood = commit.hash;
+          vscode.postMessage({ type: 'bisectStart', payload: { bad, good: commit.hash } });
+        },
+      });
+      items.push({
+        label: t('bisect.cancelSelect'),
+        action: () => { bisectBadCommit = null; },
+      });
+    } else {
+      items.push({
+        label: t('bisect.selectBad'),
+        action: () => {
+          bisectBadCommit = commit.hash;
+          uiStore.selectedCommitHash = null;
+          uiStore.showBottomPanel = false;
+        },
+      });
+    }
+
     // ── Copy SHA ──
     items.push(
       { separator: true, label: '', action: () => {} },
@@ -571,7 +612,13 @@
   });
 </script>
 
-<svelte:window onresize={handleResize} />
+<svelte:window onresize={handleResize} onkeydown={(e) => {
+  if (e.key === 'Escape') {
+    if (bisectBadCommit) { bisectBadCommit = null; }
+    else if (bisectCulpritHash) { vscode.postMessage({ type: 'bisectReset' }); }
+    else if (compareBase) { compareBase = null; }
+  }
+}} />
 
 <div class="commit-graph" bind:this={container} onscroll={handleScroll}>
   {#if commitStore.loading && !isSearchActive}
@@ -662,8 +709,21 @@
             class:compare-mode={compareBase !== null && compareBase !== commit.hash}
             class:compare-base={compareBase === commit.hash}
             class:compare-active={uiStore.comparing && (uiStore.compareRef1 === commit.hash || uiStore.compareRef2 === commit.hash)}
+            class:bisect-mode={bisectBadCommit !== null && bisectBadCommit !== commit.hash}
+            class:bisect-bad={bisectBadCommit === commit.hash}
+            class:bisect-start-bad={bisectActive && bisectStartBad === commit.hash}
+            class:bisect-start-good={bisectActive && bisectStartGood === commit.hash}
+            class:bisect-culprit={bisectCulpritHash !== null && commit.hash.startsWith(bisectCulpritHash)}
             style="height: {ROW_HEIGHT}px;"
             onclick={() => {
+              if (bisectBadCommit && bisectBadCommit !== commit.hash) {
+                const bad = bisectBadCommit;
+                bisectBadCommit = null;
+                bisectStartBad = bad;
+                bisectStartGood = commit.hash;
+                vscode.postMessage({ type: 'bisectStart', payload: { bad, good: commit.hash } });
+                return;
+              }
               if (compareBase && compareBase !== commit.hash) {
                 uiStore.comparing = true;
                 uiStore.selectedCommitHash = null;
@@ -826,6 +886,17 @@
     <span class="compare-label">{t('graph.comparingFrom')}</span>
     <span class="compare-hash">{compareBase.substring(0, 7)}</span>
     <button class="compare-cancel" aria-label="Cancel compare" onclick={() => { compareBase = null; }}>
+      <i class="codicon codicon-close"></i>
+    </button>
+  </div>
+{/if}
+
+{#if bisectBadCommit}
+  <div class="bisect-indicator">
+    <i class="codicon codicon-search"></i>
+    <span class="bisect-indicator-label">{t('bisect.clickGoodPrompt')}</span>
+    <span class="bisect-indicator-hash">{bisectBadCommit.substring(0, 7)}</span>
+    <button class="bisect-indicator-cancel" aria-label="Cancel bisect" onclick={() => { bisectBadCommit = null; }}>
       <i class="codicon codicon-close"></i>
     </button>
   </div>
@@ -1352,6 +1423,78 @@
   .compare-cancel:hover {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
+  }
+
+  /* ---- Bisect indicator ---- */
+  .bisect-indicator {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(244, 67, 54, 0.15);
+    border: 1px solid rgba(244, 67, 54, 0.4);
+    color: #f44336;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  .bisect-indicator-label {
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+
+  .bisect-indicator-hash {
+    font-family: monospace;
+    font-weight: 500;
+    color: #f44336;
+  }
+
+  .bisect-indicator-cancel {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    padding: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  .bisect-indicator-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+  }
+
+  .commit-row.bisect-bad,
+  .commit-row.bisect-start-bad {
+    background: rgba(244, 67, 54, 0.12);
+    box-shadow: inset 3px 0 0 #f44336;
+  }
+
+  .commit-row.bisect-start-good {
+    background: rgba(76, 175, 80, 0.12);
+    box-shadow: inset 3px 0 0 #4caf50;
+  }
+
+  .commit-row.bisect-culprit {
+    background: rgba(255, 152, 0, 0.15);
+    box-shadow: inset 3px 0 0 #ff9800;
+  }
+
+  .commit-row.bisect-mode {
+    cursor: pointer;
+  }
+
+  .commit-row.bisect-mode:hover {
+    background: rgba(99, 176, 244, 0.08);
   }
 
   /* ---- Modal styles ---- */

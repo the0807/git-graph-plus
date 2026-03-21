@@ -23,11 +23,13 @@
   import FlowInitModal from './components/modals/FlowInitModal.svelte';
   import FlowStartModal from './components/modals/FlowStartModal.svelte';
   import FlowFinishModal from './components/modals/FlowFinishModal.svelte';
+  import BisectBanner from './components/common/BisectBanner.svelte';
   import type { FlowConfig } from './lib/types';
 
   const vscode = getVsCodeApi();
 
   let flowConfig = $state<FlowConfig | null>(null);
+  let bisectMessage = $state<string | null>(null);
   let searchMatchedHashes = $state<Set<string> | null>(null);
   let searchNavigateHash = $state<string | null>(null);
   let resizing = $state(false);
@@ -72,9 +74,6 @@
           uiStore.repos = msg.payload.repos;
           uiStore.activeRepo = msg.payload.active;
           break;
-        case 'operationComplete':
-          conflict = null;
-          break;
         case 'conflictData':
           conflict = msg.payload;
           break;
@@ -83,6 +82,15 @@
           break;
         case 'flowStatus':
           flowConfig = msg.payload.config;
+          break;
+        case 'bisectResult':
+          bisectMessage = msg.payload.message;
+          break;
+        case 'operationComplete':
+          if (msg.payload.operation === 'bisectReset') {
+            bisectMessage = null;
+          }
+          conflict = null;
           break;
         case 'showModal':
           if (msg.payload.modal === 'deleteBranch') {
@@ -291,9 +299,19 @@
 
   <div class="content-area">
     {#if uiStore.viewMode === 'graph'}
-      <SearchBar onResults={handleSearchResults} onNavigate={handleSearchNavigate} />
+      {#if !bisectMessage && !conflict}
+        <SearchBar onResults={handleSearchResults} onNavigate={handleSearchNavigate} />
+      {/if}
+      {#if bisectMessage}
+        <BisectBanner
+          message={bisectMessage}
+          onReset={() => {
+            vscode.postMessage({ type: 'bisectReset' });
+          }}
+        />
+      {/if}
       <div class="graph-area">
-        <CommitGraph {searchMatchedHashes} {searchNavigateHash} />
+        <CommitGraph {searchMatchedHashes} {searchNavigateHash} bisectActive={bisectMessage !== null} bisectCulpritHash={bisectMessage?.includes('is the first bad commit') ? bisectMessage.match(/^([a-f0-9]{7,40})/)?.[1] ?? null : null} />
       </div>
       {#if uiStore.showBottomPanel && (uiStore.selectedCommitHash || uiStore.comparing)}
         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->

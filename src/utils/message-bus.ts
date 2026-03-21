@@ -41,6 +41,7 @@ export type WebviewMessage =
   | { type: 'bisectStart'; payload: { bad?: string; good?: string } }
   | { type: 'bisectGood'; payload: { ref?: string } }
   | { type: 'bisectBad'; payload: { ref?: string } }
+  | { type: 'bisectSkip' }
   | { type: 'bisectReset' }
   | { type: 'getStats' }
   | { type: 'lsTree'; payload: { ref: string; path?: string } }
