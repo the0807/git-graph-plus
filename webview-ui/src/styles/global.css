@@ -101,8 +101,7 @@ button {
 }
 
 button:hover {
-  background: var(--button-hover-bg);
-  color: var(--button-fg);
+  background: var(--vscode-button-secondaryHoverBackground, rgba(255, 255, 255, 0.1));
 }
 
 button:focus-visible {
@@ -116,7 +115,8 @@ button.primary {
 }
 
 button.primary:hover {
-  opacity: 0.9;
+  background: var(--button-hover-bg);
+  color: var(--button-fg);
 }
 
 button:disabled {
