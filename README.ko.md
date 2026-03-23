@@ -7,7 +7,7 @@
 
 VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜치를 관리하고, 고급 Git 작업까지 에디터를 벗어나지 않고 수행할 수 있습니다.
 
-> 스테이징과 커밋은 VS Code 내장 소스 제어를 사용합니다. Git Graph+는 그 외 모든 것에 집중합니다.
+> 스테이징, 커밋, 인라인 블레임은 VS Code 내장 소스 제어를 사용합니다. Git Graph+는 그 외 모든 것에 집중합니다.
 
 ![Git Graph+](resources/main.png)
 

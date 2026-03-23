@@ -7,7 +7,7 @@
 
 A modern, full-featured Git GUI for VS Code. Visualize your commit history, manage branches, and perform advanced git operations — all without leaving your editor.
 
-> Staging and committing use VS Code's built-in Source Control. Git Graph+ focuses on everything else.
+> Staging, committing, and inline blame use VS Code's built-in Source Control. Git Graph+ focuses on everything else.
 
 ![Git Graph+](resources/main.png)
 
