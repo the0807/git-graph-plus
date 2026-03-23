@@ -41,10 +41,16 @@
     uiStore.viewMode = 'graph';
   }
 
+  let showNoRemotesError = $state(false);
+
   function doFetch() {
+    if (branchStore.remotes.length === 0) {
+      showNoRemotesError = true;
+      return;
+    }
     showFetchConfirm = true;
     fetchAllRemotes = false;
-    fetchRemote = branchStore.remotes[0]?.name ?? 'origin';
+    fetchRemote = branchStore.remotes[0].name;
   }
 
   function confirmFetch() {
@@ -74,11 +80,15 @@
   });
 
   function doPush() {
+    if (branchStore.remotes.length === 0) {
+      showNoRemotesError = true;
+      return;
+    }
     showPushConfirm = true;
     forcePush = false;
     pushSetUpstream = true;
     pushAllTags = false;
-    pushRemote = branchStore.remotes[0]?.name ?? 'origin';
+    pushRemote = branchStore.remotes[0].name;
   }
 
   function confirmPush() {
@@ -164,7 +174,7 @@
     {#if branchStore.currentBranch}
       <span class="current-branch">
         <i class="codicon codicon-git-branch branch-icon"></i>
-        {branchStore.currentBranch.name}
+        {branchStore.currentBranch.name.startsWith('(HEAD detached') ? t('toolbar.detachedHead') : branchStore.currentBranch.name}
       </span>
     {/if}
   </div>
@@ -405,6 +415,16 @@
     onClose={() => { showAddRemote = false; }}
     onAdd={(name, url) => { showAddRemote = false; vscode.postMessage({ type: 'addRemote', payload: { name, url } }); }}
   />
+{/if}
+
+{#if showNoRemotesError}
+  <Modal title={t('common.error')} onClose={() => { showNoRemotesError = false; }}>
+    <p class="modal-desc">{t('toolbar.noRemotes')}</p>
+    <div class="form-actions">
+      <button onclick={() => { showNoRemotesError = false; }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => { showNoRemotesError = false; showAddRemote = true; }}>{t('toolbar.addRemote')}</button>
+    </div>
+  </Modal>
 {/if}
 
 <style>

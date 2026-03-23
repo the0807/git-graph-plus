@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { commitStore } from '../../lib/stores/commits.svelte';
   import { branchStore } from '../../lib/stores/branches.svelte';
   import { uiStore } from '../../lib/stores/ui.svelte';
@@ -13,6 +14,41 @@
   import RebaseBranchModal from '../modals/RebaseBranchModal.svelte';
   import { modalStore } from '../../lib/stores/modals.svelte';
   import type { Commit, CommitGraphData } from '../../lib/types';
+
+  // Track pending message handlers for cleanup on destroy
+  const pendingHandlers = new Set<(event: MessageEvent) => void>();
+  const HANDLER_TIMEOUT_MS = 10_000;
+
+  function addTimedMessageHandler(handler: (event: MessageEvent) => void): void {
+    pendingHandlers.add(handler);
+    window.addEventListener('message', handler);
+    const timer = setTimeout(() => {
+      if (pendingHandlers.has(handler)) {
+        window.removeEventListener('message', handler);
+        pendingHandlers.delete(handler);
+      }
+    }, HANDLER_TIMEOUT_MS);
+    // Store the timer so the wrapper can clear it
+    (handler as any).__timeout = timer;
+  }
+
+  function removeTimedMessageHandler(handler: (event: MessageEvent) => void): void {
+    window.removeEventListener('message', handler);
+    pendingHandlers.delete(handler);
+    if ((handler as any).__timeout) {
+      clearTimeout((handler as any).__timeout);
+    }
+  }
+
+  onDestroy(() => {
+    for (const handler of pendingHandlers) {
+      window.removeEventListener('message', handler);
+      if ((handler as any).__timeout) {
+        clearTimeout((handler as any).__timeout);
+      }
+    }
+    pendingHandlers.clear();
+  });
 
   const COLOR_PALETTE = [
     '#63b0f4', '#73d13d', '#ff7a45', '#b37feb',
@@ -209,10 +245,10 @@
     const handler = (event: MessageEvent) => {
       if (event.data.type === 'dirtyState') {
         checkoutCommitDirty = event.data.payload.dirty;
-        window.removeEventListener('message', handler);
+        removeTimedMessageHandler(handler);
       }
     };
-    window.addEventListener('message', handler);
+    addTimedMessageHandler(handler);
     vscode.postMessage({ type: 'checkDirty' });
   }
 
@@ -226,12 +262,24 @@
 
   let pendingCheckoutPullAfter = $state(false);
 
+  let showWorktreeBlockedModal = $state(false);
+  let worktreeBlockedRef = $state('');
+  let worktreeBlockedPath = $state('');
+
   function doCheckout(ref: string, pullAfter = false) {
+    // Check if branch is used by a worktree
+    const wt = branchStore.worktrees.find(w => !w.isMain && w.branch === ref);
+    if (wt) {
+      worktreeBlockedRef = ref;
+      worktreeBlockedPath = uiStore.homeDir && wt.path.startsWith(uiStore.homeDir) ? '~' + wt.path.substring(uiStore.homeDir.length) : wt.path;
+      showWorktreeBlockedModal = true;
+      return;
+    }
     pendingCheckoutPullAfter = pullAfter;
     // Check dirty first, then either checkout directly or show modal
     const handler = (event: MessageEvent) => {
       if (event.data.type === 'dirtyState') {
-        window.removeEventListener('message', handler);
+        removeTimedMessageHandler(handler);
         if (event.data.payload.dirty) {
           openCheckoutCommitModal(ref);
         } else {
@@ -239,7 +287,7 @@
         }
       }
     };
-    window.addEventListener('message', handler);
+    addTimedMessageHandler(handler);
     vscode.postMessage({ type: 'checkDirty' });
   }
 
@@ -1211,6 +1259,23 @@
     onCheckoutOnly={() => { showPullAfterCheckoutModal = false; doCheckout(pullAfterCheckoutRef); }}
     onCheckoutAndPull={() => { showPullAfterCheckoutModal = false; doCheckout(pullAfterCheckoutRef, true); }}
   />
+{/if}
+
+{#if showWorktreeBlockedModal}
+  <Modal title={t('checkout.worktreeBlockedTitle')} onClose={() => { showWorktreeBlockedModal = false; }}>
+    <p class="modal-desc">{t('checkout.worktreeBlockedDesc')}</p>
+    <div class="modal-context-card">
+      <i class="codicon codicon-git-branch"></i>
+      <span class="modal-pill modal-pill--target">{worktreeBlockedRef}</span>
+    </div>
+    <div class="modal-context-card">
+      <i class="codicon codicon-folder-opened" style="color: var(--text-secondary);"></i>
+      <span style="font-family: var(--vscode-editor-font-family, monospace); font-size: 12px; color: var(--text-secondary); word-break: break-all;">{worktreeBlockedPath}</span>
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { showWorktreeBlockedModal = false; }}>{t('common.close')}</button>
+    </div>
+  </Modal>
 {/if}
 
 <style>

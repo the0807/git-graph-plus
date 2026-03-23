@@ -12,6 +12,9 @@ export const en: Record<string, string> = {
   'toolbar.pullDesc': 'Pull (fetch + merge)',
   'toolbar.pushDesc': 'Push (upload local commits)',
   'toolbar.refreshDesc': 'Refresh (Ctrl+R)',
+  'toolbar.noRemotes': 'No remotes configured. Add a remote first.',
+  'toolbar.addRemote': 'Add Remote',
+  'toolbar.detachedHead': '(Detached HEAD)',
 
   // Push modal
   'push.title': 'Push',
@@ -357,6 +360,7 @@ export const en: Record<string, string> = {
   'common.cancel': 'Cancel',
   'common.close': 'Close',
   'common.dismiss': 'Dismiss',
+  'common.error': 'Error',
 
   // Repo selector
   'repo.switchRepo': 'Switch Repository',
@@ -431,6 +435,8 @@ export const en: Record<string, string> = {
   'checkout.discardTracked': 'Discard changes (tracked only)',
   'checkout.discardWarning': 'Selected changes will be <span style="color: #f44336;">permanently lost</span>.',
   'checkout.checkout': 'Checkout',
+  'checkout.worktreeBlockedTitle': 'Branch In Use',
+  'checkout.worktreeBlockedDesc': 'This branch is already checked out in another worktree.',
   'copiedToClipboard': 'Copied to clipboard',
   'setUpstream.title': 'Set Upstream',
   'setUpstream.desc': 'Set upstream tracking branch for {branch}',

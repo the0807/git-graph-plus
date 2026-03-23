@@ -66,6 +66,7 @@
           break;
         case 'setLocale':
           i18n.setLocale(msg.payload.locale);
+          if (msg.payload.homeDir) uiStore.homeDir = msg.payload.homeDir;
           break;
         case 'repoList':
           uiStore.repos = msg.payload.repos;

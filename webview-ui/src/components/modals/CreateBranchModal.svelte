@@ -18,6 +18,7 @@
   let startPoint = $state(initialStartPoint);
   let checkout = $state(true);
   let nameInput: HTMLInputElement | undefined = $state();
+  const isStartPointHash = $derived(/^[0-9a-f]{7,40}$/i.test(startPoint));
   const branchExists = $derived(name.trim() !== '' && branchStore.localBranches.some(b => b.name === name.trim()));
   const tagConflict = $derived(name.trim() !== '' && !branchExists && branchStore.tags.some(tag => tag.name === name.trim()));
 
@@ -32,13 +33,13 @@
 
 <Modal title={t('createBranch.title')} {onClose}>
   <p class="modal-desc">{t('createBranch.desc')}</p>
-  {#if subject}
-    <div class="modal-context-card">
-      <i class="codicon codicon-git-commit"></i>
-      <span class="modal-pill modal-pill--target">{startPoint.substring(0, 7)}</span>
-      <span class="truncate" style="color: var(--text-secondary); font-size: 11px;">{subject}</span>
-    </div>
-  {/if}
+  <div class="modal-context-card">
+    <i class="codicon {isStartPointHash ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>
+    <span class="modal-pill modal-pill--source">{isStartPointHash ? startPoint.substring(0, 7) : startPoint}</span>
+    <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
+    <i class="codicon codicon-git-branch"></i>
+    <span class="modal-pill modal-pill--target">{name.trim() || '...'}</span>
+  </div>
   {#if editableStartPoint}
     <div class="modal-form-group">
       <label class="modal-field-label" for="create-branch-start-point">{t('createBranch.startPoint')}</label>

@@ -12,6 +12,9 @@ export const ko: Record<string, string> = {
   'toolbar.pullDesc': 'Pull (fetch + merge)',
   'toolbar.pushDesc': 'Push (로컬 commit 업로드)',
   'toolbar.refreshDesc': '새로고침 (Ctrl+R)',
+  'toolbar.noRemotes': '설정된 리모트가 없습니다. 먼저 리모트를 추가하세요.',
+  'toolbar.addRemote': '리모트 추가',
+  'toolbar.detachedHead': '(Detached HEAD)',
 
   // Push modal
   'push.title': 'Push',
@@ -357,6 +360,7 @@ export const ko: Record<string, string> = {
   'common.cancel': '취소',
   'common.close': '닫기',
   'common.dismiss': '닫기',
+  'common.error': '오류',
 
   // Repo selector
   'repo.switchRepo': '리포지토리 전환',
@@ -431,6 +435,8 @@ export const ko: Record<string, string> = {
   'checkout.discardTracked': '변경 사항 삭제 (tracked only)',
   'checkout.discardWarning': '선택한 변경 사항이 <span style="color: #f44336;">영구적으로 삭제</span>됩니다.',
   'checkout.checkout': 'Checkout',
+  'checkout.worktreeBlockedTitle': '브랜치 사용 중',
+  'checkout.worktreeBlockedDesc': '이 브랜치는 다른 worktree에서 사용 중입니다.',
   'copiedToClipboard': '클립보드에 복사되었습니다',
   'setUpstream.title': '업스트림 설정',
   'setUpstream.desc': '{branch}의 업스트림 tracking 브랜치를 설정합니다',

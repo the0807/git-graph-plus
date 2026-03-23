@@ -18,6 +18,7 @@
   let startPoint = $state(initialStartPoint);
   let push = $state(true);
   let nameInput: HTMLInputElement | undefined = $state();
+  const isStartPointHash = $derived(/^[0-9a-f]{7,40}$/i.test(startPoint));
 
   onMount(() => { nameInput?.focus(); });
 
@@ -30,13 +31,13 @@
 
 <Modal title={t('createTag.title')} {onClose}>
   <p class="modal-desc">{t('createTag.desc')}</p>
-  {#if subject}
-    <div class="modal-context-card">
-      <i class="codicon codicon-git-commit"></i>
-      <span class="modal-pill modal-pill--target">{startPoint.substring(0, 7)}</span>
-      <span class="truncate" style="color: var(--text-secondary); font-size: 11px;">{subject}</span>
-    </div>
-  {/if}
+  <div class="modal-context-card">
+    <i class="codicon {isStartPointHash ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>
+    <span class="modal-pill modal-pill--source">{isStartPointHash ? startPoint.substring(0, 7) : startPoint}</span>
+    <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
+    <i class="codicon codicon-tag"></i>
+    <span class="modal-pill modal-pill--target">{name.trim() || '...'}</span>
+  </div>
   {#if editableStartPoint}
     <div class="modal-form-group">
       <label class="modal-field-label" for="create-tag-target">{t('createTag.target')}</label>

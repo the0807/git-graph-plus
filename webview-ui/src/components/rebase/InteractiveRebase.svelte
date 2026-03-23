@@ -121,16 +121,12 @@
   {:else if todos.length === 0}
     <div class="rebase-empty">{t('rebase.noCommits')}</div>
   {:else}
-    <div class="rebase-context">
-      <div class="rebase-context-row">
-        <span class="rebase-context-label">Rebase:</span>
-        <span class="rebase-context-pill branch-pill"><i class="codicon codicon-git-branch"></i> {branchName}</span>
-      </div>
-      <div class="rebase-context-row">
-        <span class="rebase-context-label">On:</span>
-        <span class="rebase-context-pill commit-pill"><i class="codicon codicon-git-commit"></i> {base.substring(0, 7)}</span>
-        <span class="rebase-context-subject truncate">{baseSubject}</span>
-      </div>
+    <div class="modal-context-card">
+      <i class="codicon codicon-git-branch"></i>
+      <span class="modal-pill modal-pill--target">{branchName}</span>
+      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
+      <i class="codicon codicon-git-commit"></i>
+      <span class="modal-pill modal-pill--source">{base.substring(0, 7)}</span>
     </div>
     <div class="rebase-header">
       <span class="rebase-count">{todos.length} commit{todos.length > 1 ? 's' : ''}</span>
@@ -220,58 +216,6 @@
 </Modal>
 
 <style>
-  .rebase-context {
-    background: var(--bg-secondary);
-    border-radius: 6px;
-    padding: 8px 12px;
-    margin-bottom: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .rebase-context-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-  }
-
-  .rebase-context-label {
-    color: var(--text-secondary);
-    width: 50px;
-    flex-shrink: 0;
-  }
-
-  .rebase-context-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 1px 8px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 500;
-    flex-shrink: 0;
-  }
-
-  .branch-pill {
-    background: rgba(115, 209, 61, 0.15);
-    color: #73d13d;
-  }
-
-  .commit-pill {
-    background: rgba(99, 176, 244, 0.15);
-    color: #63b0f4;
-    font-family: var(--vscode-editor-font-family, monospace);
-  }
-
-  .rebase-context-subject {
-    color: var(--text-secondary);
-    font-size: 11px;
-    flex: 1;
-    min-width: 0;
-  }
-
   .rebase-loading, .rebase-empty {
     padding: 24px;
     text-align: center;
