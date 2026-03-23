@@ -48,7 +48,8 @@ export class MainPanel {
     // Send locale to webview
     const localeSetting = vscode.workspace.getConfiguration('gitGraphPlus').get<string>('locale', 'auto');
     const locale = localeSetting === 'auto' ? (vscode.env.language || 'en') : localeSetting;
-    this.panel.webview.postMessage({ type: 'setLocale', payload: { locale } });
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    this.panel.webview.postMessage({ type: 'setLocale', payload: { locale, homeDir } });
 
     this.panel.webview.onDidReceiveMessage(
       (message: WebviewMessage) => this.handleMessage(message),
@@ -137,8 +138,8 @@ export class MainPanel {
             this.gitService.log(logPayload),
             this.gitService.branches(),
           ]);
-          const graph = buildGraph(commits, logBranches);
-          const fullGraph = buildFullGraph(commits, logBranches);
+          const graph = commits.length > 0 ? buildGraph(commits, logBranches) : [];
+          const fullGraph = commits.length > 0 ? buildFullGraph(commits, logBranches) : { paths: [], links: [], dots: [], commitLeftMargin: [] };
           this.panel.webview.postMessage({
             type: 'logData',
             payload: {
@@ -863,7 +864,16 @@ export class MainPanel {
     }
   }
 
+  private refreshing = false;
+  private refreshQueued = false;
+
   private async refreshAll(): Promise<void> {
+    if (this.refreshing) {
+      this.refreshQueued = true;
+      return;
+    }
+    this.refreshing = true;
+    this.refreshQueued = false;
     try {
       const [allCommits, branches, tags, remotes, stashes, worktrees] = await Promise.all([
         this.gitService.log({ limit: vscode.workspace.getConfiguration('gitGraphPlus').get<number>('maxCommits', 1000) }),
@@ -873,8 +883,9 @@ export class MainPanel {
         this.gitService.stashList(),
         this.gitService.worktreeList(),
       ]);
-      const graph = buildGraph(allCommits, branches);
-      const fg = buildFullGraph(allCommits, branches);
+      // Handle empty repository (0 commits) gracefully
+      const graph = allCommits.length > 0 ? buildGraph(allCommits, branches) : [];
+      const fg = allCommits.length > 0 ? buildFullGraph(allCommits, branches) : { paths: [], links: [], dots: [], commitLeftMargin: [] };
       // Send as single combined message to ensure atomic update
       this.panel.webview.postMessage({
         type: 'fullRefresh',
@@ -886,6 +897,12 @@ export class MainPanel {
       this.sendRepoList();
     } catch (err) {
       console.warn('Git Graph+: refresh failed:', err instanceof Error ? err.message : err);
+    } finally {
+      this.refreshing = false;
+      if (this.refreshQueued) {
+        this.refreshQueued = false;
+        this.refreshAll();
+      }
     }
   }
 

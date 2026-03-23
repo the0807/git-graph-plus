@@ -153,7 +153,7 @@ export class GitService {
               commits.unshift(sc);
             }
           }
-        } catch { /* ignore stash log errors */ }
+        } catch (err) { console.warn('Git Graph+: stash log error:', err instanceof Error ? err.message : err); }
       }
     }
 
@@ -170,7 +170,8 @@ export class GitService {
       this.cachedRemoteNames = raw.trim().split('\n').filter(Boolean);
       this.remoteNamesCacheTime = now;
       return this.cachedRemoteNames;
-    } catch {
+    } catch (err) {
+      console.warn('Git Graph+: failed to get remote names:', err instanceof Error ? err.message : err);
       return [];
     }
   }
@@ -204,7 +205,8 @@ export class GitService {
         'stash', 'list', '--format=%gd%x00%gs%x00%aI%x00%P%x00%H',
       ]);
       return parseStashList(raw);
-    } catch {
+    } catch (err) {
+      console.warn('Git Graph+: failed to list stashes:', err instanceof Error ? err.message : err);
       return [];
     }
   }
@@ -232,7 +234,7 @@ export class GitService {
   // --- Branch Management ---
 
   async isDirty(): Promise<boolean> {
-    const raw = await this.exec(['status', '--porcelain']);
+    const raw = await this.exec(['status', '--porcelain', '-uno']);
     return raw.trim().length > 0;
   }
 
@@ -536,7 +538,8 @@ export class GitService {
     try {
       const raw = await this.exec(['diff', '--name-only', '--diff-filter=U']);
       return raw.trim().split('\n').filter(Boolean);
-    } catch {
+    } catch (err) {
+      console.warn('Git Graph+: failed to get conflict files:', err instanceof Error ? err.message : err);
       return [];
     }
   }
@@ -700,7 +703,8 @@ export class GitService {
       const [raw, remoteNames] = await Promise.all([this.exec(args), this.getRemoteNames()]);
       const commits = parseLog(raw, remoteNames);
       return commits[0] ?? null;
-    } catch {
+    } catch (err) {
+      console.warn('Git Graph+: failed to get commit by hash:', err instanceof Error ? err.message : err);
       return null;
     }
   }
@@ -762,7 +766,7 @@ export class GitService {
     try {
       const raw = await this.exec(['lfs', 'ls-files']);
       return parseLfsFiles(raw);
-    } catch { return []; }
+    } catch (err) { console.warn('Git Graph+: LFS ls-files failed:', err instanceof Error ? err.message : err); return []; }
   }
 
   async lfsLock(file: string): Promise<string> {
@@ -779,7 +783,7 @@ export class GitService {
     try {
       const raw = await this.exec(['lfs', 'locks']);
       return parseLfsLocks(raw);
-    } catch { return []; }
+    } catch (err) { console.warn('Git Graph+: LFS locks failed:', err instanceof Error ? err.message : err); return []; }
   }
 
   // --- File tree at commit ---
@@ -923,7 +927,7 @@ export class GitService {
         hotfixPrefix: hotfix,
         versionTagPrefix: versionTag,
       };
-    } catch { return null; }
+    } catch (err) { console.warn('Git Graph+: failed to get flow config:', err instanceof Error ? err.message : err); return null; }
   }
 
   async getFlowBranches(): Promise<{ features: string[]; releases: string[]; hotfixes: string[] }> {
@@ -1025,14 +1029,14 @@ export class GitService {
     try {
       await this.exec(['flow', 'version']);
       return true;
-    } catch { return false; }
+    } catch (err) { console.warn('Git Graph+: flow version check failed:', err instanceof Error ? err.message : err); return false; }
   }
 
   async isFlowInitialized(): Promise<boolean> {
     try {
       await this.exec(['config', '--get', 'gitflow.branch.master']);
       return true;
-    } catch { return false; }
+    } catch (err) { console.warn('Git Graph+: flow init check failed:', err instanceof Error ? err.message : err); return false; }
   }
 
 }

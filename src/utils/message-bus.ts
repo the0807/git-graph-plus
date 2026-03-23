@@ -95,7 +95,7 @@ export type ExtensionMessage =
   | { type: 'lsTreeData'; payload: { ref: string; path?: string; entries: Array<{ mode: string; type: 'blob' | 'tree'; hash: string; name: string }> } }
   | { type: 'submoduleData'; payload: Array<{ hash: string; path: string; status: string }> }
   | { type: 'lfsData'; payload: { files: Array<{ oid: string; path: string }>; locks: Array<{ path: string; owner: string; id: string }> } }
-  | { type: 'setLocale'; payload: { locale: string } }
+  | { type: 'setLocale'; payload: { locale: string; homeDir?: string } }
   | { type: 'repoList'; payload: { repos: Array<{ path: string; name: string; type: 'root' | 'submodule' | 'nested' }>; active: string } }
   | { type: 'worktreeData'; payload: WorktreeInfo[] }
   | { type: 'imageData'; payload: { ref: string; path: string; base64: string; mimeType: string } }

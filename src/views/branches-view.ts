@@ -89,7 +89,7 @@ function buildBranchTree(branches: BranchInfo[]): BranchTreeItem[] {
   return renderNode(root);
 }
 
-const PRIMARY_BRANCHES = ['main', 'master'];
+const PRIMARY_BRANCHES = ['main', 'master', 'develop', 'dev', 'trunk'];
 
 function branchSortKey(name: string): [number, string] {
   const lower = name.toLowerCase();

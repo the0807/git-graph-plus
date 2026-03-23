@@ -406,7 +406,9 @@ export function activate(context: vscode.ExtensionContext) {
       const branch = branchItem?.branch;
       if (!branch) { return; }
       const slashIndex = branch.name.indexOf('/');
-      const remote = slashIndex > 0 ? branch.name.substring(0, slashIndex) : 'origin';
+      const remotes = await gitService.remotes();
+      const defaultRemote = remotes[0]?.name ?? 'origin';
+      const remote = slashIndex > 0 ? branch.name.substring(0, slashIndex) : defaultRemote;
       const branchName = slashIndex > 0 ? branch.name.substring(slashIndex + 1) : branch.name;
       MainPanel.showModalWithPanel(context.extensionUri, { modal: 'deleteRemoteBranch', remote, name: branchName });
     }),
@@ -436,7 +438,9 @@ export function activate(context: vscode.ExtensionContext) {
         MainPanel.showModalWithPanel(context.extensionUri, { modal: 'checkoutRemote', remoteName: branch.name, localName });
       } else if (pick.label.includes('Delete')) {
         const slashIndex = branch.name.indexOf('/');
-        const remote = slashIndex > 0 ? branch.name.substring(0, slashIndex) : 'origin';
+        const remotes = await gitService.remotes();
+        const defaultRemote = remotes[0]?.name ?? 'origin';
+        const remote = slashIndex > 0 ? branch.name.substring(0, slashIndex) : defaultRemote;
         const branchName = slashIndex > 0 ? branch.name.substring(slashIndex + 1) : branch.name;
         MainPanel.showModalWithPanel(context.extensionUri, { modal: 'deleteRemoteBranch', remote, name: branchName });
       }

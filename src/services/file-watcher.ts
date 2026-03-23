@@ -79,10 +79,18 @@ export class FileWatcher implements vscode.Disposable {
   }
 
   private pendingChanges = new Set<string>();
+  private pendingWhileRefreshing = false;
 
   private scheduleRefresh(what: string): void {
-    // Guard against refresh loops, post-dispose calls, or disabled state
-    if (this.refreshing || this.disposed || !this.enabled) {
+    // Guard against post-dispose calls or disabled state
+    if (this.disposed || !this.enabled) {
+      return;
+    }
+
+    // If currently in the refresh cooldown, flag for re-trigger instead of dropping
+    if (this.refreshing) {
+      this.pendingWhileRefreshing = true;
+      this.pendingChanges.add(what);
       return;
     }
 
@@ -107,6 +115,13 @@ export class FileWatcher implements vscode.Disposable {
         // Prevent re-triggering for 1 second after refresh
         setTimeout(() => {
           this.refreshing = false;
+          // Re-trigger if changes came in during refresh cooldown
+          if (this.pendingWhileRefreshing) {
+            this.pendingWhileRefreshing = false;
+            if (this.pendingChanges.size > 0) {
+              this.scheduleRefresh('unknown');
+            }
+          }
         }, 1000);
       }
     }, this.DEBOUNCE_MS);

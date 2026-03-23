@@ -115,6 +115,22 @@ describe('parseBranches', () => {
     expect(result[0].behind).toBe(1);
   });
 
+  it('should strip heads/ prefix from local branch names', () => {
+    const raw = ' heads/test\x00abc1234\x00\x00\x00refs/heads/heads/test';
+    const result = parseBranches(raw);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('test');
+  });
+
+  it('should not strip heads/ from remote branch names', () => {
+    const raw = ' origin/heads/test\x00abc1234\x00\x00\x00refs/remotes/origin/heads/test';
+    const result = parseBranches(raw);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('origin/heads/test');
+  });
+
   it('should parse non-current branch', () => {
     const raw = ' feature\x00def5678\x00\x00';
     const result = parseBranches(raw);
