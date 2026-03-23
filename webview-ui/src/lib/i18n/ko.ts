@@ -408,4 +408,10 @@ export const ko: Record<string, string> = {
   'lfs.unlock': 'LFS 잠금 해제',
   'lfs.unlockForce': 'LFS 강제 잠금 해제',
   'lfs.fileHistory': '파일 변경 이력 보기',
+  'copiedToClipboard': '클립보드에 복사되었습니다',
+  'setUpstream.title': '업스트림 설정',
+  'setUpstream.desc': '{branch}의 업스트림 tracking 브랜치를 설정합니다',
+  'setUpstream.remote': '리모트',
+  'setUpstream.remoteBranch': '리모트 브랜치',
+  'setUpstream.set': '업스트림 설정',
 };

@@ -10,9 +10,10 @@
     options: Option[];
     value: string;
     onChange: (value: string) => void;
+    showDot?: boolean;
   }
 
-  let { options, value, onChange }: Props = $props();
+  let { options, value, onChange, showDot = true }: Props = $props();
 
   let open = $state(false);
   let btnEl: HTMLButtonElement | undefined = $state();
@@ -57,14 +58,14 @@
   <div class="color-select-sizer" aria-hidden="true">
     {#each options as opt}
       <span class="sizer-item">
-        <span class="dot" style="background: transparent"></span>
+        {#if showDot}<span class="dot" style="background: transparent"></span>{/if}
         <span>{opt.label}</span>
         <i class="codicon codicon-chevron-down chevron"></i>
       </span>
     {/each}
   </div>
   <button class="color-select-btn" bind:this={btnEl} onclick={(e) => { e.stopPropagation(); toggle(); }}>
-    <span class="dot" style="background: {current.color}"></span>
+    {#if showDot}<span class="dot" style="background: {current.color}"></span>{/if}
     <span class="label">{current.label}</span>
     <i class="codicon codicon-chevron-down chevron"></i>
   </button>
@@ -76,7 +77,7 @@
           class:selected={opt.value === value}
           onclick={(e) => { e.stopPropagation(); select(opt.value); }}
         >
-          <span class="dot" style="background: {opt.color}"></span>
+          {#if showDot}<span class="dot" style="background: {opt.color}"></span>{/if}
           <span>{opt.label}</span>
           {#if opt.warning}<i class="codicon codicon-warning warning-icon"></i>{/if}
         </button>

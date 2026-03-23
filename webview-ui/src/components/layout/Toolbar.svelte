@@ -5,6 +5,7 @@
   import { uiStore } from '../../lib/stores/ui.svelte';
   import { t } from '../../lib/i18n/index.svelte';
   import Modal from '../common/Modal.svelte';
+  import ColorSelect from '../common/ColorSelect.svelte';
   import AddRemoteModal from '../modals/AddRemoteModal.svelte';
   import { modalStore } from '../../lib/stores/modals.svelte';
   import type { FlowStatus, FlowBranches } from '../../lib/types';
@@ -103,6 +104,7 @@
 
   let ahead = $derived(branchStore.currentBranch?.ahead ?? 0);
   let behind = $derived(branchStore.currentBranch?.behind ?? 0);
+  let activeRepoInfo = $derived(uiStore.repos.find(r => r.path === uiStore.activeRepo) ?? uiStore.repos[0]);
 </script>
 
 <div class="toolbar">
@@ -113,9 +115,9 @@
         class:clickable={uiStore.repos.length > 1}
         onclick={() => { if (uiStore.repos.length > 1) showRepoDropdown = !showRepoDropdown; }}
       >
-        <i class="codicon codicon-repo repo-icon"></i>
+        <i class="codicon {activeRepoInfo?.type === 'submodule' ? 'codicon-package' : 'codicon-repo'} repo-icon"></i>
         <span class="repo-name">
-          {uiStore.repos.find(r => r.path === uiStore.activeRepo)?.name ?? uiStore.repos[0]?.name ?? 'Repository'}
+          {activeRepoInfo?.name ?? 'Repository'}
         </span>
         {#if uiStore.repos.length > 1}
           <i class="codicon codicon-chevron-down repo-chevron"></i>
@@ -132,7 +134,7 @@
               class:active={repo.path === uiStore.activeRepo}
               onclick={() => { showRepoDropdown = false; switchRepo(repo.path); }}
             >
-              <i class="codicon {repo.path === uiStore.activeRepo ? 'codicon-check' : 'codicon-repo'}"></i>
+              <i class="codicon {repo.path === uiStore.activeRepo ? 'codicon-check' : repo.type === 'submodule' ? 'codicon-package' : 'codicon-repo'}"></i>
               {repo.name}
             </button>
           {/each}
@@ -275,13 +277,16 @@
   <Modal title={t('fetch.title')} onClose={() => { showFetchConfirm = false; }}>
     <p class="modal-desc">{t('fetch.desc')}</p>
     <div class="modal-form-group">
-      <label class="modal-field-label" for="fetch-remote">{t('fetch.remote')}</label>
-      <select class="modal-select" id="fetch-remote" bind:value={fetchRemote}>
-        <option value="">{t('fetch.allRemotes')}</option>
-        {#each branchStore.remotes as remote}
-          <option value={remote.name}>{remote.name}</option>
-        {/each}
-      </select>
+      <div class="modal-field-label">{t('fetch.remote')}</div>
+      <ColorSelect
+        options={[
+          { value: '', label: t('fetch.allRemotes'), color: '' },
+          ...branchStore.remotes.map(r => ({ value: r.name, label: r.name, color: '' })),
+        ]}
+        value={fetchRemote}
+        onChange={(v) => { fetchRemote = v; }}
+        showDot={false}
+      />
     </div>
     <div class="modal-form-group">
       <label class="modal-checkbox">
@@ -579,18 +584,6 @@
     margin-top: 16px;
   }
 
-  .modal-select {
-    width: 100%;
-    padding: 5px 8px;
-    background: var(--input-bg);
-    color: var(--input-fg);
-    border: 1px solid var(--input-border, var(--border-color));
-    border-radius: 3px;
-    font-size: 12px;
-    font-family: inherit;
-    outline: none;
-  }
-  .modal-select:focus { border-color: var(--vscode-focusBorder, #007fd4); }
 
   .flow-wrapper {
     position: relative;

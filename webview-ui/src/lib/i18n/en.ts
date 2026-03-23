@@ -408,4 +408,10 @@ export const en: Record<string, string> = {
   'lfs.unlock': 'LFS Unlock',
   'lfs.unlockForce': 'LFS Force Unlock',
   'lfs.fileHistory': 'Show File History',
+  'copiedToClipboard': 'Copied to clipboard',
+  'setUpstream.title': 'Set Upstream',
+  'setUpstream.desc': 'Set upstream tracking branch for {branch}',
+  'setUpstream.remote': 'Remote',
+  'setUpstream.remoteBranch': 'Remote branch',
+  'setUpstream.set': 'Set Upstream',
 };

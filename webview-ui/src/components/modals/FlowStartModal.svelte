@@ -33,7 +33,7 @@
   <div class="modal-context-card">
     <i class="codicon codicon-git-branch"></i>
     <span class="modal-pill modal-pill--source">{baseBranch}</span>
-    <span class="modal-arrow">&rarr;</span>
+    <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
     <i class="codicon codicon-git-branch"></i>
     <span class="modal-pill modal-pill--target">{prefix}{name || '...'}</span>
   </div>

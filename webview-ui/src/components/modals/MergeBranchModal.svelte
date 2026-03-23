@@ -25,7 +25,7 @@
   <div class="modal-context-card">
     <i class="codicon {isHash(source) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>
     <span class="modal-pill modal-pill--source">{shortRef(source)}</span>
-    <span class="modal-arrow">&rarr;</span>
+    <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
     <i class="codicon {isHash(target) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>
     <span class="modal-pill modal-pill--target">{shortRef(target)}</span>
   </div>

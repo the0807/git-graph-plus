@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Modal from '../common/Modal.svelte';
+  import ColorSelect from '../common/ColorSelect.svelte';
   import { t } from '../../lib/i18n/index.svelte';
   import { branchStore } from '../../lib/stores/branches.svelte';
 
@@ -41,12 +42,13 @@
 <Modal title={t('worktree.addTitle')} {onClose}>
   <div class="modal-form-group">
     <div class="modal-field-row">
-      <label class="modal-field-label" for="wt-start">{t('worktree.startAt')}</label>
-      <select id="wt-start" class="modal-input" bind:value={startAt}>
-        {#each localBranches as branch}
-          <option value={branch}>{branch}</option>
-        {/each}
-      </select>
+      <div class="modal-field-label">{t('worktree.startAt')}</div>
+      <ColorSelect
+        options={localBranches.map(b => ({ value: b, label: b, color: '' }))}
+        value={startAt}
+        onChange={(v) => { startAt = v; }}
+        showDot={false}
+      />
     </div>
   </div>
 

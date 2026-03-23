@@ -20,6 +20,7 @@
   import AddWorktreeModal from './components/modals/AddWorktreeModal.svelte';
   import Modal from './components/common/Modal.svelte';
   import { modalStore } from './lib/stores/modals.svelte';
+  import SetUpstreamModal from './components/modals/SetUpstreamModal.svelte';
   import FlowInitModal from './components/modals/FlowInitModal.svelte';
   import FlowStartModal from './components/modals/FlowStartModal.svelte';
   import FlowFinishModal from './components/modals/FlowFinishModal.svelte';
@@ -89,6 +90,9 @@
         case 'operationComplete':
           if (msg.payload.operation === 'bisectReset') {
             bisectMessage = null;
+          }
+          if (msg.payload.operation === 'copied') {
+            uiStore.setSuccess(t('copiedToClipboard'));
           }
           conflict = null;
           break;
@@ -409,7 +413,7 @@
     startPoint={modalStore.createBranch.startPoint}
     subject={modalStore.createBranch.subject}
     onClose={() => { modalStore.closeCreateBranch(); }}
-    onCreate={(name, _msg, startPoint) => { modalStore.closeCreateBranch(); vscode.postMessage({ type: 'createBranch', payload: { name, startPoint, checkout: true } }); }}
+    onCreate={(name, startPoint, checkout) => { modalStore.closeCreateBranch(); vscode.postMessage({ type: 'createBranch', payload: { name, startPoint, checkout } }); }}
   />
 {/if}
 
@@ -455,6 +459,14 @@
     defaultLocalName={modalStore.checkoutRemote.localName}
     onClose={() => { modalStore.closeCheckoutRemote(); }}
     onCheckout={(localName) => { const remote = modalStore.checkoutRemote.remoteName; modalStore.closeCheckoutRemote(); vscode.postMessage({ type: 'createBranch', payload: { name: localName, startPoint: remote, checkout: true } }); }}
+  />
+{/if}
+
+{#if modalStore.setUpstream.show}
+  <SetUpstreamModal
+    branchName={modalStore.setUpstream.branchName}
+    onClose={() => { modalStore.closeSetUpstream(); }}
+    onSet={(remote, remoteBranch) => { const branch = modalStore.setUpstream.branchName; modalStore.closeSetUpstream(); vscode.postMessage({ type: 'setUpstream', payload: { branch, remote, remoteBranch } }); }}
   />
 {/if}
 
