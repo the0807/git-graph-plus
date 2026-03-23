@@ -255,8 +255,11 @@ export class GitService {
   }
 
   async createAndCheckoutBranch(name: string, startPoint?: string): Promise<void> {
-    const args = ['checkout', '-b', name, '--track'];
+    const args = ['checkout', '-b', name];
     if (startPoint) {
+      if (await this.isRemoteBranch(startPoint)) {
+        args.push('--track');
+      }
       args.push(startPoint);
     }
     await this.exec(args);
@@ -388,8 +391,8 @@ export class GitService {
     await this.exec(['remote', 'remove', name]);
   }
 
-  async setUpstream(remote: string, branch: string): Promise<void> {
-    await this.exec(['branch', '--set-upstream-to', `${remote}/${branch}`]);
+  async setUpstream(localBranch: string, remote: string, remoteBranch: string): Promise<void> {
+    await this.exec(['branch', '--set-upstream-to', `${remote}/${remoteBranch}`, localBranch]);
   }
 
   async rebase(onto: string, options?: { autostash?: boolean }): Promise<void> {
