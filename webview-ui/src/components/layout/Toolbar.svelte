@@ -18,6 +18,9 @@
   let fetchRemote = $state('');
   let showPushConfirm = $state(false);
   let forcePush = $state(false);
+  let pushSetUpstream = $state(true);
+  let pushRemote = $state('origin');
+  let pushAllTags = $state(false);
   let showPullConfirm = $state(false);
   let pullRebase = $state(false);
   let pullStash = $state(false);
@@ -62,15 +65,32 @@
     vscode.postMessage({ type: 'pull', payload: { rebase: pullRebase, stash: pullStash } });
   }
 
+  const hasUpstream = $derived(!!branchStore.currentBranch?.upstream);
+  const pushBranchName = $derived(branchStore.currentBranch?.name ?? 'branch');
+  const pushTarget = $derived.by(() => {
+    const current = branchStore.currentBranch;
+    if (current?.upstream) return current.upstream;
+    return `${pushRemote}/${pushBranchName}`;
+  });
+
   function doPush() {
     showPushConfirm = true;
     forcePush = false;
+    pushSetUpstream = true;
+    pushAllTags = false;
+    pushRemote = branchStore.remotes[0]?.name ?? 'origin';
   }
 
   function confirmPush() {
     operating = 'push';
     showPushConfirm = false;
-    vscode.postMessage({ type: 'push', payload: { force: forcePush, setUpstream: true } });
+    const current = branchStore.currentBranch;
+    const remote = hasUpstream ? undefined : pushRemote;
+    const branch = hasUpstream ? undefined : pushBranchName;
+    vscode.postMessage({ type: 'push', payload: { remote, branch, force: forcePush, setUpstream: !hasUpstream && pushSetUpstream } });
+    if (pushAllTags) {
+      vscode.postMessage({ type: 'pushAllTags', payload: { remote: pushRemote } });
+    }
   }
 
   function openFlowDropdown() {
@@ -306,7 +326,37 @@
     <p class="modal-desc">{t('push.desc')}</p>
     <div class="modal-context-card">
       <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
+      <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
+      {#if hasUpstream}
+        <span class="modal-pill modal-pill--target">{pushTarget}</span>
+      {:else}
+        {#if branchStore.remotes.length > 1}
+          <ColorSelect
+            options={branchStore.remotes.map(r => ({ value: r.name, label: `new (${r.name}/${branchStore.currentBranch?.name ?? 'branch'})`, color: '' }))}
+            value={pushRemote}
+            onChange={(v) => { pushRemote = v; }}
+            showDot={false}
+          />
+        {:else}
+          <span class="modal-pill modal-pill--target">{t('push.new', { target: pushTarget })}</span>
+        {/if}
+      {/if}
+    </div>
+    {#if !hasUpstream}
+      <div class="modal-form-group">
+        <label class="modal-checkbox">
+          <input type="checkbox" bind:checked={pushSetUpstream} />
+          <span>{t('push.createTracking')}</span>
+        </label>
+      </div>
+    {/if}
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={pushAllTags} />
+        <span>{t('push.pushAllTags')}</span>
+      </label>
     </div>
     <div class="modal-form-group">
       <label class="modal-checkbox modal-checkbox--danger">
@@ -644,5 +694,6 @@
     border-top: 1px solid var(--border-color);
     margin: 4px 0;
   }
+
 
 </style>

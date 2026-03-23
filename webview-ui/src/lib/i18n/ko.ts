@@ -21,6 +21,11 @@ export const ko: Record<string, string> = {
   'push.cancel': '취소',
   'push.push': 'Push',
   'push.forcePushBtn': 'Force Push',
+  'push.branch': '브랜치',
+  'push.to': '대상',
+  'push.new': 'new ({target})',
+  'push.createTracking': 'Tracking reference 생성',
+  'push.pushAllTags': '모든 태그 push',
 
   // Sidebar sections
   'sidebar.local': '로컬',
@@ -55,6 +60,8 @@ export const ko: Record<string, string> = {
   'createBranch.checkout': '생성 후 checkout',
   'createBranch.create': '생성',
   'createBranch.createAndCheckout': '생성 및 Checkout',
+  'createBranch.branchExists': '\'{name}\' 이름의 브랜치가 이미 존재합니다.',
+  'createBranch.tagConflict': '\'{name}\' 이름의 태그가 이미 존재합니다.',
 
   // Rename branch modal
   'renameBranch.title': '브랜치 이름 변경',

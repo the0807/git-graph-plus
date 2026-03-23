@@ -21,6 +21,11 @@ export const en: Record<string, string> = {
   'push.cancel': 'Cancel',
   'push.push': 'Push',
   'push.forcePushBtn': 'Force Push',
+  'push.branch': 'Branch',
+  'push.to': 'To',
+  'push.new': 'new ({target})',
+  'push.createTracking': 'Create tracking reference',
+  'push.pushAllTags': 'Push all tags',
 
   // Sidebar sections
   'sidebar.local': 'Local',
@@ -55,6 +60,8 @@ export const en: Record<string, string> = {
   'createBranch.checkout': 'Check out after create',
   'createBranch.create': 'Create',
   'createBranch.createAndCheckout': 'Create and Checkout',
+  'createBranch.branchExists': 'A branch named \'{name}\' already exists.',
+  'createBranch.tagConflict': 'A tag named \'{name}\' already exists.',
 
   // Rename branch modal
   'renameBranch.title': 'Rename Branch',
