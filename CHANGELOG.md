@@ -1,5 +1,54 @@
 # Changelog
 
+## 0.2.0 (2026-03-23)
+
+### New Features
+- **Nested git repo discovery**: Auto-detect independent git repos in workspace subfolders (depth 1)
+- **Conflict prediction**: Merge/rebase modals show conflict file list via `git merge-tree` before execution
+- **Checkout dirty handling**: Unified checkout modal with keep/stash/discard options when uncommitted changes exist
+- **Push modal redesign**: Branch → remote pill layout with tracking reference and push-all-tags options
+- **Pull modal redesign**: Remote → local branch pill layout with rebase default
+- **Stash apply/pop modal**: Shows stash → current branch with kept/deleted highlighting
+- **Set upstream modal**: ColorSelect dropdowns for remote and branch selection
+- **Worktree checkout guard**: Block checkout on branches used by other worktrees with info modal
+- **Open VSX support**: Added Open VSX publishing to release workflow
+
+### Improvements
+- **Modal UI unification**: All modals use consistent pill + arrow + codicon layout
+- **Color-highlighted warnings**: Destructive action keywords highlighted in red across all modals
+- **Radio button options**: Checkout dirty state uses radio buttons instead of multiple buttons
+- **Detached HEAD display**: Toolbar shows "(Detached HEAD)" instead of raw ref
+- **No-remotes handling**: Push/fetch show error modal with add-remote option when no remotes configured
+- **Interactive rebase pill style**: Unified with other modal context cards
+- **Branch/tag creation validation**: Block creation when name conflicts with existing branch or tag
+- **Bottom panel font sizes**: Increased for better readability, commit body no longer dimmed
+- **Graph rail spacing**: Reduced from 14.4px to 12.6px for tighter layout
+- **Fetch defaults**: Remote defaults to first remote, prune always on
+- **ColorSelect showDot option**: Support dot-free dropdowns for non-color selections
+- **Codicon arrows**: Replace HTML arrow entities with codicon icons across all modals
+- Remove CLI option names from UI labels
+
+### Bug Fixes
+- Fix blue dot (local-only) detection using current branch upstream instead of all remote refs
+- Fix remote-ahead BFS to include merged branch commits for gray dot display
+- Fix createBranch callback arg order causing `fatal: 'true' is not a commit`
+- Fix `--track` only applied for remote branch startPoints, not commit hashes
+- Fix `heads/` prefix in branch names when tag/branch names collide
+- Fix push using `refs/heads/` refspec to avoid ambiguous ref errors
+- Fix merge lines disconnected at remote-tip merge commits
+- Fix disabled button appearing active on hover
+- Fix secondary button hover using primary button color
+- Fix stash with no changes showing no feedback
+- Fix clipboard copy showing no feedback
+- Fix pull stash-pop failure silently ignored
+- Fix auto-open source control sidebar on conflict
+- Fix event listener leak in CommitGraph with timed auto-cleanup
+- Fix concurrent refreshAll calls with queuing guard
+- Fix file watcher losing changes during refresh cooldown
+- Fix isDirty detecting untracked files unnecessarily
+- Fix hardcoded 'origin' fallback in extension commands
+- Add console.warn to empty catch blocks in git-service
+
 ## 0.1.6 (2026-03-21)
 
 ### New Features
