@@ -265,7 +265,7 @@
 
   const ROW_HEIGHT = 28;
   // SourceGit uses unitWidth=12 for X coordinates, we scale them up for display
-  const X_SCALE = 1.2; // multiply SourceGit X coords by this for pixel positions
+  const X_SCALE = 1.05; // multiply SourceGit X coords by this for pixel positions
   const BUFFER_ROWS = 20; // Larger buffer to keep lines visible during scroll
 
   let container: HTMLDivElement | undefined = $state();
