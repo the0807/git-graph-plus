@@ -9,7 +9,7 @@ class UiStore {
   sidebarWidth = $state(220);
   errorMessage = $state<string | null>(null);
   successMessage = $state<string | null>(null);
-  repos = $state<Array<{ path: string; name: string }>>([]);
+  repos = $state<Array<{ path: string; name: string; type: 'root' | 'submodule' | 'nested' }>>([]);
   activeRepo = $state('');
   private errorTimer: ReturnType<typeof setTimeout> | null = null;
   private successTimer: ReturnType<typeof setTimeout> | null = null;
