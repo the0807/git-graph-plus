@@ -16,8 +16,8 @@ export const en: Record<string, string> = {
   // Push modal
   'push.title': 'Push',
   'push.confirm': 'Push {branch} to remote?',
-  'push.forcePush': 'Force push (--force-with-lease)',
-  'push.forceWarning': 'Force push may overwrite remote changes. Use with caution.',
+  'push.forcePush': 'Force push',
+  'push.forceWarning': 'Force push may <span style="color: #f44336;">overwrite</span> remote changes. Use with caution.',
   'push.cancel': 'Cancel',
   'push.push': 'Push',
   'push.forcePushBtn': 'Force Push',
@@ -79,7 +79,7 @@ export const en: Record<string, string> = {
   'stash.title': 'Stash Changes',
   'stash.message': 'Message (optional)',
   'stash.includeUntracked': 'Include untracked files',
-  'stash.keepIndex': 'Keep staged changes (--keep-index)',
+  'stash.keepIndex': 'Keep staged changes',
   'stash.stash': 'Stash',
 
   // Create tag modal
@@ -232,12 +232,12 @@ export const en: Record<string, string> = {
   'fetch.desc': 'Fetch latest changes from remote repository.',
   'fetch.remote': 'Remote',
   'fetch.allRemotes': 'All remotes',
-  'fetch.prune': 'Prune deleted remote branches (--prune)',
+  'fetch.prune': 'Prune deleted remote branches',
   'fetch.fetch': 'Fetch',
 
   // Push modal (inline)
   'push.desc': 'Push local commits to the remote repository.',
-  'push.forcePushOption': 'Force push (--force-with-lease)',
+  'push.forcePushOption': 'Force push',
 
   // Pull modal
   'pull.title': 'Pull',
@@ -249,13 +249,13 @@ export const en: Record<string, string> = {
   // Cherry-pick modal
   'cherryPick.title': 'Cherry-pick Commit',
   'cherryPick.desc': 'Apply the selected commit onto the current branch.',
-  'cherryPick.noCommit': 'Apply changes without committing (--no-commit)',
+  'cherryPick.noCommit': 'Apply changes without committing',
   'cherryPick.cherryPick': 'Cherry-pick',
 
   // Revert modal
   'revert.title': 'Revert Commit',
   'revert.desc': 'Create a new commit that undoes the changes of the selected commit.',
-  'revert.noCommit': 'Apply changes without committing (--no-commit)',
+  'revert.noCommit': 'Apply changes without committing',
   'revert.revert': 'Revert',
 
   // Merge modal
@@ -266,14 +266,18 @@ export const en: Record<string, string> = {
   'merge.noFf': 'No Fast-forward — Always create merge commit',
   'merge.ffOnly': 'Fast-forward Only — Fail if not possible',
   'merge.squash': 'Squash — Combine all commits into one',
-  'merge.squashWarning': 'Original commits will not be preserved in the history.',
+  'merge.squashWarning': 'Original commits will <span style="color: #f44336;">not be preserved</span> in the history.',
+  'merge.conflictWarning': '<span style="color: #f44336;">Conflict</span> detected in {count} file(s)',
+  'merge.noConflict': 'No conflicts detected',
+  'merge.moreFiles': 'more file(s)',
+  'merge.collapse': 'Show less',
   'merge.merge': 'Merge',
 
   // Rebase modal
   'rebaseBranch.title': 'Rebase Branch',
   'rebaseBranch.desc': 'Rebase the current branch onto the selected branch. This will rewrite commit history.',
   'rebaseBranch.rebase': 'Rebase',
-  'rebase.autostash': 'Auto-stash before rebase (--autostash)',
+  'rebase.autostash': 'Stash and reapply local changes (tracked only)',
 
   // Reset modal
   'reset.modalTitle': 'Reset Branch to Revision',
@@ -284,7 +288,7 @@ export const en: Record<string, string> = {
   'reset.softOption': 'Soft — Keep all changes staged',
   'reset.mixedOption': 'Mixed — Keep all changes unstaged',
   'reset.hardOption': 'Hard — Discard all changes',
-  'reset.hardWarning': 'All uncommitted changes will be permanently lost.',
+  'reset.hardWarning': 'All uncommitted changes will be <span style="color: #f44336;">permanently lost</span>.',
   'reset.resetBtn': 'Reset',
 
   // Common labels
@@ -307,18 +311,22 @@ export const en: Record<string, string> = {
 
   // Delete remote tag confirmation
   'deleteRemoteTag.title': 'Delete Remote Tag',
-  'deleteRemoteTag.confirm': 'Are you sure you want to delete tag "{name}" from the remote? This cannot be undone.',
+  'deleteRemoteTag.confirm': 'Are you sure you want to delete tag "{name}" from the remote? This <span style="color: #f44336;">cannot be undone</span>.',
 
   // Delete remote branch
   'deleteRemoteBranch.title': 'Delete Remote Branch',
-  'deleteRemoteBranch.confirm': 'Are you sure you want to delete branch {name} from the remote? This cannot be undone.',
+  'deleteRemoteBranch.confirm': 'Are you sure you want to delete branch {name} from the remote? This <span style="color: #f44336;">cannot be undone</span>.',
 
   // Stash drop confirmation
   'stashDrop.title': 'Drop Stash',
   'stashDrop.confirm': 'Are you sure you want to drop stash "{message}"? This cannot be undone.',
 
   // Stash pop confirmation
+  'stashApply.title': 'Apply Stash',
+  'stashApply.desc': 'Apply stash to the current branch. The stash entry will be <span style="color: #4da6ff;">kept</span>.',
+  'stashApply.apply': 'Apply',
   'stashPop.title': 'Pop Stash',
+  'stashPop.desc': 'Apply and remove stash. The stash entry will be <span style="color: #f44336;">deleted</span> after applying.',
   'stashPop.confirm': 'Apply and remove stash "{message}"? The stash entry will be deleted after applying.',
   'stashPop.pop': 'Pop',
 
@@ -341,7 +349,7 @@ export const en: Record<string, string> = {
 
   // Conflict resolution
   'conflict.abortTitle': 'Abort Operation',
-  'conflict.abortConfirm': 'Abort the current {operation}? The operation will be cancelled and changes will be reverted.',
+  'conflict.abortConfirm': 'Abort the current {operation}? The operation will be <span style="color: #f44336;">cancelled</span> and changes will be <span style="color: #f44336;">reverted</span>.',
   'conflict.abort': 'Abort',
   'conflict.resolveSuccess': '{operation} completed successfully.',
 
@@ -419,10 +427,9 @@ export const en: Record<string, string> = {
   'checkout.blockedDesc': 'You have uncommitted local changes.',
   'checkout.localChanges': 'Local changes:',
   'checkout.keepChanges': 'Keep changes and checkout',
-  'checkout.stashAll': 'Stash all (tracked + untracked)',
-  'checkout.discardTracked': 'Discard modified files only',
-  'checkout.discardAll': 'Discard all (modified + untracked)',
-  'checkout.discardWarning': 'Selected changes will be permanently lost.',
+  'checkout.stashAll': 'Stash (tracked only)',
+  'checkout.discardTracked': 'Discard changes (tracked only)',
+  'checkout.discardWarning': 'Selected changes will be <span style="color: #f44336;">permanently lost</span>.',
   'checkout.checkout': 'Checkout',
   'copiedToClipboard': 'Copied to clipboard',
   'setUpstream.title': 'Set Upstream',

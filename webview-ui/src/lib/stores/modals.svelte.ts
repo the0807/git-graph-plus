@@ -50,6 +50,11 @@ class ModalStore {
   openRemoveWorktree(path: string, branch: string) { this.removeWorktree = { show: true, path, branch }; }
   closeRemoveWorktree() { this.removeWorktree = { show: false, path: '', branch: '' }; }
 
+  // ── Stash Apply/Pop ──
+  stashApply = $state({ show: false, index: 0, message: '', drop: false });
+  openStashApply(index: number, message: string, drop: boolean) { this.stashApply = { show: true, index, message, drop }; }
+  closeStashApply() { this.stashApply = { show: false, index: 0, message: '', drop: false }; }
+
   // ── Stash Save ──
   stashSave = $state({ show: false });
   openStashSave() { this.stashSave = { show: true }; }

@@ -16,7 +16,7 @@
   let message = $state('');
   // svelte-ignore state_referenced_locally
   let startPoint = $state(initialStartPoint);
-  let push = $state(false);
+  let push = $state(true);
   let nameInput: HTMLInputElement | undefined = $state();
 
   onMount(() => { nameInput?.focus(); });

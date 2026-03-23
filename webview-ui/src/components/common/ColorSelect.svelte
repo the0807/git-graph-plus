@@ -87,7 +87,7 @@
   {#if current.warning}
     <div class="warning-message">
       <i class="codicon codicon-warning"></i>
-      <span>{current.warning}</span>
+      <span>{@html current.warning}</span>
     </div>
   {/if}
 </div>

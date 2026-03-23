@@ -41,9 +41,6 @@
   let showStashDropModal = $state(false);
   let stashDropIndex = $state(0);
   let stashDropMessage = $state('');
-  let showStashPopModal = $state(false);
-  let stashPopIndex = $state(0);
-  let stashPopMessage = $state('');
   let showDeleteRemoteTagModal = $state(false);
   let deleteRemoteTagName = $state('');
   let showAddWorktreeModal = $state(false);
@@ -105,9 +102,7 @@
             stashDropMessage = msg.payload.message;
             showStashDropModal = true;
           } else if (msg.payload.modal === 'stashPop') {
-            stashPopIndex = msg.payload.index;
-            stashPopMessage = msg.payload.message;
-            showStashPopModal = true;
+            modalStore.openStashApply(msg.payload.index, msg.payload.message, true);
           } else if (msg.payload.modal === 'renameBranch') {
             renameBranchNew = msg.payload.branchName;
             modalStore.openRenameBranch(msg.payload.branchName);
@@ -277,7 +272,7 @@
 
   {#if showAbortConfirmModal}
     <Modal title={t('conflict.abortTitle')} onClose={() => { showAbortConfirmModal = false; }}>
-      <p class="modal-desc">{t('conflict.abortConfirm', { operation: conflict?.operation ?? 'merge' })}</p>
+      <p class="modal-desc">{@html t('conflict.abortConfirm', { operation: conflict?.operation ?? 'merge' })}</p>
       <div class="form-actions">
         <button onclick={() => { showAbortConfirmModal = false; }}>{t('common.cancel')}</button>
         <button class="danger-btn" onclick={() => { showAbortConfirmModal = false; vscode.postMessage({ type: 'abortOperation' }); conflict = null; }}>{t('conflict.abort')}</button>
@@ -369,12 +364,19 @@
   </Modal>
 {/if}
 
-{#if showStashPopModal}
-  <Modal title={t('stashPop.title')} onClose={() => { showStashPopModal = false; }}>
-    <p class="modal-desc">{t('stashPop.confirm', { message: stashPopMessage })}</p>
+{#if modalStore.stashApply.show}
+  <Modal title={modalStore.stashApply.drop ? t('stashPop.title') : t('stashApply.title')} onClose={() => { modalStore.closeStashApply(); }}>
+    <p class="modal-desc">{@html modalStore.stashApply.drop ? t('stashPop.desc') : t('stashApply.desc')}</p>
+    <div class="modal-context-card">
+      <i class="codicon codicon-archive" style="color: var(--text-secondary);"></i>
+      <span class="modal-pill modal-pill--source">{modalStore.stashApply.message || `stash@{${modalStore.stashApply.index}}`}</span>
+      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
+      <i class="codicon codicon-git-branch"></i>
+      <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+    </div>
     <div class="form-actions">
-      <button onclick={() => { showStashPopModal = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showStashPopModal = false; vscode.postMessage({ type: 'stashApply', payload: { index: stashPopIndex, drop: true } }); }}>{t('stashPop.pop')}</button>
+      <button onclick={() => { modalStore.closeStashApply(); }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => { const { index, drop } = modalStore.stashApply; modalStore.closeStashApply(); vscode.postMessage({ type: 'stashApply', payload: { index, drop } }); }}>{modalStore.stashApply.drop ? t('stashPop.pop') : t('stashApply.apply')}</button>
     </div>
   </Modal>
 {/if}

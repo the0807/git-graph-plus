@@ -16,8 +16,8 @@ export const ko: Record<string, string> = {
   // Push modal
   'push.title': 'Push',
   'push.confirm': '{branch}을(를) 리모트에 push 하시겠습니까?',
-  'push.forcePush': 'Force push (--force-with-lease)',
-  'push.forceWarning': 'Force push는 원격 변경 사항을 덮어쓸 수 있습니다. 주의해서 사용하세요.',
+  'push.forcePush': 'Force push',
+  'push.forceWarning': 'Force push는 원격 변경 사항을 <span style="color: #f44336;">덮어쓸 수 있습니다</span>. 주의해서 사용하세요.',
   'push.cancel': '취소',
   'push.push': 'Push',
   'push.forcePushBtn': 'Force Push',
@@ -79,7 +79,7 @@ export const ko: Record<string, string> = {
   'stash.title': '변경 사항 Stash',
   'stash.message': '메시지 (선택 사항)',
   'stash.includeUntracked': '추적되지 않는 파일 포함',
-  'stash.keepIndex': 'Staged 변경 사항 유지 (--keep-index)',
+  'stash.keepIndex': 'Staged 변경 사항 유지',
   'stash.stash': 'Stash',
 
   // Create tag modal
@@ -232,12 +232,12 @@ export const ko: Record<string, string> = {
   'fetch.desc': '리모트 저장소에서 최신 변경 사항을 가져옵니다.',
   'fetch.remote': '리모트',
   'fetch.allRemotes': '모든 리모트',
-  'fetch.prune': '삭제된 리모트 브랜치 정리 (--prune)',
+  'fetch.prune': '삭제된 리모트 브랜치 정리',
   'fetch.fetch': 'Fetch',
 
   // Push modal (inline)
   'push.desc': '로컬 commit을 리모트 저장소에 push합니다.',
-  'push.forcePushOption': 'Force push (--force-with-lease)',
+  'push.forcePushOption': 'Force push',
 
   // Pull modal
   'pull.title': 'Pull',
@@ -249,13 +249,13 @@ export const ko: Record<string, string> = {
   // Cherry-pick modal
   'cherryPick.title': 'Commit Cherry-pick',
   'cherryPick.desc': '선택한 commit을 현재 브랜치에 적용합니다.',
-  'cherryPick.noCommit': 'Commit 없이 변경 사항만 적용 (--no-commit)',
+  'cherryPick.noCommit': 'Commit 없이 변경 사항만 적용',
   'cherryPick.cherryPick': 'Cherry-pick',
 
   // Revert modal
   'revert.title': 'Commit Revert',
   'revert.desc': '선택한 commit의 변경 사항을 되돌리는 새 commit을 생성합니다.',
-  'revert.noCommit': 'Commit 없이 변경 사항만 적용 (--no-commit)',
+  'revert.noCommit': 'Commit 없이 변경 사항만 적용',
   'revert.revert': 'Revert',
 
   // Merge modal
@@ -266,14 +266,18 @@ export const ko: Record<string, string> = {
   'merge.noFf': 'No Fast-forward — 항상 merge commit 생성',
   'merge.ffOnly': 'Fast-forward Only — 불가능하면 실패',
   'merge.squash': 'Squash — 모든 commit을 하나로 합침',
-  'merge.squashWarning': '원본 commit이 히스토리에 보존되지 않습니다.',
+  'merge.squashWarning': '원본 commit이 히스토리에 <span style="color: #f44336;">보존되지 않습니다</span>.',
+  'merge.conflictWarning': '{count}개 파일에서 <span style="color: #f44336;">충돌</span>이 감지되었습니다',
+  'merge.noConflict': '충돌이 감지되지 않았습니다',
+  'merge.moreFiles': '개 파일 더 보기',
+  'merge.collapse': '접기',
   'merge.merge': 'Merge',
 
   // Rebase modal
   'rebaseBranch.title': 'Rebase Branch',
   'rebaseBranch.desc': '현재 브랜치를 선택한 브랜치 위에 rebase합니다. Commit 히스토리가 재작성됩니다.',
   'rebaseBranch.rebase': 'Rebase',
-  'rebase.autostash': 'Rebase 전 자동 stash (--autostash)',
+  'rebase.autostash': '로컬 변경 사항 stash 후 다시 적용 (tracked only)',
 
   // Reset modal
   'reset.modalTitle': '브랜치를 리비전으로 Reset',
@@ -284,7 +288,7 @@ export const ko: Record<string, string> = {
   'reset.softOption': 'Soft — 모든 변경 사항을 staged 상태로 유지',
   'reset.mixedOption': 'Mixed — 모든 변경 사항을 unstaged 상태로 유지',
   'reset.hardOption': 'Hard — 모든 변경 사항 삭제',
-  'reset.hardWarning': '커밋되지 않은 모든 변경 사항이 영구적으로 손실됩니다.',
+  'reset.hardWarning': '커밋되지 않은 모든 변경 사항이 <span style="color: #f44336;">영구적으로 손실</span>됩니다.',
   'reset.resetBtn': 'Reset',
 
   // Common labels
@@ -307,18 +311,22 @@ export const ko: Record<string, string> = {
 
   // Delete remote tag confirmation
   'deleteRemoteTag.title': '리모트 태그 삭제',
-  'deleteRemoteTag.confirm': '리모트에서 태그 "{name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+  'deleteRemoteTag.confirm': '리모트에서 태그 "{name}"을(를) 삭제하시겠습니까? 이 작업은 <span style="color: #f44336;">되돌릴 수 없습니다</span>.',
 
   // Delete remote branch
   'deleteRemoteBranch.title': '리모트 브랜치 삭제',
-  'deleteRemoteBranch.confirm': '리모트에서 브랜치 {name}을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+  'deleteRemoteBranch.confirm': '리모트에서 브랜치 {name}을(를) 삭제하시겠습니까? 이 작업은 <span style="color: #f44336;">되돌릴 수 없습니다</span>.',
 
   // Stash drop confirmation
   'stashDrop.title': 'Stash 삭제',
   'stashDrop.confirm': 'Stash "{message}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
 
   // Stash pop confirmation
+  'stashApply.title': 'Stash Apply',
+  'stashApply.desc': '현재 브랜치에 stash를 적용합니다. Stash 항목은 <span style="color: #4da6ff;">유지</span>됩니다.',
+  'stashApply.apply': 'Apply',
   'stashPop.title': 'Stash Pop',
+  'stashPop.desc': 'Stash를 적용하고 삭제합니다. 적용 후 stash 항목이 <span style="color: #f44336;">삭제</span>됩니다.',
   'stashPop.confirm': 'Stash "{message}"을(를) 적용하고 삭제하시겠습니까? 적용 후 stash 항목이 삭제됩니다.',
   'stashPop.pop': 'Pop',
 
@@ -341,7 +349,7 @@ export const ko: Record<string, string> = {
 
   // Conflict resolution
   'conflict.abortTitle': '작업 중단',
-  'conflict.abortConfirm': '현재 {operation} 작업을 중단하시겠습니까? 작업이 중단되고 변경사항이 되돌려집니다.',
+  'conflict.abortConfirm': '현재 {operation} 작업을 중단하시겠습니까? 작업이 <span style="color: #f44336;">중단</span>되고 변경사항이 <span style="color: #f44336;">되돌려집니다</span>.',
   'conflict.abort': '중단',
   'conflict.resolveSuccess': '{operation} 작업이 완료되었습니다.',
 
@@ -419,10 +427,9 @@ export const ko: Record<string, string> = {
   'checkout.blockedDesc': '커밋되지 않은 로컬 변경 사항이 있습니다.',
   'checkout.localChanges': '로컬 변경 사항:',
   'checkout.keepChanges': '변경 사항 유지하고 checkout',
-  'checkout.stashAll': 'Stash (수정 + 새 파일 전체)',
-  'checkout.discardTracked': '수정된 파일만 삭제',
-  'checkout.discardAll': '전체 삭제 (수정 + 새 파일)',
-  'checkout.discardWarning': '선택한 변경 사항이 영구적으로 삭제됩니다.',
+  'checkout.stashAll': 'Stash (tracked only)',
+  'checkout.discardTracked': '변경 사항 삭제 (tracked only)',
+  'checkout.discardWarning': '선택한 변경 사항이 <span style="color: #f44336;">영구적으로 삭제</span>됩니다.',
   'checkout.checkout': 'Checkout',
   'copiedToClipboard': '클립보드에 복사되었습니다',
   'setUpstream.title': '업스트림 설정',
