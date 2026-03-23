@@ -377,7 +377,8 @@ export class GitService {
     if (remote) {
       args.push(remote);
       if (branch) {
-        args.push(branch);
+        // Use full refspec to avoid ambiguity when tag and branch names collide
+        args.push(`refs/heads/${branch}`);
       }
     }
     return this.exec(args);

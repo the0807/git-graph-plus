@@ -164,7 +164,7 @@ export function parseBranches(raw: string): BranchInfo[] {
     const rest = current ? line.substring(1) : line;
     const fields = rest.split(FIELD_SEP);
 
-    const name = fields[0]?.trim() ?? '';
+    const rawName = fields[0]?.trim() ?? '';
     const hash = fields[1]?.trim() ?? '';
     const upstream = fields[2]?.trim() || undefined;
     const trackStr = fields[3]?.trim() ?? '';
@@ -179,7 +179,9 @@ export function parseBranches(raw: string): BranchInfo[] {
     // Use full refname to distinguish local from remote branches
     const fullRefname = fields[4]?.trim() ?? '';
     const isRemote = fullRefname.startsWith('refs/remotes/');
-    const remote = isRemote ? name.split('/')[0] : undefined;
+    const remote = isRemote ? rawName.split('/')[0] : undefined;
+    // Strip heads/ prefix added by git when tag and branch names collide
+    const name = !isRemote && rawName.startsWith('heads/') ? rawName.substring(6) : rawName;
 
     return { name, current, remote, upstream, ahead, behind, hash };
   }).filter(b => b.name.length > 0);
