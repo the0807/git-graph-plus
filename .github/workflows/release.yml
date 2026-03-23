@@ -69,6 +69,9 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
+      - name: Publish to Open VSX
+        run: npx ovsx publish *.vsix -p ${{ secrets.OVSX_PAT }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
