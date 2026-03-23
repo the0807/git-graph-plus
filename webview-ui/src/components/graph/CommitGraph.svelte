@@ -97,6 +97,41 @@
     return set;
   });
 
+  // Set of commit hashes that are local-only (ahead of upstream) for current branch
+  const currentBranchLocalOnly = $derived.by(() => {
+    const set = new Set<string>();
+    const current = branchStore.currentBranch;
+    if (!current?.upstream || current.ahead === 0) return set;
+    const commits = commitStore.commits;
+    if (commits.length === 0) return set;
+    const hashIndex = new Map<string, number>();
+    for (let i = 0; i < commits.length; i++) hashIndex.set(commits[i].hash, i);
+    // Find the upstream remote tip commit
+    const [remote, ...rest] = current.upstream.split('/');
+    const remoteBranchName = rest.join('/');
+    const remoteTipCommit = commits.find(c => c.refs.some(r => r.type === 'remote-branch' && r.remote === remote && r.name === remoteBranchName));
+    // Collect commits reachable from upstream tip
+    const upstreamReachable = new Set<string>();
+    if (remoteTipCommit) {
+      const queue = [remoteTipCommit.hash];
+      while (queue.length > 0) {
+        const hash = queue.shift()!;
+        if (upstreamReachable.has(hash)) continue;
+        upstreamReachable.add(hash);
+        const idx = hashIndex.get(hash);
+        if (idx === undefined) continue;
+        for (const parent of commits[idx].parents) {
+          if (!upstreamReachable.has(parent)) queue.push(parent);
+        }
+      }
+    }
+    // Local-only = on current branch but not reachable from upstream
+    for (const hash of currentBranchCommits) {
+      if (!upstreamReachable.has(hash)) set.add(hash);
+    }
+    return set;
+  });
+
   // Set of commit hashes that are remote-ahead for current branch's upstream only
   const currentBranchRemoteAhead = $derived.by(() => {
     const set = new Set<string>();
@@ -111,13 +146,19 @@
     const remoteBranchName = rest.join('/');
     const remoteTipCommit = commits.find(c => c.refs.some(r => r.type === 'remote-branch' && r.remote === remote && r.name === remoteBranchName));
     if (!remoteTipCommit) return set;
-    // Walk first parents from remote tip, stop when hitting current branch commits
-    let hash: string | undefined = remoteTipCommit.hash;
-    while (hash && !currentBranchCommits.has(hash)) {
+    // BFS from remote tip, follow all parents, stop at current branch commits
+    const queue: string[] = [remoteTipCommit.hash];
+    while (queue.length > 0) {
+      const hash = queue.shift()!;
+      if (set.has(hash) || currentBranchCommits.has(hash)) continue;
       set.add(hash);
       const idx = hashIndex.get(hash);
-      if (idx === undefined) break;
-      hash = commits[idx].parents[0];
+      if (idx === undefined) continue;
+      for (const parent of commits[idx].parents) {
+        if (!set.has(parent) && !currentBranchCommits.has(parent)) {
+          queue.push(parent);
+        }
+      }
     }
     return set;
   });
@@ -347,7 +388,7 @@
               {
                 label: t('graph.setUpstream'),
                 action: () => {
-                  vscode.postMessage({ type: 'setUpstream', payload: { branch: branchName, remote: 'origin', remoteBranch: branchName } });
+                  modalStore.openSetUpstream(branchName);
                 },
               },
               { separator: true, label: '', action: () => {} },
@@ -765,7 +806,7 @@
             onkeydown={(e) => { if (e.key === 'Enter') selectCommit(commit.hash); }}
           >
             <div class="col-message" style="padding-left: {(displayLeftMargin[index] ?? graphWidth) * X_SCALE + 4}px;">
-              {#if dot?.localOnly && currentBranchCommits.has(commit.hash)}
+              {#if currentBranchLocalOnly.has(commit.hash)}
                 <span class="local-dot" title="Not pushed"></span>
               {:else if currentBranchRemoteAhead.has(commit.hash)}
                 <span class="remote-dot" title="Remote only"></span>
@@ -804,17 +845,13 @@
                       title={trackedUpstream}
                       ondblclick={(e) => {
                         e.stopPropagation();
-                        fastForwardLocalBranch = ref.name;
-                        fastForwardRemote = trackedUpstream!;
-                        showFastForwardModal = true;
+                        doCheckout(ref.name);
                       }}
                       role="button"
                       tabindex={0}
                       onkeydown={(e) => {
                         if (e.key === 'Enter') {
-                          fastForwardLocalBranch = ref.name;
-                          fastForwardRemote = trackedUpstream!;
-                          showFastForwardModal = true;
+                          doCheckout(ref.name);
                         }
                       }}
                     >
@@ -829,7 +866,14 @@
                     ondblclick={(e) => {
                       e.stopPropagation();
                       if (ref.type === 'remote-branch') {
-                        doCheckoutRemote(`${ref.remote}/${ref.name}`, ref.name);
+                        const trackingLocal = branchStore.branches.find(b => !b.remote && b.upstream === `${ref.remote}/${ref.name}`);
+                        if (trackingLocal) {
+                          fastForwardLocalBranch = trackingLocal.name;
+                          fastForwardRemote = `${ref.remote}/${ref.name}`;
+                          showFastForwardModal = true;
+                        } else {
+                          doCheckoutRemote(`${ref.remote}/${ref.name}`, ref.name);
+                        }
                       } else if (ref.type === 'tag' || ref.type === 'stash') {
                         checkoutCommitHash = ref.type === 'stash' ? commit.hash : ref.name;
                         showCheckoutCommitModal = true;
@@ -842,7 +886,14 @@
                     onkeydown={(e) => {
                       if (e.key === 'Enter') {
                         if (ref.type === 'remote-branch') {
-                          doCheckoutRemote(`${ref.remote}/${ref.name}`, ref.name);
+                          const trackingLocal = branchStore.branches.find(b => !b.remote && b.upstream === `${ref.remote}/${ref.name}`);
+                          if (trackingLocal) {
+                            fastForwardLocalBranch = trackingLocal.name;
+                            fastForwardRemote = `${ref.remote}/${ref.name}`;
+                            showFastForwardModal = true;
+                          } else {
+                            doCheckoutRemote(`${ref.remote}/${ref.name}`, ref.name);
+                          }
                         } else if (ref.type === 'tag' || ref.type === 'stash') {
                           checkoutCommitHash = ref.type === 'stash' ? commit.hash : ref.name;
                           showCheckoutCommitModal = true;
@@ -933,7 +984,7 @@
     <div class="modal-context-card">
       <i class="codicon codicon-git-branch"></i>
       <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
-      <span class="modal-arrow">&rarr;</span>
+      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
       <i class="codicon codicon-git-commit"></i>
       <span class="modal-pill modal-pill--target">{resetTarget.substring(0, 7)}</span>
     </div>
@@ -975,7 +1026,7 @@
     <div class="modal-context-card">
       <i class="codicon codicon-git-commit"></i>
       <span class="modal-pill modal-pill--target">{cherryPickTarget.substring(0, 7)}</span>
-      <span class="modal-arrow">&rarr;</span>
+      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
       <i class="codicon codicon-git-branch"></i>
       <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
