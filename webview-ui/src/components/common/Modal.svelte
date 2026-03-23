@@ -275,7 +275,7 @@
     border-radius: 5px;
     color: #f0a020;
     font-size: 11px;
-    margin-top: 6px;
+    margin: 0 0 6px;
   }
 
   :global(.modal-hash) {

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Modal from '../common/Modal.svelte';
   import { t } from '../../lib/i18n/index.svelte';
+  import { branchStore } from '../../lib/stores/branches.svelte';
 
   interface Props {
     startPoint: string;
@@ -17,6 +18,8 @@
   let startPoint = $state(initialStartPoint);
   let checkout = $state(true);
   let nameInput: HTMLInputElement | undefined = $state();
+  const branchExists = $derived(name.trim() !== '' && branchStore.localBranches.some(b => b.name === name.trim()));
+  const tagConflict = $derived(name.trim() !== '' && !branchExists && branchStore.tags.some(tag => tag.name === name.trim()));
 
   onMount(() => { nameInput?.focus(); });
 
@@ -61,6 +64,11 @@
       onkeydown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
     />
   </div>
+  {#if branchExists}
+    <p class="modal-warning" role="alert">{t('createBranch.branchExists', { name: name.trim() })}</p>
+  {:else if tagConflict}
+    <p class="modal-warning" role="alert">{t('createBranch.tagConflict', { name: name.trim() })}</p>
+  {/if}
   <div class="modal-form-group">
     <label class="modal-checkbox">
       <input type="checkbox" bind:checked={checkout} />
@@ -69,6 +77,6 @@
   </div>
   <div class="form-actions">
     <button onclick={onClose}>{t('common.cancel')}</button>
-    <button class="primary" onclick={handleSubmit} disabled={!name.trim()}>{checkout ? t('createBranch.createAndCheckout') : t('createBranch.create')}</button>
+    <button class="primary" onclick={handleSubmit} disabled={!name.trim() || branchExists || tagConflict}>{checkout ? t('createBranch.createAndCheckout') : t('createBranch.create')}</button>
   </div>
 </Modal>

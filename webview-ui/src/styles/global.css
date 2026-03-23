@@ -124,6 +124,16 @@ button:disabled {
   cursor: not-allowed;
 }
 
+button:disabled:hover {
+  background: var(--button-secondary-bg);
+  opacity: 0.4;
+}
+
+button.primary:disabled:hover {
+  background: var(--button-bg);
+  opacity: 0.4;
+}
+
 /* Checkbox */
 input[type="checkbox"] {
   appearance: none;
