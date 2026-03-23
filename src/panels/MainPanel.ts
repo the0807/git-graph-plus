@@ -249,7 +249,7 @@ export class MainPanel {
           break;
         }
         case 'setUpstream': {
-          await this.gitService.setUpstream(message.payload.remote, message.payload.remoteBranch);
+          await this.gitService.setUpstream(message.payload.branch, message.payload.remote, message.payload.remoteBranch);
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'setUpstream', success: true } });
           await this.refreshAll();
           break;
@@ -297,7 +297,11 @@ export class MainPanel {
             await this.gitService.pull(message.payload.remote, message.payload.branch, { rebase: message.payload.rebase });
           } finally {
             if (message.payload.stash) {
-              try { await this.gitService.stashPop(0); } catch { /* stash pop may fail if no conflicts */ }
+              try {
+                await this.gitService.stashPop(0);
+              } catch {
+                this.panel.webview.postMessage({ type: 'error', payload: { message: vscode.l10n.t('stashPopAfterPullFailed') } });
+              }
             }
           }
           this.panel.webview.postMessage({
@@ -385,8 +389,14 @@ export class MainPanel {
           break;
         }
         case 'stashSave': {
+          const beforeCount = (await this.gitService.stashList()).length;
           await this.gitService.stashSave(message.payload.message, message.payload.includeUntracked, message.payload.keepIndex);
-          this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'stashSave', success: true } });
+          const afterCount = (await this.gitService.stashList()).length;
+          if (afterCount > beforeCount) {
+            this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'stashSave', success: true } });
+          } else {
+            this.panel.webview.postMessage({ type: 'error', payload: { message: vscode.l10n.t('noChangesToStash') } });
+          }
           await this.refreshAll();
           break;
         }
@@ -525,6 +535,7 @@ export class MainPanel {
         }
         case 'copyToClipboard': {
           await vscode.env.clipboard.writeText(message.payload.text);
+          this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'copied', success: true } });
           break;
         }
         case 'saveCommitPatch': {
@@ -789,6 +800,8 @@ export class MainPanel {
           type: 'conflictData',
           payload: { operation: opState.type ?? 'merge', files: conflictFiles.map(f => ({ path: f, resolved: false })) },
         });
+        // Focus the Source Control sidebar so the user can resolve conflicts
+        vscode.commands.executeCommand('workbench.view.scm');
         await this.refreshAll();
       } else {
         this.panel.webview.postMessage({

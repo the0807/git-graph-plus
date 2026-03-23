@@ -64,5 +64,7 @@
   "worktreeAdded": "'{0}'에 worktree가 추가되었습니다",
   "addWorktreeFailed": "Worktree 추가 실패: {0}",
   "worktreesPruned": "Worktree가 정리되었습니다",
-  "pruneWorktreesFailed": "Worktree 정리 실패: {0}"
+  "pruneWorktreesFailed": "Worktree 정리 실패: {0}",
+  "noChangesToStash": "Stash할 변경 사항이 없습니다",
+  "stashPopAfterPullFailed": "Pull은 성공했지만 stash 복원에 실패했습니다. 'git stash pop'을 직접 실행해주세요."
 }
