@@ -362,7 +362,7 @@
       </label>
     </div>
     {#if forcePush}
-      <p class="modal-warning" role="alert">{t('push.forceWarning')}</p>
+      <p class="modal-warning" role="alert">{@html t('push.forceWarning')}</p>
     {/if}
     <div class="form-actions">
       <button onclick={() => { showPushConfirm = false; }}>{t('common.cancel')}</button>
