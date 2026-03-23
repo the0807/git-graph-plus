@@ -197,6 +197,24 @@
 
   let showCheckoutCommitModal = $state(false);
   let checkoutCommitHash = $state('');
+  let checkoutCommitDirty = $state(false);
+  let checkoutCommitOption = $state<'keep' | 'stash' | 'discardTracked' | 'discardAll'>('keep');
+
+  function openCheckoutCommitModal(hash: string) {
+    checkoutCommitHash = hash;
+    checkoutCommitOption = 'keep';
+    checkoutCommitDirty = false;
+    showCheckoutCommitModal = true;
+    // Check dirty state asynchronously
+    const handler = (event: MessageEvent) => {
+      if (event.data.type === 'dirtyState') {
+        checkoutCommitDirty = event.data.payload.dirty;
+        window.removeEventListener('message', handler);
+      }
+    };
+    window.addEventListener('message', handler);
+    vscode.postMessage({ type: 'checkDirty' });
+  }
 
   let showPullAfterCheckoutModal = $state(false);
   let pullAfterCheckoutRef = $state('');
@@ -206,8 +224,23 @@
   let fastForwardLocalBranch = $state('');
   let fastForwardRemote = $state('');
 
-  function doCheckout(ref: string) {
-    vscode.postMessage({ type: 'checkout', payload: { ref } });
+  let pendingCheckoutPullAfter = $state(false);
+
+  function doCheckout(ref: string, pullAfter = false) {
+    pendingCheckoutPullAfter = pullAfter;
+    // Check dirty first, then either checkout directly or show modal
+    const handler = (event: MessageEvent) => {
+      if (event.data.type === 'dirtyState') {
+        window.removeEventListener('message', handler);
+        if (event.data.payload.dirty) {
+          openCheckoutCommitModal(ref);
+        } else {
+          vscode.postMessage({ type: 'checkout', payload: { ref, pullAfter } });
+        }
+      }
+    };
+    window.addEventListener('message', handler);
+    vscode.postMessage({ type: 'checkDirty' });
   }
 
   function doCheckoutRemote(remoteName: string, branchName: string) {
@@ -445,7 +478,7 @@
           children: [
             {
               label: t('sidebar.checkout'),
-              action: () => vscode.postMessage({ type: 'checkout', payload: { ref: ref.name } }),
+              action: () => doCheckout(ref.name),
             },
             {
               label: t('graph.deleteTag'),
@@ -543,8 +576,7 @@
             if (remoteRef) {
               doCheckoutRemote(`${remoteRef.remote}/${remoteRef.name}`, remoteRef.name);
             } else {
-              checkoutCommitHash = commit.hash;
-              showCheckoutCommitModal = true;
+              openCheckoutCommitModal(commit.hash);
             }
           }
         },
@@ -789,14 +821,13 @@
               if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
               const localRef = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
               if (localRef) {
-                vscode.postMessage({ type: 'checkout', payload: { ref: localRef.name } });
+                doCheckout(localRef.name);
               } else {
                 const remoteRef = commit.refs.find(r => r.type === 'remote-branch' && r.name !== 'HEAD');
                 if (remoteRef) {
                   doCheckoutRemote(`${remoteRef.remote}/${remoteRef.name}`, remoteRef.name);
                 } else {
-                  checkoutCommitHash = commit.hash;
-                  showCheckoutCommitModal = true;
+                  openCheckoutCommitModal(commit.hash);
                 }
               }
             }}
@@ -875,8 +906,7 @@
                           doCheckoutRemote(`${ref.remote}/${ref.name}`, ref.name);
                         }
                       } else if (ref.type === 'tag' || ref.type === 'stash') {
-                        checkoutCommitHash = ref.type === 'stash' ? commit.hash : ref.name;
-                        showCheckoutCommitModal = true;
+                        openCheckoutCommitModal(ref.type === 'stash' ? commit.hash : ref.name);
                       } else {
                         doCheckout(ref.name);
                       }
@@ -895,8 +925,7 @@
                             doCheckoutRemote(`${ref.remote}/${ref.name}`, ref.name);
                           }
                         } else if (ref.type === 'tag' || ref.type === 'stash') {
-                          checkoutCommitHash = ref.type === 'stash' ? commit.hash : ref.name;
-                          showCheckoutCommitModal = true;
+                          openCheckoutCommitModal(ref.type === 'stash' ? commit.hash : ref.name);
                         } else {
                           doCheckout(ref.name);
                         }
@@ -1104,12 +1133,37 @@
         </div>
       {/if}
     {/if}
+    {#if checkoutCommitDirty}
+      <div class="modal-form-group">
+        <div class="modal-field-label">{t('checkout.localChanges')}</div>
+        <label class="modal-radio">
+          <input type="radio" name="commit-dirty-option" value="keep" bind:group={checkoutCommitOption} />
+          <span>{t('checkout.keepChanges')}</span>
+        </label>
+        <label class="modal-radio">
+          <input type="radio" name="commit-dirty-option" value="stash" bind:group={checkoutCommitOption} />
+          <span>{t('checkout.stashAll')}</span>
+        </label>
+        <label class="modal-radio">
+          <input type="radio" name="commit-dirty-option" value="discardTracked" bind:group={checkoutCommitOption} />
+          <span>{t('checkout.discardTracked')}</span>
+        </label>
+        <label class="modal-radio">
+          <input type="radio" name="commit-dirty-option" value="discardAll" bind:group={checkoutCommitOption} />
+          <span>{t('checkout.discardAll')}</span>
+        </label>
+      </div>
+      {#if checkoutCommitOption === 'discardTracked' || checkoutCommitOption === 'discardAll'}
+        <p class="modal-warning" role="alert">{t('checkout.discardWarning')}</p>
+      {/if}
+    {/if}
+    {@const dirtyPayload = checkoutCommitDirty ? (checkoutCommitOption === 'stash' ? { stash: true } : checkoutCommitOption === 'discardTracked' ? { force: true } : checkoutCommitOption === 'discardAll' ? { force: true, clean: true } : {}) : {}}
     <div class="form-actions">
       <button onclick={() => { showCheckoutCommitModal = false; }}>{t('common.cancel')}</button>
       {#if !isBranchName && linkedBranches.length > 0}
         <button class="primary" onclick={() => {
           showCheckoutCommitModal = false;
-          doCheckout(linkedBranches[0]);
+          vscode.postMessage({ type: 'checkout', payload: { ref: linkedBranches[0], ...dirtyPayload } });
         }}>{t('checkoutCommit.checkoutBranch', { name: linkedBranches[0] })}</button>
       {:else if !isBranchName && linkedRemoteBranches.length > 0}
         <button class="primary" onclick={() => {
@@ -1120,7 +1174,7 @@
       {:else}
         <button class="primary" onclick={() => {
           showCheckoutCommitModal = false;
-          doCheckout(checkoutCommitHash);
+          vscode.postMessage({ type: 'checkout', payload: { ref: checkoutCommitHash, ...dirtyPayload } });
         }}>{t('checkoutCommit.checkout')}</button>
       {/if}
     </div>
@@ -1144,7 +1198,7 @@
       <button onclick={() => { showFastForwardModal = false; }}>{t('common.cancel')}</button>
       <button class="primary" onclick={() => {
         showFastForwardModal = false;
-        vscode.postMessage({ type: 'checkout', payload: { ref: fastForwardLocalBranch } });
+        doCheckout(fastForwardLocalBranch);
         setTimeout(() => {
           vscode.postMessage({ type: 'merge', payload: { branch: fastForwardRemote, ffOnly: true } });
         }, 500);
@@ -1158,8 +1212,8 @@
     branchName={pullAfterCheckoutRef}
     behind={pullAfterCheckoutBehind}
     onClose={() => { showPullAfterCheckoutModal = false; }}
-    onCheckoutOnly={() => { showPullAfterCheckoutModal = false; vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef } }); }}
-    onCheckoutAndPull={() => { showPullAfterCheckoutModal = false; vscode.postMessage({ type: 'checkout', payload: { ref: pullAfterCheckoutRef, pullAfter: true } }); }}
+    onCheckoutOnly={() => { showPullAfterCheckoutModal = false; doCheckout(pullAfterCheckoutRef); }}
+    onCheckoutAndPull={() => { showPullAfterCheckoutModal = false; doCheckout(pullAfterCheckoutRef, true); }}
   />
 {/if}
 

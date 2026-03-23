@@ -5,7 +5,8 @@ export type WebviewMessage =
   | { type: 'getLog'; payload: { branch?: string; limit?: number } }
   | { type: 'getBranches' }
   | { type: 'getRepoList' }
-  | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean } }
+  | { type: 'checkDirty' }
+  | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean; force?: boolean; stash?: boolean; clean?: boolean } }
   | { type: 'getCommitDiff'; payload: { hash: string } }
   | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean } }
   | { type: 'deleteBranch'; payload: { name: string; force?: boolean; worktreePath?: string; deleteRemote?: boolean } }
@@ -85,6 +86,8 @@ export type ExtensionMessage =
   | { type: 'repoChanged'; payload: { what: string } }
   | { type: 'error'; payload: { message: string; command?: string } }
   | { type: 'operationComplete'; payload: { operation: string; success: boolean } }
+  | { type: 'checkoutBlocked'; payload: { ref: string; pullAfter?: boolean } }
+  | { type: 'dirtyState'; payload: { dirty: boolean } }
   | { type: 'bisectResult'; payload: { message: string } }
   | { type: 'statsData'; payload: { byAuthor: Array<{ author: string; email: string; count: number }>; byWeekdayHour: Array<{ weekday: number; hour: number; count: number }> } }
   | { type: 'lsTreeData'; payload: { ref: string; path?: string; entries: Array<{ mode: string; type: 'blob' | 'tree'; hash: string; name: string }> } }

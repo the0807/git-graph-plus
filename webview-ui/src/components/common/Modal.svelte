@@ -265,6 +265,44 @@
     border-color: #f44336;
   }
 
+  :global(.modal-radio) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 2px 0;
+  }
+
+  :global(.modal-radio input[type="radio"]) {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--text-secondary);
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  :global(.modal-radio input[type="radio"]:checked) {
+    background: var(--vscode-focusBorder, #007fd4);
+    border-color: var(--vscode-focusBorder, #007fd4);
+  }
+
+  :global(.modal-radio input[type="radio"]:checked::after) {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+  }
+
   :global(.modal-warning) {
     display: flex;
     align-items: center;

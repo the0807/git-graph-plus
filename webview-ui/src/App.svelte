@@ -53,7 +53,6 @@
   let stashSaveIncludeUntracked = $state(true);
   let stashSaveKeepIndex = $state(false);
   let deleteWorktreeBranch = $state(false);
-
   onMount(() => {
     function handleMessage(event: MessageEvent) {
       const msg = event.data;

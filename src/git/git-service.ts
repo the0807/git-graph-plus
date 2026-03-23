@@ -231,8 +231,20 @@ export class GitService {
 
   // --- Branch Management ---
 
-  async checkout(ref: string): Promise<void> {
-    await this.exec(['checkout', ref]);
+  async isDirty(): Promise<boolean> {
+    const raw = await this.exec(['status', '--porcelain']);
+    return raw.trim().length > 0;
+  }
+
+  async clean(): Promise<void> {
+    await this.exec(['clean', '-fd']);
+  }
+
+  async checkout(ref: string, force?: boolean): Promise<void> {
+    const args = ['checkout'];
+    if (force) { args.push('--force'); }
+    args.push(ref);
+    await this.exec(args);
   }
 
   /**

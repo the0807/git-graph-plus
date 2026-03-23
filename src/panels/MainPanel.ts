@@ -180,8 +180,21 @@ export class MainPanel {
           });
           break;
         }
+        case 'checkDirty': {
+          const dirty = await this.gitService.isDirty();
+          this.panel.webview.postMessage({ type: 'dirtyState', payload: { dirty } });
+          break;
+        }
         case 'checkout': {
-          await this.gitService.checkout(message.payload.ref);
+          if (message.payload.stash) {
+            await this.gitService.stashSave('Auto-stash before checkout', true);
+          }
+          await this.gitService.checkout(message.payload.ref, message.payload.force);
+          if (message.payload.clean) {
+            await this.gitService.clean();
+          }
+          // Trigger sidebar refresh (stashes, branches, etc.)
+          vscode.commands.executeCommand('gitGraphPlus.refresh');
           if (message.payload.pullAfter) {
             await this.gitService.pull();
           }
