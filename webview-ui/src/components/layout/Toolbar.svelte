@@ -14,8 +14,8 @@
 
   let operating = $state<string | null>(null);
   let showFetchConfirm = $state(false);
-  let fetchPrune = $state(true);
-  let fetchRemote = $state('');
+  let fetchAllRemotes = $state(false);
+  let fetchRemote = $state('origin');
   let showPushConfirm = $state(false);
   let forcePush = $state(false);
   let pushSetUpstream = $state(true);
@@ -43,19 +43,19 @@
 
   function doFetch() {
     showFetchConfirm = true;
-    fetchPrune = true;
-    fetchRemote = '';
+    fetchAllRemotes = false;
+    fetchRemote = branchStore.remotes[0]?.name ?? 'origin';
   }
 
   function confirmFetch() {
     operating = 'fetch';
     showFetchConfirm = false;
-    vscode.postMessage({ type: 'fetch', payload: { remote: fetchRemote || undefined, prune: fetchPrune } });
+    vscode.postMessage({ type: 'fetch', payload: { remote: fetchAllRemotes ? undefined : fetchRemote, prune: true } });
   }
 
   function doPull() {
     showPullConfirm = true;
-    pullRebase = false;
+    pullRebase = true;
     pullStash = false;
   }
 
@@ -299,10 +299,7 @@
     <div class="modal-form-group">
       <div class="modal-field-label">{t('fetch.remote')}</div>
       <ColorSelect
-        options={[
-          { value: '', label: t('fetch.allRemotes'), color: '' },
-          ...branchStore.remotes.map(r => ({ value: r.name, label: r.name, color: '' })),
-        ]}
+        options={branchStore.remotes.map(r => ({ value: r.name, label: r.name, color: '' }))}
         value={fetchRemote}
         onChange={(v) => { fetchRemote = v; }}
         showDot={false}
@@ -310,8 +307,8 @@
     </div>
     <div class="modal-form-group">
       <label class="modal-checkbox">
-        <input type="checkbox" bind:checked={fetchPrune} />
-        <span>{t('fetch.prune')}</span>
+        <input type="checkbox" bind:checked={fetchAllRemotes} />
+        <span>{t('fetch.allRemotes')}</span>
       </label>
     </div>
     <div class="form-actions">
@@ -378,6 +375,9 @@
   <Modal title={t('pull.title')} onClose={() => { showPullConfirm = false; }}>
     <p class="modal-desc">{t('pull.desc')}</p>
     <div class="modal-context-card">
+      <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
+      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.upstream ?? 'origin'}</span>
+      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
       <i class="codicon codicon-git-branch"></i>
       <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
