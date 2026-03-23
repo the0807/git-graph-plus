@@ -236,10 +236,6 @@ export class GitService {
     return raw.trim().length > 0;
   }
 
-  async clean(): Promise<void> {
-    await this.exec(['clean', '-fd']);
-  }
-
   async checkout(ref: string, force?: boolean): Promise<void> {
     const args = ['checkout'];
     if (force) { args.push('--force'); }
@@ -283,6 +279,29 @@ export class GitService {
 
   async renameBranch(oldName: string, newName: string): Promise<void> {
     await this.exec(['branch', '-m', oldName, newName]);
+  }
+
+  async predictConflicts(ours: string, theirs: string): Promise<{ hasConflict: boolean; files: string[] }> {
+    return new Promise((resolve) => {
+      const proc = spawn('git', ['merge-tree', '--write-tree', ours, theirs], {
+        cwd: this.repoPath,
+        env: { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' },
+      });
+      let stdout = '';
+      proc.stdout.on('data', (data: Buffer) => { stdout += data.toString(); });
+      proc.on('close', (code) => {
+        if (code === 0) {
+          resolve({ hasConflict: false, files: [] });
+        } else {
+          const files = stdout.split('\n')
+            .filter(l => l.startsWith('CONFLICT'))
+            .map(l => l.match(/in (.+)$/)?.[1])
+            .filter((f): f is string => !!f);
+          resolve({ hasConflict: true, files });
+        }
+      });
+      proc.on('error', () => resolve({ hasConflict: false, files: [] }));
+    });
   }
 
   async merge(branch: string, options?: { noFf?: boolean; ffOnly?: boolean; squash?: boolean }): Promise<void> {

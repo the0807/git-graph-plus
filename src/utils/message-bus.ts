@@ -6,7 +6,8 @@ export type WebviewMessage =
   | { type: 'getBranches' }
   | { type: 'getRepoList' }
   | { type: 'checkDirty' }
-  | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean; force?: boolean; stash?: boolean; clean?: boolean } }
+  | { type: 'predictConflicts'; payload: { ours: string; theirs: string } }
+  | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean; force?: boolean; stash?: boolean } }
   | { type: 'getCommitDiff'; payload: { hash: string } }
   | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean } }
   | { type: 'deleteBranch'; payload: { name: string; force?: boolean; worktreePath?: string; deleteRemote?: boolean } }
@@ -88,6 +89,7 @@ export type ExtensionMessage =
   | { type: 'operationComplete'; payload: { operation: string; success: boolean } }
   | { type: 'checkoutBlocked'; payload: { ref: string; pullAfter?: boolean } }
   | { type: 'dirtyState'; payload: { dirty: boolean } }
+  | { type: 'conflictPrediction'; payload: { hasConflict: boolean; files: string[] } }
   | { type: 'bisectResult'; payload: { message: string } }
   | { type: 'statsData'; payload: { byAuthor: Array<{ author: string; email: string; count: number }>; byWeekdayHour: Array<{ weekday: number; hour: number; count: number }> } }
   | { type: 'lsTreeData'; payload: { ref: string; path?: string; entries: Array<{ mode: string; type: 'blob' | 'tree'; hash: string; name: string }> } }
