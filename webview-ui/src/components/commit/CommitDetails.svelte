@@ -504,7 +504,7 @@
     align-items: center;
     gap: 5px;
     padding: 8px 16px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     background: transparent;
     color: var(--text-secondary);
@@ -552,7 +552,7 @@
   }
 
   .info-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--text-secondary);
     letter-spacing: 0.5px;
@@ -588,7 +588,7 @@
   }
 
   .person-date {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-secondary);
     margin-top: 2px;
   }
@@ -604,13 +604,13 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .meta-label {
     width: 65px;
     flex-shrink: 0;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--text-secondary);
     letter-spacing: 0.5px;
@@ -623,7 +623,7 @@
 
   .mono {
     font-family: var(--vscode-editor-font-family, monospace);
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .parent-link {
@@ -632,7 +632,7 @@
     border: none;
     cursor: pointer;
     font-family: var(--vscode-editor-font-family, monospace);
-    font-size: 12px;
+    font-size: 13px;
     padding: 0;
   }
 
@@ -646,7 +646,7 @@
     gap: 3px;
     padding: 2px 8px;
     border-radius: 3px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     margin-right: 6px;
     border: 1px solid rgba(128, 128, 128, 0.4);
@@ -675,7 +675,7 @@
 
   .message-body {
     font-size: 13px;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     white-space: pre-wrap;
     line-height: 1.6;
     margin-top: 10px;
@@ -716,7 +716,7 @@
     border: none;
     border-radius: 0;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .file-item:hover, .dir-item:hover { background: var(--bg-hover); }
@@ -725,14 +725,14 @@
   .dir-item {
     color: var(--text-secondary);
     font-weight: 600;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .file-name { font-weight: 500; min-width: 0; }
   .dir-name { min-width: 0; }
   .file-status {
     margin-left: auto;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     font-family: var(--vscode-editor-font-family, monospace);
     flex-shrink: 0;
@@ -759,7 +759,7 @@
     z-index: 5;
   }
 
-  .diff-file-name { font-weight: 600; font-size: 12px; }
+  .diff-file-name { font-weight: 600; font-size: 13px; }
 
   .diff-mode-toggle {
     display: flex;
