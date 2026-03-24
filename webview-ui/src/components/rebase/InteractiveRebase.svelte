@@ -423,6 +423,16 @@
     margin-top: 10px;
   }
 
+  :global(body.vscode-light) .action-badge {
+    color: #000;
+  }
+
+  :global(body.vscode-light) .rebase-warning {
+    background: rgba(183, 28, 28, 0.06);
+    border-color: rgba(183, 28, 28, 0.2);
+    color: #b71c1c;
+  }
+
   .form-actions {
     display: flex;
     justify-content: flex-end;

@@ -206,7 +206,7 @@
 
     function onMouseMove(e: MouseEvent) {
       const delta = startY - e.clientY;
-      uiStore.bottomPanelHeight = Math.max(100, Math.min(600, startHeight + delta));
+      uiStore.bottomPanelHeight = Math.max(100, Math.min(window.innerHeight * 0.7, startHeight + delta));
     }
 
     function onMouseUp() {
@@ -859,6 +859,49 @@
   .resize-handle-h:hover .resize-handle-line {
     background: var(--vscode-focusBorder, #007fd4);
     width: 120px;
+  }
+
+  /* ---- Light theme overrides ---- */
+  :global(body.vscode-light) .success-bar {
+    background: rgba(46, 125, 50, 0.06);
+    border-bottom-color: rgba(46, 125, 50, 0.2);
+    color: #2e7d32;
+  }
+
+  :global(body.vscode-light) .success-dismiss {
+    color: #2e7d32;
+  }
+
+  :global(body.vscode-light) .conflict-icon {
+    color: #9a6700;
+  }
+
+  :global(body.vscode-light) .conflict-count {
+    color: #9a6700;
+    background: rgba(200, 120, 0, 0.12);
+  }
+
+  :global(body.vscode-light) .conflict-btn--abort {
+    color: #b71c1c;
+    border-color: rgba(183, 28, 28, 0.3);
+  }
+
+  :global(body.vscode-light) .conflict-btn--abort:hover {
+    background: rgba(183, 28, 28, 0.06);
+  }
+
+  :global(body.vscode-light) .conflict-file-status {
+    color: #9a6700;
+    background: rgba(200, 120, 0, 0.12);
+  }
+
+  :global(body.vscode-light) .conflict-stage-hint {
+    color: #2e7d32;
+  }
+
+  :global(body.vscode-light) .resolved-icon {
+    color: #2e7d32;
+    background: rgba(46, 125, 50, 0.12);
   }
 
   .bottom-area {

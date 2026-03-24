@@ -78,6 +78,10 @@
     outline: none;
   }
 
+  :global(body.vscode-light) .modal {
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  }
+
   .modal-header {
     display: flex;
     align-items: center;
@@ -145,10 +149,15 @@
     flex-shrink: 1;
     min-width: 0;
   }
-  :global(.modal-pill--source) { background: rgba(115, 209, 61, 0.15); color: #73d13d; }
-  :global(.modal-pill--target) { background: rgba(99, 176, 244, 0.15); color: #63b0f4; }
-  :global(.modal-pill--danger) { background: rgba(244, 67, 54, 0.15); color: #f44336; }
-  :global(.modal-pill--tag) { background: rgba(226, 160, 41, 0.15); color: #e2a029; }
+  :global(.modal-pill--source) { background: rgba(115, 209, 61, 0.15); color: #fff; }
+  :global(.modal-pill--target) { background: rgba(99, 176, 244, 0.15); color: #fff; }
+  :global(.modal-pill--danger) { background: rgba(244, 67, 54, 0.15); color: #fff; }
+  :global(.modal-pill--tag) { background: rgba(226, 160, 41, 0.15); color: #fff; }
+
+  :global(body.vscode-light .modal-pill--source) { background: rgba(80, 160, 40, 0.12); color: #000; }
+  :global(body.vscode-light .modal-pill--target) { background: rgba(60, 130, 200, 0.12); color: #000; }
+  :global(body.vscode-light .modal-pill--danger) { background: rgba(220, 50, 40, 0.12); color: #000; }
+  :global(body.vscode-light .modal-pill--tag) { background: rgba(190, 130, 20, 0.12); color: #000; }
 
   :global(.modal-label) {
     font-size: 11px;
@@ -314,6 +323,12 @@
     color: #f0a020;
     font-size: 11px;
     margin: 0 0 6px;
+  }
+
+  :global(body.vscode-light .modal-warning) {
+    background: rgba(200, 120, 0, 0.08);
+    border-color: rgba(200, 120, 0, 0.3);
+    color: #9a6700;
   }
 
   :global(.modal-hash) {

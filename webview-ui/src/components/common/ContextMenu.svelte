@@ -209,4 +209,17 @@
     margin: 4px 8px;
     background: var(--border-color);
   }
+
+  :global(body.vscode-light) .menu {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  :global(body.vscode-light) .submenu {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  :global(body.vscode-light) .menu-item.danger:hover:not(:disabled) {
+    background: rgba(183, 28, 28, 0.08);
+    color: #b71c1c;
+  }
 </style>

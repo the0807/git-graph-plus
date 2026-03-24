@@ -50,7 +50,7 @@ class WorktreeItem extends vscode.TreeItem {
 
     this.contextValue = worktree.isMain ? 'worktree-main' : 'worktree';
     this.iconPath = new vscode.ThemeIcon(
-      worktree.locked ? 'lock' : worktree.isMain ? 'home' : 'folder-opened'
+      worktree.locked ? 'lock' : worktree.isMain ? 'home' : 'worktree'
     );
     const homeDir = process.env.HOME || process.env.USERPROFILE || '';
     const repoPathWithSlash = repoPath.endsWith('/') ? repoPath : repoPath + '/';

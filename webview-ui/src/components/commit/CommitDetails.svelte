@@ -132,7 +132,18 @@
     }
   });
 
+  const isLight = document.body.classList.contains('vscode-light');
   function statusColor(s?: string): string {
+    if (isLight) {
+      switch (s) {
+        case 'A': return '#2e7d32';
+        case 'M': return '#8a6d3b';
+        case 'D': return '#b71c1c';
+        case 'R': return '#1565c0';
+        case 'C': return '#6a1b9a';
+        default: return 'var(--text-secondary)';
+      }
+    }
     switch (s) {
       case 'A': return '#4caf50';
       case 'M': return '#e2c08d';
@@ -834,6 +845,9 @@
   .diff-add .line-prefix { color: #4caf50; }
   .diff-delete .line-prefix { color: #f44336; }
 
+  :global(body.vscode-light) .diff-add .line-prefix { color: #2e7d32; }
+  :global(body.vscode-light) .diff-delete .line-prefix { color: #b71c1c; }
+
   .line-content {
     flex: 1;
     white-space: pre;
@@ -882,6 +896,16 @@
   .lfs-badge.locked {
     background: rgba(255, 152, 0, 0.15);
     color: #ff9800;
+  }
+
+  :global(body.vscode-light) .lfs-badge {
+    background: rgba(106, 27, 154, 0.1);
+    color: #6a1b9a;
+  }
+
+  :global(body.vscode-light) .lfs-badge.locked {
+    background: rgba(200, 100, 0, 0.1);
+    color: #e65100;
   }
 
   .lfs-badge i {

@@ -447,7 +447,7 @@
           // Worktree-linked branch: show worktree menu
           items.push({
             label: branchName,
-            icon: 'folder-opened',
+            icon: 'worktree',
             action: () => {},
             children: [
               {
@@ -1032,7 +1032,7 @@
                   >
                     {#if ref.type === 'head'}
                       <i class="codicon codicon-check ref-icon"></i>
-                      {#if worktreeBranches.has(ref.name)}<i class="codicon codicon-folder-opened ref-icon"></i>{/if}
+                      {#if worktreeBranches.has(ref.name)}<i class="codicon codicon-worktree ref-icon"></i>{/if}
                       {ref.name}
                     {:else if ref.type === 'remote-branch'}
                       <i class="codicon codicon-cloud ref-icon"></i>
@@ -1044,7 +1044,7 @@
                       <i class="codicon codicon-archive ref-icon"></i>
                       {ref.name}
                     {:else}
-                      {#if (ref.type === 'branch') && worktreeBranches.has(ref.name)}<i class="codicon codicon-folder-opened ref-icon"></i>{/if}
+                      {#if (ref.type === 'branch') && worktreeBranches.has(ref.name)}<i class="codicon codicon-worktree ref-icon"></i>{/if}
                       {ref.name}
                     {/if}
                   </span>
@@ -1327,7 +1327,7 @@
       <span class="modal-pill modal-pill--target">{worktreeBlockedRef}</span>
     </div>
     <div class="modal-context-card">
-      <i class="codicon codicon-folder-opened" style="color: var(--text-secondary);"></i>
+      <i class="codicon codicon-worktree" style="color: var(--text-secondary);"></i>
       <span style="font-family: var(--vscode-editor-font-family, monospace); font-size: 12px; color: var(--text-secondary); word-break: break-all;">{worktreeBlockedPath}</span>
     </div>
     <div class="form-actions">
@@ -1564,13 +1564,13 @@
   /* Light theme overrides */
   :global(body.vscode-light) .ref-badge {
     background: color-mix(in srgb, var(--badge-color) 18%, transparent);
-    color: color-mix(in srgb, var(--badge-color) 85%, #000);
+    color: #000;
     border: 1px solid color-mix(in srgb, var(--badge-color) 40%, transparent);
   }
 
   :global(body.vscode-light) .ref-badge.badge-bold {
     background: color-mix(in srgb, var(--badge-color) 75%, #fff);
-    color: #fff;
+    color: #000;
     border-color: color-mix(in srgb, var(--badge-color) 85%, transparent);
   }
 
@@ -1719,6 +1719,59 @@
 
   .commit-row.bisect-mode:hover {
     background: rgba(99, 176, 244, 0.08);
+  }
+
+  /* ---- Light theme overrides ---- */
+  :global(body.vscode-light) .compare-indicator {
+    background: rgba(40, 100, 180, 0.1);
+    border-color: rgba(40, 100, 180, 0.3);
+    color: #1a5fa0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  :global(body.vscode-light) .compare-hash {
+    color: #1a5fa0;
+  }
+
+  :global(body.vscode-light) .compare-cancel:hover {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  :global(body.vscode-light) .bisect-indicator {
+    background: rgba(200, 40, 30, 0.08);
+    border-color: rgba(200, 40, 30, 0.3);
+    color: #b71c1c;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  :global(body.vscode-light) .bisect-indicator-hash {
+    color: #b71c1c;
+  }
+
+  :global(body.vscode-light) .bisect-indicator-cancel:hover {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  :global(body.vscode-light) .commit-row.compare-base,
+  :global(body.vscode-light) .commit-row.compare-active {
+    background: rgba(40, 100, 180, 0.08);
+    box-shadow: inset 3px 0 0 #1a5fa0;
+  }
+
+  :global(body.vscode-light) .commit-row.bisect-bad,
+  :global(body.vscode-light) .commit-row.bisect-start-bad {
+    background: rgba(200, 40, 30, 0.08);
+    box-shadow: inset 3px 0 0 #b71c1c;
+  }
+
+  :global(body.vscode-light) .commit-row.bisect-start-good {
+    background: rgba(46, 125, 50, 0.08);
+    box-shadow: inset 3px 0 0 #2e7d32;
+  }
+
+  :global(body.vscode-light) .commit-row.bisect-culprit {
+    background: rgba(200, 100, 0, 0.08);
+    box-shadow: inset 3px 0 0 #e65100;
   }
 
   /* ---- Modal styles ---- */
