@@ -132,9 +132,8 @@
     }
   });
 
-  const isLight = document.body.classList.contains('vscode-light');
   function statusColor(s?: string): string {
-    if (isLight) {
+    if (document.body.classList.contains('vscode-light')) {
       switch (s) {
         case 'A': return '#2e7d32';
         case 'M': return '#8a6d3b';

@@ -23,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Inject VS Code's built-in git extension askpass env so authentication prompts work
   const builtinGit = vscode.extensions.getExtension('vscode.git');
   if (builtinGit) {
-    const waitForGit = builtinGit.isActive ? Promise.resolve(builtinGit.exports) : builtinGit.activate();
+    const waitForGit = builtinGit.isActive ? Promise.resolve(builtinGit.exports) : Promise.resolve(builtinGit.activate());
     waitForGit.then((ext: { getAPI(version: number): { git: { env?: Record<string, string> } } }) => {
       try {
         const env = ext.getAPI(1)?.git?.env;
@@ -499,4 +499,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 }
 
-export function deactivate() {}
+export function deactivate() {
+  MainPanel.onSidebarRefresh = null;
+}

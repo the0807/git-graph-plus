@@ -1255,7 +1255,7 @@
         <p class="modal-warning" role="alert">{@html t('checkout.discardWarning')}</p>
       {/if}
     {/if}
-    {@const dirtyPayload = checkoutCommitDirty ? (checkoutCommitOption === 'stash' ? { stash: true } : checkoutCommitOption === 'stashAll' ? { stash: true, stashUntracked: true } : checkoutCommitOption === 'discard' ? { force: true, clean: true } : {}) : {}}
+    {@const dirtyPayload: Record<string, boolean> = checkoutCommitDirty ? (checkoutCommitOption === 'stash' ? { stash: true } : checkoutCommitOption === 'stashAll' ? { stash: true, stashUntracked: true } : checkoutCommitOption === 'discard' ? { force: true, clean: true } : {}) : {}}
     <div class="form-actions">
       <button onclick={() => { showCheckoutCommitModal = false; }}>{t('common.cancel')}</button>
       {#if !isBranchName && linkedBranches.length > 0}

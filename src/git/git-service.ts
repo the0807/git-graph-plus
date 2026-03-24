@@ -46,11 +46,13 @@ export class GitService {
 
       const timer = setTimeout(() => {
         proc.kill('SIGTERM');
+        // Force kill if SIGTERM doesn't work after 5s
+        setTimeout(() => { try { proc.kill('SIGKILL'); } catch { /* already dead */ } }, 5000);
         reject(new GitError(`Command timed out after ${timeoutMs}ms`, null, args));
       }, timeoutMs);
 
-      let stdout = '';
-      let stderr = '';
+      const stdoutChunks: Buffer[] = [];
+      const stderrChunks: Buffer[] = [];
 
       if (options?.stdin) {
         proc.stdin.write(options.stdin);
@@ -58,18 +60,22 @@ export class GitService {
       }
 
       proc.stdout.on('data', (data: Buffer) => {
-        stdout += data.toString();
+        stdoutChunks.push(data);
       });
 
       proc.stderr.on('data', (data: Buffer) => {
-        stderr += data.toString();
+        stderrChunks.push(data);
       });
 
       proc.on('close', (code) => {
         clearTimeout(timer);
+        const stdout = Buffer.concat(stdoutChunks).toString();
+        const stderr = Buffer.concat(stderrChunks).toString();
         const duration = Date.now() - startTime;
+        // Truncate command for activity log to prevent memory bloat
+        const logCommand = command.length > 500 ? command.substring(0, 500) + '…' : command;
         this.activityLog.unshift({
-          command,
+          command: logCommand,
           timestamp: new Date().toISOString(),
           success: code === 0,
           duration,
@@ -301,9 +307,11 @@ export class GitService {
         cwd: this.repoPath,
         env: { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' },
       });
+      const timer = setTimeout(() => { proc.kill('SIGTERM'); resolve({ hasConflict: false, files: [] }); }, 15000);
       let stdout = '';
       proc.stdout.on('data', (data: Buffer) => { stdout += data.toString(); });
       proc.on('close', (code) => {
+        clearTimeout(timer);
         if (code === 0) {
           resolve({ hasConflict: false, files: [] });
         } else {
@@ -314,7 +322,7 @@ export class GitService {
           resolve({ hasConflict: true, files });
         }
       });
-      proc.on('error', () => resolve({ hasConflict: false, files: [] }));
+      proc.on('error', () => { clearTimeout(timer); resolve({ hasConflict: false, files: [] }); });
     });
   }
 
@@ -483,7 +491,7 @@ export class GitService {
 
     // Write todo list to a temp file (avoids shell injection)
     const todoContent = todos.map(t => `${t.action} ${t.hash}`).join('\n') + '\n';
-    const todoFile = join(this.repoPath, '.git', 'ghg-rebase-todo');
+    const todoFile = join(this.repoPath, '.git', `ghg-rebase-todo-${Date.now()}`);
 
     try {
       await writeFile(todoFile, todoContent, 'utf-8');
@@ -615,14 +623,17 @@ export class GitService {
   }
 
   async stashApply(index: number): Promise<void> {
+    if (!Number.isInteger(index) || index < 0) throw new Error('Invalid stash index');
     await this.exec(['stash', 'apply', `stash@{${index}}`]);
   }
 
   async stashPop(index: number): Promise<void> {
+    if (!Number.isInteger(index) || index < 0) throw new Error('Invalid stash index');
     await this.exec(['stash', 'pop', `stash@{${index}}`]);
   }
 
   async stashDrop(index: number): Promise<void> {
+    if (!Number.isInteger(index) || index < 0) throw new Error('Invalid stash index');
     await this.exec(['stash', 'drop', `stash@{${index}}`]);
   }
 
@@ -1018,20 +1029,30 @@ export class GitService {
   // --- Image at ref (binary-safe) ---
 
   async getImageBase64(ref: string, filePath: string): Promise<string> {
+    const MAX_IMAGE_SIZE = 50 * 1024 * 1024; // 50MB limit
     return new Promise((resolve, reject) => {
       const proc = spawn('git', ['show', `${ref}:${filePath}`], {
         cwd: this.repoPath,
         env: { ...process.env, ...this.extraEnv, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C', GIT_MERGE_AUTOEDIT: 'no', GIT_EDITOR: 'true', EDITOR: 'true' },
       });
 
+      const timer = setTimeout(() => { proc.kill('SIGTERM'); reject(new GitError('Image load timed out', null, ['show'])); }, 30000);
       const chunks: Buffer[] = [];
-      proc.stdout.on('data', (data: Buffer) => { chunks.push(data); });
+      let totalSize = 0;
+      proc.stdout.on('data', (data: Buffer) => {
+        totalSize += data.length;
+        if (totalSize > MAX_IMAGE_SIZE) { proc.kill('SIGTERM'); return; }
+        chunks.push(data);
+      });
 
       let stderr = '';
       proc.stderr.on('data', (data: Buffer) => { stderr += data.toString(); });
 
       proc.on('close', (code) => {
-        if (code === 0) {
+        clearTimeout(timer);
+        if (totalSize > MAX_IMAGE_SIZE) {
+          reject(new GitError('Image file too large', null, ['show', `${ref}:${filePath}`]));
+        } else if (code === 0) {
           const buffer = Buffer.concat(chunks);
           resolve(buffer.toString('base64'));
         } else {
@@ -1039,6 +1060,7 @@ export class GitService {
         }
       });
       proc.on('error', (err) => {
+        clearTimeout(timer);
         reject(new GitError(err.message, null, ['show', `${ref}:${filePath}`]));
       });
     });

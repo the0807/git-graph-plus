@@ -4,6 +4,7 @@ import * as path from 'path';
 export class FileWatcher implements vscode.Disposable {
   private watchers: vscode.FileSystemWatcher[] = [];
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private cooldownTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly DEBOUNCE_MS = 500;
   private refreshing = false;
   private disposed = false;
@@ -113,8 +114,10 @@ export class FileWatcher implements vscode.Disposable {
         this.onChange(changeType);
       } finally {
         // Prevent re-triggering for 1 second after refresh
-        setTimeout(() => {
+        this.cooldownTimer = setTimeout(() => {
+          this.cooldownTimer = null;
           this.refreshing = false;
+          if (this.disposed) return;
           // Re-trigger if changes came in during refresh cooldown
           if (this.pendingWhileRefreshing) {
             this.pendingWhileRefreshing = false;
@@ -131,6 +134,9 @@ export class FileWatcher implements vscode.Disposable {
     this.disposed = true;
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
+    }
+    if (this.cooldownTimer) {
+      clearTimeout(this.cooldownTimer);
     }
     this.watchers.forEach(w => w.dispose());
   }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { getVsCodeApi } from './lib/vscode-api';
   import { commitStore } from './lib/stores/commits.svelte';
   import { branchStore } from './lib/stores/branches.svelte';
@@ -197,7 +197,9 @@
     searchNavigateHash = hash;
   }
 
-  // Draggable resize handle
+  // Draggable resize handle — track active listeners for cleanup
+  let resizeCleanup: (() => void) | null = null;
+
   function startResize(e: MouseEvent) {
     e.preventDefault();
     resizing = true;
@@ -211,13 +213,17 @@
 
     function onMouseUp() {
       resizing = false;
+      resizeCleanup = null;
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     }
 
+    resizeCleanup = onMouseUp;
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
   }
+
+  onDestroy(() => { resizeCleanup?.(); });
 </script>
 
 <div class="app-container" class:resizing>
