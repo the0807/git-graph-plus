@@ -10,7 +10,7 @@ export class TagsViewProvider implements vscode.TreeDataProvider<TagItem> {
 
   constructor(private gitService: GitService) {}
 
-  refresh(): void { this.pending = null; this.prefetch(); }
+  refresh(): void { this.pending = this.doFetch(); }
 
   prefetch(): Promise<void> {
     if (!this.pending) this.pending = this.doFetch();
@@ -18,10 +18,10 @@ export class TagsViewProvider implements vscode.TreeDataProvider<TagItem> {
   }
 
   private async doFetch(): Promise<void> {
-    const thisRequest = this.pending;
     try { this.cache = (await this.gitService.tags()).map(t => new TagItem(t)); }
     catch { /* keep old cache */ }
-    if (this.pending === thisRequest) { this.pending = null; this._onDidChangeTreeData.fire(); }
+    this.pending = null;
+    this._onDidChangeTreeData.fire();
   }
 
   getTreeItem(element: TagItem): vscode.TreeItem { return element; }

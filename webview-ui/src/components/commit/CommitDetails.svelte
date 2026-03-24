@@ -2,6 +2,7 @@
   import type { Commit, DiffData } from '../../lib/types';
   import { getVsCodeApi } from '../../lib/vscode-api';
   import { branchStore } from '../../lib/stores/branches.svelte';
+  import { uiStore } from '../../lib/stores/ui.svelte';
   import { onMount } from 'svelte';
   import { t } from '../../lib/i18n/index.svelte';
   import { getGravatarUrl } from '../../lib/utils/gravatar';
@@ -312,7 +313,17 @@
                   class:selected={selectedFile === node.path}
                   style="padding-left: {8 + depth * 16 + 18}px;"
                   onclick={() => { selectedFile = selectedFile === node.path ? null : node.path; }}
-                  ondblclick={() => { if (commit) vscode.postMessage({ type: 'openDiff', payload: { file: node.path, commitHash: commit.hash } }); }}
+                  ondblclick={() => {
+                    if (commit) {
+                      vscode.postMessage({ type: 'openDiff', payload: { file: node.path, commitHash: commit.hash } });
+                    } else if (uiStore.comparing && uiStore.compareRef1 && uiStore.compareRef2) {
+                      vscode.postMessage({ type: 'openDiff', payload: { file: node.path, ref1: uiStore.compareRef1, ref2: uiStore.compareRef2 } });
+                    } else if (uiStore.comparing && uiStore.compareRef1) {
+                      vscode.postMessage({ type: 'openDiff', payload: { file: node.path, ref1: uiStore.compareRef1, ref2: 'working' } });
+                    } else {
+                      vscode.postMessage({ type: 'openDiff', payload: { file: node.path } });
+                    }
+                  }}
                   title="Double-click to open in editor"
                   oncontextmenu={(e) => {
                     e.preventDefault();

@@ -261,13 +261,14 @@
   let fastForwardRemote = $state('');
 
   let pendingCheckoutPullAfter = $state(false);
+  let pendingCheckoutDirtyPayload: Record<string, boolean> = {};
 
   let showWorktreeBlockedModal = $state(false);
   let worktreeBlockedRef = $state('');
   let worktreeBlockedPath = $state('');
   let worktreeBlockedAbsPath = $state('');
 
-  function doCheckout(ref: string, pullAfter = false) {
+  function doCheckout(ref: string, pullAfter = false, dirtyPayload: Record<string, boolean> = {}, skipBehindCheck = false) {
     // Check if branch is used by a worktree
     const wt = branchStore.worktrees.find(w => !w.isMain && w.branch === ref);
     if (wt) {
@@ -277,7 +278,23 @@
       showWorktreeBlockedModal = true;
       return;
     }
+    // Check if local branch is behind remote — offer fast-forward
+    if (!skipBehindCheck) {
+      const branch = branchStore.branches.find(b => !b.remote && b.name === ref);
+      if (branch?.behind && branch.behind > 0 && branch.upstream) {
+        fastForwardLocalBranch = ref;
+        fastForwardRemote = branch.upstream;
+        pendingCheckoutDirtyPayload = dirtyPayload;
+        showFastForwardModal = true;
+        return;
+      }
+    }
     pendingCheckoutPullAfter = pullAfter;
+    // If dirtyPayload already resolved (from commit modal), skip dirty check
+    if (Object.keys(dirtyPayload).length > 0) {
+      vscode.postMessage({ type: 'checkout', payload: { ref, pullAfter, ...dirtyPayload } });
+      return;
+    }
     // Check dirty first, then either checkout directly or show modal
     const handler = (event: MessageEvent) => {
       if (event.data.type === 'dirtyState') {
@@ -293,14 +310,24 @@
     vscode.postMessage({ type: 'checkDirty' });
   }
 
-  function doCheckoutRemote(remoteName: string, branchName: string) {
+  function doCheckoutRemote(remoteName: string, branchName: string, dirtyPayload: Record<string, boolean> = {}) {
     // Check if a local branch tracks this remote (upstream), or has the same name
     const localBranch = branchStore.branches.find(b => !b.remote && (b.upstream === remoteName || b.name === branchName));
     if (localBranch) {
-      doCheckout(localBranch.name);
+      doCheckout(localBranch.name, false, dirtyPayload);
+    } else if (Object.keys(dirtyPayload).length > 0) {
+      // Dirty already handled — skip dirty check in modal
+      modalStore.openCheckoutRemote(remoteName, branchName, false, dirtyPayload);
     } else {
-      // No local branch → show create modal
-      modalStore.openCheckoutRemote(remoteName, branchName);
+      // No local branch → check dirty, then show create modal
+      const handler = (event: MessageEvent) => {
+        if (event.data.type === 'dirtyState') {
+          removeTimedMessageHandler(handler);
+          modalStore.openCheckoutRemote(remoteName, branchName, event.data.payload.dirty);
+        }
+      };
+      addTimedMessageHandler(handler);
+      vscode.postMessage({ type: 'checkDirty' });
     }
   }
 
@@ -531,6 +558,11 @@
               action: () => doCheckout(ref.name),
             },
             {
+              label: t('graph.mergeInto', { branch: currentBranch }),
+              action: () => { modalStore.openMerge(ref.name, branchStore.currentBranch?.name ?? 'current branch'); },
+            },
+            { separator: true, label: '', action: () => {} },
+            {
               label: t('graph.deleteTag'),
               action: () => { modalStore.openDeleteTag(ref.name); },
               danger: true,
@@ -587,16 +619,32 @@
     );
 
     // ── Branch operations ──
+    const hasBranchOrTag = commit.refs.some(r => r.type === 'head' || r.type === 'branch' || r.type === 'remote-branch' || r.type === 'tag');
+    if (hasBranchOrTag) {
+      const localRef = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
+      const remoteRef = commit.refs.find(r => r.type === 'remote-branch');
+      const tagRef = commit.refs.find(r => r.type === 'tag');
+      const mergeRef = localRef?.name ?? (remoteRef ? `${remoteRef.remote}/${remoteRef.name}` : undefined) ?? tagRef?.name ?? commit.hash;
+      items.push(
+        { separator: true, label: '', action: () => {} },
+        {
+          label: t('graph.mergeInto', { branch: currentBranch }),
+          action: () => { modalStore.openMerge(mergeRef, branchStore.currentBranch?.name ?? 'current branch'); },
+        },
+      );
+    }
+    const isOnCurrentBranch = currentBranchCommits.has(commit.hash);
+    if (!isOnCurrentBranch) {
+      items.push(
+        ...(!hasBranchOrTag ? [{ separator: true, label: '', action: () => {} }] : []),
+        {
+          label: t('graph.rebaseTo', { branch: currentBranch }),
+          action: () => { rebaseTarget = commit.hash; showRebaseModal = true; },
+        },
+      );
+    }
     items.push(
-      { separator: true, label: '', action: () => {} },
-      {
-        label: t('graph.mergeInto', { branch: currentBranch }),
-        action: () => { modalStore.openMerge(commit.hash, branchStore.currentBranch?.name ?? 'current branch'); },
-      },
-      {
-        label: t('graph.rebaseTo', { branch: currentBranch }),
-        action: () => { rebaseTarget = commit.hash; showRebaseModal = true; },
-      },
+      ...(isOnCurrentBranch && !hasBranchOrTag ? [{ separator: true, label: '', action: () => {} }] : []),
       {
         label: t('graph.interactiveRebaseTo', { branch: currentBranch }),
         action: () => { interactiveRebaseBase = commit.hash; },
@@ -1213,18 +1261,18 @@
       {#if !isBranchName && linkedBranches.length > 0}
         <button class="primary" onclick={() => {
           showCheckoutCommitModal = false;
-          vscode.postMessage({ type: 'checkout', payload: { ref: linkedBranches[0], ...dirtyPayload } });
+          doCheckout(linkedBranches[0], false, dirtyPayload);
         }}>{t('checkoutCommit.checkoutBranch', { name: linkedBranches[0] })}</button>
       {:else if !isBranchName && linkedRemoteBranches.length > 0}
         <button class="primary" onclick={() => {
           showCheckoutCommitModal = false;
           const rb = linkedRemoteBranches[0];
-          doCheckoutRemote(`${rb.remote}/${rb.name}`, rb.name);
+          doCheckoutRemote(`${rb.remote}/${rb.name}`, rb.name, dirtyPayload);
         }}>{t('checkoutCommit.checkoutRemote', { name: linkedRemoteBranches[0].name })}</button>
       {:else}
         <button class="primary" onclick={() => {
           showCheckoutCommitModal = false;
-          vscode.postMessage({ type: 'checkout', payload: { ref: checkoutCommitHash, ...dirtyPayload } });
+          doCheckout(checkoutCommitHash, false, dirtyPayload);
         }}>{t('checkoutCommit.checkout')}</button>
       {/if}
     </div>
@@ -1248,9 +1296,13 @@
       <button onclick={() => { showFastForwardModal = false; }}>{t('common.cancel')}</button>
       <button class="primary" onclick={() => {
         showFastForwardModal = false;
-        doCheckout(fastForwardLocalBranch);
+        const local = fastForwardLocalBranch;
+        const remote = fastForwardRemote;
+        const dp = { ...pendingCheckoutDirtyPayload };
+        pendingCheckoutDirtyPayload = {};
+        doCheckout(local, false, dp, true);
         setTimeout(() => {
-          vscode.postMessage({ type: 'merge', payload: { branch: fastForwardRemote, ffOnly: true } });
+          vscode.postMessage({ type: 'merge', payload: { branch: remote, ffOnly: true } });
         }, 500);
       }}>{t('fastForward.title')}</button>
     </div>
@@ -1262,8 +1314,8 @@
     branchName={pullAfterCheckoutRef}
     behind={pullAfterCheckoutBehind}
     onClose={() => { showPullAfterCheckoutModal = false; }}
-    onCheckoutOnly={() => { showPullAfterCheckoutModal = false; doCheckout(pullAfterCheckoutRef); }}
-    onCheckoutAndPull={() => { showPullAfterCheckoutModal = false; doCheckout(pullAfterCheckoutRef, true); }}
+    onCheckoutOnly={() => { showPullAfterCheckoutModal = false; doCheckout(pullAfterCheckoutRef, false, pendingCheckoutDirtyPayload, true); }}
+    onCheckoutAndPull={() => { showPullAfterCheckoutModal = false; doCheckout(pullAfterCheckoutRef, true, pendingCheckoutDirtyPayload, true); }}
   />
 {/if}
 

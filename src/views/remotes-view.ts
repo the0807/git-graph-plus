@@ -15,8 +15,7 @@ export class RemotesViewProvider implements vscode.TreeDataProvider<RemoteTreeIt
 
   refresh(): void {
     this.branchCache.clear();
-    this.pending = null;
-    this.prefetch();
+    this.pending = this.doFetch();
   }
 
   prefetch(): Promise<void> {
@@ -25,10 +24,10 @@ export class RemotesViewProvider implements vscode.TreeDataProvider<RemoteTreeIt
   }
 
   private async doFetch(): Promise<void> {
-    const thisRequest = this.pending;
     try { this.rootCache = (await this.gitService.remotes()).map(r => new RemoteItem(r)); }
     catch { /* keep old cache */ }
-    if (this.pending === thisRequest) { this.pending = null; this._onDidChangeTreeData.fire(); }
+    this.pending = null;
+    this._onDidChangeTreeData.fire();
   }
 
   getTreeItem(element: RemoteTreeItem): vscode.TreeItem {

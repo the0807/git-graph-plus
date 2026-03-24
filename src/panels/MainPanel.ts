@@ -18,6 +18,7 @@ export class MainPanel {
   private fileWatcher: FileWatcher;
   private disposables: vscode.Disposable[] = [];
   private allConflictFiles: string[] = [];
+  public static onSidebarRefresh: (() => void) | null = null;
 
   private constructor(
     panel: vscode.WebviewPanel,
@@ -199,8 +200,6 @@ export class MainPanel {
             await this.gitService.clean();
           }
           await this.gitService.checkout(message.payload.ref, message.payload.force);
-          // Trigger sidebar refresh (stashes, branches, etc.)
-          vscode.commands.executeCommand('gitGraphPlus.refresh');
           if (message.payload.pullAfter) {
             await this.gitService.pull();
           }
@@ -213,6 +212,12 @@ export class MainPanel {
         }
         case 'createBranch': {
           if (message.payload.checkout) {
+            if (message.payload.stash) {
+              await this.gitService.stashSave('Auto-stash before checkout', message.payload.stashUntracked);
+            }
+            if (message.payload.clean) {
+              await this.gitService.clean();
+            }
             await this.gitService.createAndCheckoutBranch(message.payload.name, message.payload.startPoint);
           } else {
             await this.gitService.createBranch(message.payload.name, message.payload.startPoint);
@@ -292,11 +297,15 @@ export class MainPanel {
           break;
         }
         case 'openDiff': {
-          await this.openDiffInEditor(
-            message.payload.file,
-            false,
-            message.payload.commitHash,
-          );
+          if (message.payload.ref1 && message.payload.ref2) {
+            await this.openCompareDiffInEditor(message.payload.file, message.payload.ref1, message.payload.ref2);
+          } else {
+            await this.openDiffInEditor(
+              message.payload.file,
+              false,
+              message.payload.commitHash,
+            );
+          }
           break;
         }
         case 'fetch': {
@@ -685,7 +694,11 @@ export class MainPanel {
         }
         // --- Tag Push ---
         case 'pushTag': {
-          await this.gitService.pushTag(message.payload.name, message.payload.remote);
+          if (message.payload.remote) {
+            await this.gitService.pushTag(message.payload.name, message.payload.remote);
+          } else {
+            await this.gitService.pushTagToAllRemotes(message.payload.name);
+          }
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'pushTag', success: true } });
           break;
         }
@@ -885,6 +898,28 @@ export class MainPanel {
     }
   }
 
+  private async openCompareDiffInEditor(file: string, ref1: string, ref2: string): Promise<void> {
+    // ref1 = 'working' means compare ref2 against working tree
+    if (ref1 === 'working' || ref2 === 'working') {
+      const commitRef = ref1 === 'working' ? ref2 : ref1;
+      const commitUri = vscode.Uri.parse(`git-graph-plus://show/${commitRef}/${file}`).with({
+        query: JSON.stringify({ ref: commitRef, path: file, repoPath: this.repoPath }),
+      });
+      const fileUri = vscode.Uri.file(path.join(this.repoPath, file));
+      await vscode.commands.executeCommand('vscode.diff', commitUri, fileUri, `${file} (${commitRef.substring(0, 7)} ↔ Working Tree)`);
+    } else {
+      const leftUri = vscode.Uri.parse(`git-graph-plus://show/${ref1}/${file}`).with({
+        query: JSON.stringify({ ref: ref1, path: file, repoPath: this.repoPath }),
+      });
+      const rightUri = vscode.Uri.parse(`git-graph-plus://show/${ref2}/${file}`).with({
+        query: JSON.stringify({ ref: ref2, path: file, repoPath: this.repoPath }),
+      });
+      const label1 = ref1.length > 10 ? ref1.substring(0, 7) : ref1;
+      const label2 = ref2.length > 10 ? ref2.substring(0, 7) : ref2;
+      await vscode.commands.executeCommand('vscode.diff', leftUri, rightUri, `${file} (${label1} ↔ ${label2})`);
+    }
+  }
+
   private refreshing = false;
   private refreshQueued = false;
 
@@ -916,6 +951,7 @@ export class MainPanel {
         },
       });
       this.sendRepoList();
+      MainPanel.onSidebarRefresh?.();
     } catch (err) {
       console.warn('Git Graph+: refresh failed:', err instanceof Error ? err.message : err);
     } finally {

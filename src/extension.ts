@@ -73,13 +73,20 @@ export function activate(context: vscode.ExtensionContext) {
   fileWatcher.enabled = vscode.workspace.getConfiguration('gitGraphPlus').get<boolean>('autoRefresh', true);
   context.subscriptions.push(fileWatcher);
 
+  let sidebarRefreshTimer: ReturnType<typeof setTimeout> | null = null;
   function refreshAll() {
-    branchesProvider.refresh();
-    remotesProvider.refresh();
-    tagsProvider.refresh();
-    stashesProvider.refresh();
-    worktreesProvider.refresh();
+    if (sidebarRefreshTimer) { clearTimeout(sidebarRefreshTimer); }
+    sidebarRefreshTimer = setTimeout(() => {
+      sidebarRefreshTimer = null;
+      branchesProvider.refresh();
+      remotesProvider.refresh();
+      tagsProvider.refresh();
+      stashesProvider.refresh();
+      worktreesProvider.refresh();
+    }, 300);
   }
+
+  MainPanel.onSidebarRefresh = refreshAll;
 
   // --- Auto Fetch ---
   let bgFetching = false;

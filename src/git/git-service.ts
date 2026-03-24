@@ -993,6 +993,13 @@ export class GitService {
     return this.exec(['push', r, `refs/tags/${name}`]);
   }
 
+  async pushTagToAllRemotes(name: string): Promise<void> {
+    const remotes = await this.getRemoteNames();
+    for (const r of remotes) {
+      await this.exec(['push', r, `refs/tags/${name}`]);
+    }
+  }
+
   async pushAllTags(remote?: string): Promise<string> {
     const r = remote || 'origin';
     return this.exec(['push', r, '--tags']);

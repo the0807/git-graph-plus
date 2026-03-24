@@ -459,8 +459,19 @@
   <CheckoutRemoteModal
     remoteName={modalStore.checkoutRemote.remoteName}
     defaultLocalName={modalStore.checkoutRemote.localName}
+    dirty={modalStore.checkoutRemote.dirty}
     onClose={() => { modalStore.closeCheckoutRemote(); }}
-    onCheckout={(localName) => { const remote = modalStore.checkoutRemote.remoteName; modalStore.closeCheckoutRemote(); vscode.postMessage({ type: 'createBranch', payload: { name: localName, startPoint: remote, checkout: true } }); }}
+    onCheckout={(localName, dirtyOption) => {
+      const remote = modalStore.checkoutRemote.remoteName;
+      const existingPayload = modalStore.checkoutRemote.dirtyPayload;
+      modalStore.closeCheckoutRemote();
+      const dp = Object.keys(existingPayload).length > 0 ? existingPayload
+        : dirtyOption === 'stash' ? { stash: true }
+        : dirtyOption === 'stashAll' ? { stash: true, stashUntracked: true }
+        : dirtyOption === 'discard' ? { force: true, clean: true }
+        : {};
+      vscode.postMessage({ type: 'createBranch', payload: { name: localName, startPoint: remote, checkout: true, ...dp } });
+    }}
   />
 {/if}
 

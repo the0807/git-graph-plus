@@ -9,7 +9,7 @@ export type WebviewMessage =
   | { type: 'predictConflicts'; payload: { ours: string; theirs: string } }
   | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean; force?: boolean; stash?: boolean; stashUntracked?: boolean; clean?: boolean } }
   | { type: 'getCommitDiff'; payload: { hash: string } }
-  | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean } }
+  | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean; stash?: boolean; stashUntracked?: boolean; force?: boolean; clean?: boolean } }
   | { type: 'deleteBranch'; payload: { name: string; force?: boolean; worktreePath?: string; deleteRemote?: boolean } }
   | { type: 'deleteRemoteBranch'; payload: { remote: string; name: string } }
   | { type: 'renameBranch'; payload: { oldName: string; newName: string } }
@@ -31,7 +31,7 @@ export type WebviewMessage =
   | { type: 'revert'; payload: { commit: string; noCommit?: boolean } }
   | { type: 'addRemote'; payload: { name: string; url: string } }
   | { type: 'removeRemote'; payload: { name: string } }
-  | { type: 'openDiff'; payload: { file: string; commitHash?: string } }
+  | { type: 'openDiff'; payload: { file: string; commitHash?: string; ref1?: string; ref2?: string } }
   | { type: 'stashDrop'; payload: { index: number } }
   | { type: 'worktreeAdd'; payload: { path: string; branch?: string; newBranch?: string } }
   | { type: 'worktreeRemove'; payload: { path: string; deleteBranch?: string } }

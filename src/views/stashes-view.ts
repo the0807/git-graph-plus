@@ -10,7 +10,7 @@ export class StashesViewProvider implements vscode.TreeDataProvider<StashItem> {
 
   constructor(private gitService: GitService) {}
 
-  refresh(): void { this.pending = null; this.prefetch(); }
+  refresh(): void { this.pending = this.doFetch(); }
 
   prefetch(): Promise<void> {
     if (!this.pending) this.pending = this.doFetch();
@@ -18,10 +18,10 @@ export class StashesViewProvider implements vscode.TreeDataProvider<StashItem> {
   }
 
   private async doFetch(): Promise<void> {
-    const thisRequest = this.pending;
     try { this.cache = (await this.gitService.stashList()).map(s => new StashItem(s)); }
     catch { /* keep old cache */ }
-    if (this.pending === thisRequest) { this.pending = null; this._onDidChangeTreeData.fire(); }
+    this.pending = null;
+    this._onDidChangeTreeData.fire();
   }
 
   getTreeItem(element: StashItem): vscode.TreeItem { return element; }

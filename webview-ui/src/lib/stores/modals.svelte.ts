@@ -31,9 +31,9 @@ class ModalStore {
   closeMerge() { this.merge = { show: false, source: '', target: '' }; }
 
   // ── Checkout Remote ──
-  checkoutRemote = $state({ show: false, remoteName: '', localName: '' });
-  openCheckoutRemote(remoteName: string, localName: string) { this.checkoutRemote = { show: true, remoteName, localName }; }
-  closeCheckoutRemote() { this.checkoutRemote = { show: false, remoteName: '', localName: '' }; }
+  checkoutRemote = $state<{ show: boolean; remoteName: string; localName: string; dirty: boolean; dirtyPayload: Record<string, boolean> }>({ show: false, remoteName: '', localName: '', dirty: false, dirtyPayload: {} });
+  openCheckoutRemote(remoteName: string, localName: string, dirty = false, dirtyPayload: Record<string, boolean> = {}) { this.checkoutRemote = { show: true, remoteName, localName, dirty, dirtyPayload }; }
+  closeCheckoutRemote() { this.checkoutRemote = { show: false, remoteName: '', localName: '', dirty: false, dirtyPayload: {} }; }
 
   // ── Rename Branch ──
   renameBranch = $state({ show: false, oldName: '' });
