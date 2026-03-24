@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.2.1 (2026-03-24)
+
+### New Features
+- **Open worktree in new window**: Checkout blocked modal now offers to open the worktree path in a new VS Code window
+- **Checkout stash options**: Added "Stash modified files", "Stash modified + new files", and "Discard all changes" options
+- **Remote branch dirty handling**: Remote branch checkout modal includes dirty state options
+- **Fast-forward on commit row**: Behind branches show fast-forward modal when checking out from commit row
+- **Tag merge**: Tags now have merge option in context menu
+- **Diff from compare/working tree**: Double-click files in compare or working tree view to open VS Code diff
+- **Push tags to all remotes**: Tag creation pushes to all configured remotes by default
+
+### Improvements
+- **Context menu refinement**: Merge only on branch/tag commits, rebase only on non-current-branch, interactive rebase on all
+- **Sidebar auto-refresh**: Sidebar tree views update after all git operations
+- **Light theme readability**: Darker text colors for warnings, errors, status indicators, pills, and badges
+- **Worktree icon**: Updated to codicon-worktree
+- **Bottom panel height**: Max height now 70% of viewport (was 600px)
+
+### Bug Fixes
+- **Sidebar refresh race condition**: Fixed superseded doFetch preventing tree view updates (fetchId-based check)
+- **FileWatcher timer leak**: Cooldown timer now tracked and cleared on dispose
+- **Memory: exec() buffer**: Replaced O(n²) string concatenation with Buffer array collection
+- **Memory: resize listener**: Fixed potential leak when component unmounts during drag
+- **Memory: EventEmitter**: Added dispose() to all view providers
+- **Theme detection**: Fixed non-reactive isLight in CommitDetails
+- **Process safety**: Added timeouts to predictConflicts (15s) and getImageBase64 (30s/50MB limit)
+- **Process safety**: SIGKILL fallback after SIGTERM timeout in exec()
+- **Input validation**: Stash index rejects negative/non-integer values
+- **Rebase temp file**: Unique filename prevents concurrent rebase collision
+
+### Tests
+- Added git-service unit tests (12 tests): stash validation, clean, pushTagToAllRemotes, setExtraEnv, activity log truncation, GitError
+
 ## 0.2.0 (2026-03-23)
 
 ### New Features
