@@ -193,7 +193,10 @@ export class MainPanel {
         }
         case 'checkout': {
           if (message.payload.stash) {
-            await this.gitService.stashSave('Auto-stash before checkout');
+            await this.gitService.stashSave('Auto-stash before checkout', message.payload.stashUntracked);
+          }
+          if (message.payload.clean) {
+            await this.gitService.clean();
           }
           await this.gitService.checkout(message.payload.ref, message.payload.force);
           // Trigger sidebar refresh (stashes, branches, etc.)
@@ -449,6 +452,11 @@ export class MainPanel {
           }
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'worktreeRemove', success: true } });
           await this.refreshAll();
+          break;
+        }
+        case 'openWorktreeInNewWindow': {
+          const wtUri = vscode.Uri.file(message.payload.path.replace(/^~/, process.env.HOME || process.env.USERPROFILE || ''));
+          await vscode.commands.executeCommand('vscode.openFolder', wtUri, true);
           break;
         }
         case 'cherryPick': {
@@ -807,6 +815,19 @@ export class MainPanel {
     } catch (err: unknown) {
       // Use stderr directly for GitError (cleaner than the full "git xxx failed (exit N): ..." message)
       const errorMessage = err instanceof GitError ? err.stderr.trim().split('\n')[0] : err instanceof Error ? err.message : String(err);
+
+      // Detect authentication errors and show a helpful message
+      if (err instanceof GitError && /terminal prompts disabled|Authentication failed|could not read Username|could not read Password/.test(err.stderr)) {
+        const action = await vscode.window.showErrorMessage(
+          vscode.l10n.t('Authentication required. Please configure your Git credentials.'),
+          vscode.l10n.t('Open Terminal'),
+        );
+        if (action) {
+          vscode.commands.executeCommand('workbench.action.terminal.new');
+        }
+        return;
+      }
+
       // Check if this is a merge/rebase conflict
       const conflictFiles = await this.gitService.getConflictFiles();
       if (conflictFiles.length > 0) {

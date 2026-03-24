@@ -7,7 +7,7 @@ export type WebviewMessage =
   | { type: 'getRepoList' }
   | { type: 'checkDirty' }
   | { type: 'predictConflicts'; payload: { ours: string; theirs: string } }
-  | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean; force?: boolean; stash?: boolean } }
+  | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean; force?: boolean; stash?: boolean; stashUntracked?: boolean; clean?: boolean } }
   | { type: 'getCommitDiff'; payload: { hash: string } }
   | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean } }
   | { type: 'deleteBranch'; payload: { name: string; force?: boolean; worktreePath?: string; deleteRemote?: boolean } }
@@ -73,7 +73,8 @@ export type WebviewMessage =
   | { type: 'stageFile'; payload: { file: string } }
   | { type: 'abortOperation' }
   | { type: 'openConflictFile'; payload: { file: string } }
-  | { type: 'setUpstream'; payload: { branch: string; remote: string; remoteBranch: string } };
+  | { type: 'setUpstream'; payload: { branch: string; remote: string; remoteBranch: string } }
+  | { type: 'openWorktreeInNewWindow'; payload: { path: string } };
 
 // Messages from Extension → Webview
 export type ExtensionMessage =

@@ -20,6 +20,18 @@ export function activate(context: vscode.ExtensionContext) {
   const repoPath = workspaceFolder.uri.fsPath;
   const gitService = new GitService(repoPath);
 
+  // Inject VS Code's built-in git extension askpass env so authentication prompts work
+  const builtinGit = vscode.extensions.getExtension('vscode.git');
+  if (builtinGit) {
+    const waitForGit = builtinGit.isActive ? Promise.resolve(builtinGit.exports) : builtinGit.activate();
+    waitForGit.then((ext: { getAPI(version: number): { git: { env?: Record<string, string> } } }) => {
+      try {
+        const env = ext.getAPI(1)?.git?.env;
+        if (env) { gitService.setExtraEnv(env); }
+      } catch { /* built-in git extension API unavailable */ }
+    }).catch(() => {});
+  }
+
   // --- Content Provider for diff URIs ---
   const contentProvider = new GitContentProvider();
   context.subscriptions.push(

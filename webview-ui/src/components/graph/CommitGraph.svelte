@@ -234,7 +234,7 @@
   let showCheckoutCommitModal = $state(false);
   let checkoutCommitHash = $state('');
   let checkoutCommitDirty = $state(false);
-  let checkoutCommitOption = $state<'keep' | 'stash' | 'discard'>('keep');
+  let checkoutCommitOption = $state<'keep' | 'stash' | 'stashAll' | 'discard'>('keep');
 
   function openCheckoutCommitModal(hash: string) {
     checkoutCommitHash = hash;
@@ -265,12 +265,14 @@
   let showWorktreeBlockedModal = $state(false);
   let worktreeBlockedRef = $state('');
   let worktreeBlockedPath = $state('');
+  let worktreeBlockedAbsPath = $state('');
 
   function doCheckout(ref: string, pullAfter = false) {
     // Check if branch is used by a worktree
     const wt = branchStore.worktrees.find(w => !w.isMain && w.branch === ref);
     if (wt) {
       worktreeBlockedRef = ref;
+      worktreeBlockedAbsPath = wt.path;
       worktreeBlockedPath = uiStore.homeDir && wt.path.startsWith(uiStore.homeDir) ? '~' + wt.path.substring(uiStore.homeDir.length) : wt.path;
       showWorktreeBlockedModal = true;
       return;
@@ -1190,18 +1192,22 @@
         </label>
         <label class="modal-radio">
           <input type="radio" name="commit-dirty-option" value="stash" bind:group={checkoutCommitOption} />
+          <span>{t('checkout.stashTracked')}</span>
+        </label>
+        <label class="modal-radio">
+          <input type="radio" name="commit-dirty-option" value="stashAll" bind:group={checkoutCommitOption} />
           <span>{t('checkout.stashAll')}</span>
         </label>
         <label class="modal-radio">
           <input type="radio" name="commit-dirty-option" value="discard" bind:group={checkoutCommitOption} />
-          <span>{t('checkout.discardTracked')}</span>
+          <span>{t('checkout.discardAll')}</span>
         </label>
       </div>
       {#if checkoutCommitOption === 'discard'}
         <p class="modal-warning" role="alert">{@html t('checkout.discardWarning')}</p>
       {/if}
     {/if}
-    {@const dirtyPayload = checkoutCommitDirty ? (checkoutCommitOption === 'stash' ? { stash: true } : checkoutCommitOption === 'discard' ? { force: true } : {}) : {}}
+    {@const dirtyPayload = checkoutCommitDirty ? (checkoutCommitOption === 'stash' ? { stash: true } : checkoutCommitOption === 'stashAll' ? { stash: true, stashUntracked: true } : checkoutCommitOption === 'discard' ? { force: true, clean: true } : {}) : {}}
     <div class="form-actions">
       <button onclick={() => { showCheckoutCommitModal = false; }}>{t('common.cancel')}</button>
       {#if !isBranchName && linkedBranches.length > 0}
@@ -1273,6 +1279,7 @@
       <span style="font-family: var(--vscode-editor-font-family, monospace); font-size: 12px; color: var(--text-secondary); word-break: break-all;">{worktreeBlockedPath}</span>
     </div>
     <div class="form-actions">
+      <button class="primary" onclick={() => { vscode.postMessage({ type: 'openWorktreeInNewWindow', payload: { path: worktreeBlockedAbsPath } }); showWorktreeBlockedModal = false; }}>{t('checkout.openInNewWindow')}</button>
       <button onclick={() => { showWorktreeBlockedModal = false; }}>{t('common.close')}</button>
     </div>
   </Modal>

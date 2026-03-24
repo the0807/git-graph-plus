@@ -19,8 +19,13 @@ export class GitService {
   private activityLog: Array<{ command: string; timestamp: string; success: boolean; duration: number }> = [];
   private cachedRemoteNames: string[] | null = null;
   private remoteNamesCacheTime = 0;
+  private extraEnv: Record<string, string> = {};
 
   constructor(private repoPath: string) {}
+
+  setExtraEnv(env: Record<string, string>): void {
+    this.extraEnv = env;
+  }
 
   get rootPath(): string { return this.repoPath; }
 
@@ -36,7 +41,7 @@ export class GitService {
     return new Promise((resolve, reject) => {
       const proc = spawn('git', args, {
         cwd: this.repoPath,
-        env: { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C', GIT_MERGE_AUTOEDIT: 'no', GIT_EDITOR: 'true', EDITOR: 'true' },
+        env: { ...process.env, ...this.extraEnv, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C', GIT_MERGE_AUTOEDIT: 'no', GIT_EDITOR: 'true', EDITOR: 'true' },
       });
 
       const timer = setTimeout(() => {
@@ -242,6 +247,13 @@ export class GitService {
     const args = ['checkout'];
     if (force) { args.push('--force'); }
     args.push(ref);
+    await this.exec(args);
+  }
+
+  async clean(directories = true, force = true): Promise<void> {
+    const args = ['clean'];
+    if (force) { args.push('-f'); }
+    if (directories) { args.push('-d'); }
     await this.exec(args);
   }
 
@@ -1002,7 +1014,7 @@ export class GitService {
     return new Promise((resolve, reject) => {
       const proc = spawn('git', ['show', `${ref}:${filePath}`], {
         cwd: this.repoPath,
-        env: { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C', GIT_MERGE_AUTOEDIT: 'no', GIT_EDITOR: 'true', EDITOR: 'true' },
+        env: { ...process.env, ...this.extraEnv, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C', GIT_MERGE_AUTOEDIT: 'no', GIT_EDITOR: 'true', EDITOR: 'true' },
       });
 
       const chunks: Buffer[] = [];
