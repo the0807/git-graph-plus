@@ -32,7 +32,7 @@
 </script>
 
 <Modal title={t('deleteBranch.title')} {onClose}>
-  <p class="modal-desc">{@html t('deleteBranch.confirm', { name: `<span class="modal-pill modal-pill--danger">${branchName}</span>` })}</p>
+  <p class="modal-desc">{@html t('deleteBranch.confirm', { name: branchName })}</p>
   <div class="modal-form-group">
     <label class="modal-checkbox modal-checkbox--danger">
       <input type="checkbox" bind:checked={force} />

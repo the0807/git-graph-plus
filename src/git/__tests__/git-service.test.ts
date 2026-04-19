@@ -113,4 +113,106 @@ describe('GitService', () => {
       expect(err.exitCode).toBe(128);
     });
   });
+
+  describe('ref safety validation', () => {
+    it('checkout rejects ref starting with -', async () => {
+      await expect(service.checkout('-foo')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('merge rejects ref starting with --', async () => {
+      await expect(service.merge('--hack')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('rebase rejects ref starting with -', async () => {
+      await expect(service.rebase('-upload-pack=attacker')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('cherryPick rejects hash starting with -', async () => {
+      await expect(service.cherryPick('-foo')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('revert rejects hash starting with -', async () => {
+      await expect(service.revert('-foo')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('reset rejects ref starting with -', async () => {
+      await expect(service.reset('-foo', 'hard')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('interactiveRebase rejects base starting with -', async () => {
+      await expect(service.interactiveRebase('-foo', [])).rejects.toThrow("must not start with '-'");
+    });
+
+    it('interactiveRebase rejects base of --hack', async () => {
+      await expect(service.interactiveRebase('--hack', [])).rejects.toThrow("must not start with '-'");
+    });
+
+    it('checkout rejects empty ref', async () => {
+      await expect(service.checkout('')).rejects.toThrow('Invalid ref');
+    });
+
+    it('checkout accepts normal branch name', async () => {
+      mockExec(service, async () => '');
+      await expect(service.checkout('main')).resolves.toBeUndefined();
+    });
+
+    it('interactiveRebase accepts normal base', async () => {
+      // Avoid actually running the spawn/rebase; just verify the ref check passes and
+      // the action validator catches a bad action before spawn.
+      await expect(service.interactiveRebase('main', [{ action: 'nope', hash: 'abc123' }]))
+        .rejects.toThrow('Invalid rebase action');
+    });
+
+    it('log rejects options.branch starting with -', async () => {
+      await expect(service.log({ branch: '-foo' })).rejects.toThrow("must not start with '-'");
+    });
+
+    it('diff rejects ref1 starting with -', async () => {
+      await expect(service.diff({ ref1: '-foo' })).rejects.toThrow("must not start with '-'");
+    });
+
+    it('addRemote rejects url starting with -', async () => {
+      await expect(service.addRemote('origin', '--upload-pack=attacker')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('setUpstream rejects remote starting with -', async () => {
+      await expect(service.setUpstream('main', '-foo', 'main')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('worktreeAdd rejects branch starting with -', async () => {
+      await expect(service.worktreeAdd('/tmp/wt', '-foo')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('worktreeAdd rejects newBranch starting with -', async () => {
+      await expect(service.worktreeAdd('/tmp/wt', undefined, '-foo')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('bisectStart rejects bad starting with -', async () => {
+      await expect(service.bisectStart('-foo')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('bisectGood rejects ref starting with -', async () => {
+      await expect(service.bisectGood('-foo')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('deleteRemoteBranch rejects name starting with -', async () => {
+      await expect(service.deleteRemoteBranch('-foo')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('pushTag rejects remote starting with -', async () => {
+      await expect(service.pushTag('v1.0', '-foo')).rejects.toThrow("must not start with '-'");
+    });
+
+    it('getImageBase64 rejects absolute filePath', async () => {
+      await expect(service.getImageBase64('main', '/etc/passwd')).rejects.toThrow('Unsafe filePath');
+    });
+
+    it('getImageBase64 rejects parent traversal in filePath', async () => {
+      await expect(service.getImageBase64('main', '../secret')).rejects.toThrow('Unsafe filePath');
+    });
+
+    it('getImageBase64 rejects empty filePath', async () => {
+      await expect(service.getImageBase64('main', '')).rejects.toThrow('Invalid filePath');
+    });
+  });
 });

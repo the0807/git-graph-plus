@@ -67,43 +67,39 @@
     {#if item.separator}
       <div class="separator"></div>
     {:else if item.children}
-      <button
-        class="menu-item has-children"
-        class:submenu-active={activeSubmenu === idx}
-        onmouseenter={() => { activeSubmenu = idx; }}
-        role="menuitem"
-      >
-        {#if item.icon}<i class="codicon codicon-{item.icon} menu-icon"></i>{/if}
-        <span class="menu-label">{item.label}</span>
-        <span class="submenu-arrow">›</span>
-      </button>
-      {#if activeSubmenu === idx}
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div
-          class="submenu"
-          role="menu"
-          tabindex="-1"
-          style="top: {idx * 28 + 4}px;"
-          onmouseleave={() => { activeSubmenu = null; }}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div class="submenu-wrapper" onmouseleave={() => { activeSubmenu = null; }}>
+        <button
+          class="menu-item has-children"
+          class:submenu-active={activeSubmenu === idx}
+          onmouseenter={() => { activeSubmenu = idx; }}
+          role="menuitem"
         >
-          {#each item.children as child}
-            {#if child.separator}
-              <div class="separator"></div>
-            {:else}
-              <button
-                class="menu-item"
-                class:danger={child.danger}
-                disabled={child.disabled}
-                onclick={() => { child.action(); onClose(); }}
-                role="menuitem"
-              >
-                {#if child.icon}<i class="codicon codicon-{child.icon} menu-icon"></i>{/if}
-                {child.label}
-              </button>
-            {/if}
-          {/each}
-        </div>
-      {/if}
+          {#if item.icon}<i class="codicon codicon-{item.icon} menu-icon"></i>{/if}
+          <span class="menu-label">{item.label}</span>
+          <span class="submenu-arrow">›</span>
+        </button>
+        {#if activeSubmenu === idx}
+          <div class="submenu" role="menu" tabindex="-1">
+            {#each item.children as child}
+              {#if child.separator}
+                <div class="separator"></div>
+              {:else}
+                <button
+                  class="menu-item"
+                  class:danger={child.danger}
+                  disabled={child.disabled}
+                  onclick={() => { child.action(); onClose(); }}
+                  role="menuitem"
+                >
+                  {#if child.icon}<i class="codicon codicon-{child.icon} menu-icon"></i>{/if}
+                  {child.label}
+                </button>
+              {/if}
+            {/each}
+          </div>
+        {/if}
+      </div>
     {:else}
       <button
         class="menu-item"
@@ -192,9 +188,15 @@
     color: var(--vscode-menu-selectionForeground, var(--text-selected));
   }
 
+  .submenu-wrapper {
+    position: relative;
+  }
+
   .submenu {
     position: absolute;
     left: 100%;
+    top: 0;
+    margin-left: 2px;
     background: var(--vscode-menu-background, var(--bg-secondary));
     border: 1px solid var(--vscode-menu-border, var(--border-color));
     border-radius: 4px;

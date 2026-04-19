@@ -491,7 +491,7 @@
 
 {#if showDeleteRemoteTagModal}
   <Modal title={t('deleteRemoteTag.title')} onClose={() => { showDeleteRemoteTagModal = false; }}>
-    <p class="modal-desc">{@html t('deleteRemoteTag.confirm', { name: `<span class="modal-pill modal-pill--danger">${deleteRemoteTagName}</span>` })}</p>
+    <p class="modal-desc">{@html t('deleteRemoteTag.confirm', { name: deleteRemoteTagName })}</p>
     <div class="form-actions">
       <button onclick={() => { showDeleteRemoteTagModal = false; }}>{t('common.cancel')}</button>
       <button class="danger-btn" onclick={() => { showDeleteRemoteTagModal = false; vscode.postMessage({ type: 'deleteRemoteTag', payload: { name: deleteRemoteTagName } }); }}>{t('sidebar.delete')}</button>
@@ -509,7 +509,7 @@
 
 {#if modalStore.deleteRemoteBranch.show}
   <Modal title={t('deleteRemoteBranch.title')} onClose={() => { modalStore.closeDeleteRemoteBranch(); }}>
-    <p class="modal-desc">{@html t('deleteRemoteBranch.confirm', { name: `<span class="modal-pill modal-pill--danger">${modalStore.deleteRemoteBranch.remote}/${modalStore.deleteRemoteBranch.name}</span>` })}</p>
+    <p class="modal-desc">{@html t('deleteRemoteBranch.confirm', { name: `${modalStore.deleteRemoteBranch.remote}/${modalStore.deleteRemoteBranch.name}` })}</p>
     <div class="form-actions">
       <button onclick={() => { modalStore.closeDeleteRemoteBranch(); }}>{t('common.cancel')}</button>
       <button class="danger-btn" onclick={() => { const { remote, name } = modalStore.deleteRemoteBranch; modalStore.closeDeleteRemoteBranch(); vscode.postMessage({ type: 'deleteRemoteBranch', payload: { remote, name } }); }}>{t('sidebar.delete')}</button>

@@ -755,7 +755,10 @@ export class MainPanel {
           const newPath = message.payload.path;
           this.repoPath = newPath;
           this.gitService = new GitService(newPath);
-          this.fileWatcher.dispose();
+          const oldWatcher = this.fileWatcher;
+          oldWatcher.dispose();
+          const oldIdx = this.disposables.indexOf(oldWatcher);
+          if (oldIdx >= 0) { this.disposables.splice(oldIdx, 1); }
           this.fileWatcher = new FileWatcher(newPath, (what) => {
             this.onRepoChanged(what);
           });

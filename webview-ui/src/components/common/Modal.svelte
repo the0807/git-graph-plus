@@ -122,7 +122,13 @@
     font-size: 12px;
     color: var(--text-secondary);
     margin-bottom: 14px;
+    line-height: 1.6;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
   }
+
+  :global(.modal-emph--danger) { color: #f44336; }
+  :global(.modal-emph--info) { color: #4da6ff; }
 
   :global(.modal-context-card) {
     background: var(--bg-secondary);

@@ -20,7 +20,7 @@ export const en: Record<string, string> = {
   'push.title': 'Push',
   'push.confirm': 'Push {branch} to remote?',
   'push.forcePush': 'Force push',
-  'push.forceWarning': 'Force push may <span style="color: #f44336;">overwrite</span> remote changes. Use with caution.',
+  'push.forceWarning': 'Force push may <span class="modal-emph modal-emph--danger">overwrite</span> remote changes. Use with caution.',
   'push.cancel': 'Cancel',
   'push.push': 'Push',
   'push.forcePushBtn': 'Force Push',
@@ -269,8 +269,8 @@ export const en: Record<string, string> = {
   'merge.noFf': 'No Fast-forward — Always create merge commit',
   'merge.ffOnly': 'Fast-forward Only — Fail if not possible',
   'merge.squash': 'Squash — Combine all commits into one',
-  'merge.squashWarning': 'Original commits will <span style="color: #f44336;">not be preserved</span> in the history.',
-  'merge.conflictWarning': '<span style="color: #f44336;">Conflict</span> detected in {count} file(s)',
+  'merge.squashWarning': 'Original commits will <span class="modal-emph modal-emph--danger">not be preserved</span> in the history.',
+  'merge.conflictWarning': '<span class="modal-emph modal-emph--danger">Conflict</span> detected in {count} file(s)',
   'merge.noConflict': 'No conflicts detected',
   'merge.moreFiles': 'more file(s)',
   'merge.collapse': 'Show less',
@@ -291,7 +291,7 @@ export const en: Record<string, string> = {
   'reset.softOption': 'Soft — Keep all changes staged',
   'reset.mixedOption': 'Mixed — Keep all changes unstaged',
   'reset.hardOption': 'Hard — Discard all changes',
-  'reset.hardWarning': 'All uncommitted changes will be <span style="color: #f44336;">permanently lost</span>.',
+  'reset.hardWarning': 'All uncommitted changes will be <span class="modal-emph modal-emph--danger">permanently lost</span>.',
   'reset.resetBtn': 'Reset',
 
   // Common labels
@@ -302,23 +302,23 @@ export const en: Record<string, string> = {
 
   // Delete branch confirmation
   'deleteBranch.title': 'Delete Branch',
-  'deleteBranch.confirm': 'Are you sure you want to delete branch "{name}"?',
+  'deleteBranch.confirm': 'Are you sure you want to delete branch <span class="modal-pill modal-pill--danger">{name}</span>?',
   'deleteBranch.force': 'Force delete even if not fully merged (-D)',
   'deleteBranch.deleteRemote': 'Also delete remote branch',
   'deleteBranch.worktreeWarning': 'Linked worktree "{name}" will also be removed.',
 
   // Delete tag confirmation
   'deleteTag.title': 'Delete Tag',
-  'deleteTag.confirm': 'Are you sure you want to delete tag "{name}"?',
+  'deleteTag.confirm': 'Are you sure you want to delete tag <span class="modal-pill modal-pill--tag">{name}</span>?',
   'deleteTag.deleteRemote': 'Also delete from remote',
 
   // Delete remote tag confirmation
   'deleteRemoteTag.title': 'Delete Remote Tag',
-  'deleteRemoteTag.confirm': 'Are you sure you want to delete tag "{name}" from the remote? This <span style="color: #f44336;">cannot be undone</span>.',
+  'deleteRemoteTag.confirm': 'Are you sure you want to delete tag <span class="modal-pill modal-pill--danger">{name}</span> from the remote? This <span class="modal-emph modal-emph--danger">cannot be undone</span>.',
 
   // Delete remote branch
   'deleteRemoteBranch.title': 'Delete Remote Branch',
-  'deleteRemoteBranch.confirm': 'Are you sure you want to delete branch {name} from the remote? This <span style="color: #f44336;">cannot be undone</span>.',
+  'deleteRemoteBranch.confirm': 'Are you sure you want to delete branch <span class="modal-pill modal-pill--danger">{name}</span> from the remote? This <span class="modal-emph modal-emph--danger">cannot be undone</span>.',
 
   // Stash drop confirmation
   'stashDrop.title': 'Drop Stash',
@@ -326,10 +326,10 @@ export const en: Record<string, string> = {
 
   // Stash pop confirmation
   'stashApply.title': 'Apply Stash',
-  'stashApply.desc': 'Apply stash to the current branch. The stash entry will be <span style="color: #4da6ff;">kept</span>.',
+  'stashApply.desc': 'Apply stash to the current branch. The stash entry will be <span class="modal-emph modal-emph--info">kept</span>.',
   'stashApply.apply': 'Apply',
   'stashPop.title': 'Pop Stash',
-  'stashPop.desc': 'Apply and remove stash. The stash entry will be <span style="color: #f44336;">deleted</span> after applying.',
+  'stashPop.desc': 'Apply and remove stash. The stash entry will be <span class="modal-emph modal-emph--danger">deleted</span> after applying.',
   'stashPop.confirm': 'Apply and remove stash "{message}"? The stash entry will be deleted after applying.',
   'stashPop.pop': 'Pop',
 
@@ -352,7 +352,7 @@ export const en: Record<string, string> = {
 
   // Conflict resolution
   'conflict.abortTitle': 'Abort Operation',
-  'conflict.abortConfirm': 'Abort the current {operation}? The operation will be <span style="color: #f44336;">cancelled</span> and changes will be <span style="color: #f44336;">reverted</span>.',
+  'conflict.abortConfirm': 'Abort the current {operation}? The operation will be <span class="modal-emph modal-emph--danger">cancelled</span> and changes will be <span class="modal-emph modal-emph--danger">reverted</span>.',
   'conflict.abort': 'Abort',
   'conflict.resolveSuccess': '{operation} completed successfully.',
 
@@ -434,7 +434,7 @@ export const en: Record<string, string> = {
   'checkout.stashTracked': 'Stash modified files',
   'checkout.stashAll': 'Stash modified + new files',
   'checkout.discardAll': 'Discard all changes',
-  'checkout.discardWarning': 'All changes including new files will be <span style="color: #f44336;">permanently lost</span>.',
+  'checkout.discardWarning': 'All changes including new files will be <span class="modal-emph modal-emph--danger">permanently lost</span>.',
   'checkout.checkout': 'Checkout',
   'checkout.worktreeBlockedTitle': 'Branch In Use',
   'checkout.worktreeBlockedDesc': 'This branch is already checked out in another worktree.',

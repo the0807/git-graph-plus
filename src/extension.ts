@@ -46,6 +46,11 @@ export function activate(context: vscode.ExtensionContext) {
   const worktreesProvider = new WorktreesViewProvider(gitService);
 
   context.subscriptions.push(
+    branchesProvider,
+    remotesProvider,
+    tagsProvider,
+    stashesProvider,
+    worktreesProvider,
     vscode.window.createTreeView('gitGraphPlus.branches', { treeDataProvider: branchesProvider }),
     vscode.window.createTreeView('gitGraphPlus.remotes', { treeDataProvider: remotesProvider }),
     vscode.window.createTreeView('gitGraphPlus.tags', { treeDataProvider: tagsProvider }),

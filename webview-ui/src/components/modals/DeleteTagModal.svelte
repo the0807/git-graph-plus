@@ -18,7 +18,7 @@
 </script>
 
 <Modal title={t('deleteTag.title')} {onClose}>
-  <p class="modal-desc">{@html t('deleteTag.confirm', { name: `<span class="modal-pill modal-pill--tag">${tagName}</span>` })}</p>
+  <p class="modal-desc">{@html t('deleteTag.confirm', { name: tagName })}</p>
   {#if hasRemote}
     <div class="modal-form-group">
       <label class="modal-checkbox modal-checkbox--danger">

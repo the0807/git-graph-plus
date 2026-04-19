@@ -23,6 +23,15 @@ export class GitService {
 
   constructor(private repoPath: string) {}
 
+  private assertSafeRef(ref: string, context: string): void {
+    if (typeof ref !== 'string' || ref.length === 0) {
+      throw new GitError(`Invalid ref for ${context}`, null, []);
+    }
+    if (ref.startsWith('-')) {
+      throw new GitError(`Ref must not start with '-': ${ref}`, null, []);
+    }
+  }
+
   setExtraEnv(env: Record<string, string>): void {
     this.extraEnv = env;
   }
@@ -126,6 +135,7 @@ export class GitService {
     }
 
     if (options?.branch) {
+      this.assertSafeRef(options.branch, 'log');
       args.push(options.branch);
     }
 
@@ -228,8 +238,10 @@ export class GitService {
     const args = ['diff', '--no-color'];
 
     if (options?.ref1) {
+      this.assertSafeRef(options.ref1, 'diff');
       args.push(options.ref1);
       if (options?.ref2) {
+        this.assertSafeRef(options.ref2, 'diff');
         args.push(options.ref2);
       }
     }
@@ -250,6 +262,7 @@ export class GitService {
   }
 
   async checkout(ref: string, force?: boolean): Promise<void> {
+    this.assertSafeRef(ref, 'checkout');
     const args = ['checkout'];
     if (force) { args.push('--force'); }
     args.push(ref);
@@ -275,16 +288,20 @@ export class GitService {
   }
 
   async createBranch(name: string, startPoint?: string): Promise<void> {
+    this.assertSafeRef(name, 'branch');
     const args = ['branch', name];
     if (startPoint) {
+      this.assertSafeRef(startPoint, 'branch');
       args.push(startPoint);
     }
     await this.exec(args);
   }
 
   async createAndCheckoutBranch(name: string, startPoint?: string): Promise<void> {
+    this.assertSafeRef(name, 'checkout -b');
     const args = ['checkout', '-b', name];
     if (startPoint) {
+      this.assertSafeRef(startPoint, 'checkout -b');
       if (await this.isRemoteBranch(startPoint)) {
         args.push('--track');
       }
@@ -294,14 +311,19 @@ export class GitService {
   }
 
   async deleteBranch(name: string, force?: boolean): Promise<void> {
+    this.assertSafeRef(name, 'branch -d');
     await this.exec(['branch', force ? '-D' : '-d', name]);
   }
 
   async renameBranch(oldName: string, newName: string): Promise<void> {
+    this.assertSafeRef(oldName, 'branch -m');
+    this.assertSafeRef(newName, 'branch -m');
     await this.exec(['branch', '-m', oldName, newName]);
   }
 
   async predictConflicts(ours: string, theirs: string): Promise<{ hasConflict: boolean; files: string[] }> {
+    this.assertSafeRef(ours, 'merge-tree');
+    this.assertSafeRef(theirs, 'merge-tree');
     return new Promise((resolve) => {
       const proc = spawn('git', ['merge-tree', '--write-tree', ours, theirs], {
         cwd: this.repoPath,
@@ -327,6 +349,7 @@ export class GitService {
   }
 
   async merge(branch: string, options?: { noFf?: boolean; ffOnly?: boolean; squash?: boolean }): Promise<void> {
+    this.assertSafeRef(branch, 'merge');
     const args = ['merge', branch];
     if (options?.noFf) {
       args.push('--no-ff');
@@ -345,11 +368,15 @@ export class GitService {
   }
 
   async diffCommits(ref1: string, ref2: string): Promise<DiffData[]> {
+    this.assertSafeRef(ref1, 'diff');
+    this.assertSafeRef(ref2, 'diff');
     const raw = await this.exec(['diff', '--no-color', ref1, ref2]);
     return parseDiff(raw);
   }
 
   async diffFiles(ref1: string, ref2?: string): Promise<Array<{ path: string; status: string }>> {
+    this.assertSafeRef(ref1, 'diff');
+    if (ref2) this.assertSafeRef(ref2, 'diff');
     const args = ['diff', '--name-status'];
     args.push(ref1);
     if (ref2) args.push(ref2);
@@ -361,6 +388,7 @@ export class GitService {
   }
 
   async showCommitFiles(hash: string): Promise<Array<{ path: string; status: string }>> {
+    this.assertSafeRef(hash, 'show');
     try {
       const raw = await this.exec(['diff', '--name-status', `${hash}^..${hash}`]);
       return raw.trim().split('\n').filter(Boolean).map(line => {
@@ -377,6 +405,7 @@ export class GitService {
   }
 
   async showCommitDiff(hash: string): Promise<DiffData[]> {
+    this.assertSafeRef(hash, 'show');
     // For merge commits, diff against first parent (hash^1..hash)
     // For regular commits, git show works fine
     try {
@@ -438,18 +467,25 @@ export class GitService {
   }
 
   async addRemote(name: string, url: string): Promise<void> {
+    this.assertSafeRef(name, 'remote add');
+    this.assertSafeRef(url, 'remote add');
     await this.exec(['remote', 'add', name, url]);
   }
 
   async removeRemote(name: string): Promise<void> {
+    this.assertSafeRef(name, 'remote remove');
     await this.exec(['remote', 'remove', name]);
   }
 
   async setUpstream(localBranch: string, remote: string, remoteBranch: string): Promise<void> {
+    this.assertSafeRef(localBranch, 'branch --set-upstream-to');
+    this.assertSafeRef(remote, 'branch --set-upstream-to');
+    this.assertSafeRef(remoteBranch, 'branch --set-upstream-to');
     await this.exec(['branch', '--set-upstream-to', `${remote}/${remoteBranch}`, localBranch]);
   }
 
   async rebase(onto: string, options?: { autostash?: boolean }): Promise<void> {
+    this.assertSafeRef(onto, 'rebase');
     const args = ['rebase'];
     if (options?.autostash) {
       args.push('--autostash');
@@ -478,6 +514,7 @@ export class GitService {
     base: string,
     todos: Array<{ action: string; hash: string }>
   ): Promise<void> {
+    this.assertSafeRef(base, 'rebase -i');
     // Validate inputs to prevent injection
     const validActions = ['pick', 'squash', 'fixup', 'reword', 'edit', 'drop'];
     for (const todo of todos) {
@@ -533,6 +570,7 @@ export class GitService {
    * Get commits between base and HEAD for interactive rebase preview.
    */
   async getRebaseCommits(base: string): Promise<Commit[]> {
+    this.assertSafeRef(base, 'log');
     const args = [
       'log',
       '--format=%x01%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
@@ -547,6 +585,7 @@ export class GitService {
   // --- Reset & Discard ---
 
   async reset(ref: string, mode: 'soft' | 'mixed' | 'hard'): Promise<void> {
+    this.assertSafeRef(ref, 'reset');
     await this.exec(['reset', `--${mode}`, ref]);
   }
 
@@ -638,6 +677,7 @@ export class GitService {
   }
 
   async cherryPick(hash: string, options?: { noCommit?: boolean }): Promise<void> {
+    this.assertSafeRef(hash, 'cherry-pick');
     const args = ['cherry-pick'];
     if (options?.noCommit) {
       args.push('--no-commit');
@@ -647,6 +687,7 @@ export class GitService {
   }
 
   async revert(hash: string, options?: { noCommit?: boolean }): Promise<void> {
+    this.assertSafeRef(hash, 'revert');
     const args = ['revert'];
     if (options?.noCommit) {
       args.push('--no-commit');
@@ -656,6 +697,8 @@ export class GitService {
   }
 
   async createTag(name: string, ref?: string, message?: string): Promise<void> {
+    this.assertSafeRef(name, 'tag');
+    if (ref) this.assertSafeRef(ref, 'tag');
     const args = ['tag'];
     if (message) {
       args.push('-a', name, '-m', message);
@@ -669,6 +712,7 @@ export class GitService {
   }
 
   async deleteTag(name: string): Promise<void> {
+    this.assertSafeRef(name, 'tag -d');
     await this.exec(['tag', '-d', name]);
   }
 
@@ -717,6 +761,7 @@ export class GitService {
 
   async searchByHash(hash: string): Promise<Commit | null> {
     try {
+      this.assertSafeRef(hash, 'log');
       const args = [
         'log',
         '--format=%x01%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
@@ -736,20 +781,20 @@ export class GitService {
 
   async bisectStart(bad?: string, good?: string): Promise<string> {
     const args = ['bisect', 'start'];
-    if (bad) { args.push(bad); }
-    if (good) { args.push(good); }
+    if (bad) { this.assertSafeRef(bad, 'bisect start'); args.push(bad); }
+    if (good) { this.assertSafeRef(good, 'bisect start'); args.push(good); }
     return this.exec(args);
   }
 
   async bisectGood(ref?: string): Promise<string> {
     const args = ['bisect', 'good'];
-    if (ref) { args.push(ref); }
+    if (ref) { this.assertSafeRef(ref, 'bisect good'); args.push(ref); }
     return this.exec(args);
   }
 
   async bisectBad(ref?: string): Promise<string> {
     const args = ['bisect', 'bad'];
-    if (ref) { args.push(ref); }
+    if (ref) { this.assertSafeRef(ref, 'bisect bad'); args.push(ref); }
     return this.exec(args);
   }
 
@@ -812,6 +857,7 @@ export class GitService {
   // --- File tree at commit ---
 
   async lsTree(ref: string, path?: string): Promise<Array<{ mode: string; type: 'blob' | 'tree'; hash: string; name: string }>> {
+    this.assertSafeRef(ref, 'ls-tree');
     const args = ['ls-tree', ref];
     if (path) { args.push(path); }
     const raw = await this.exec(args);
@@ -853,10 +899,12 @@ export class GitService {
   // --- Patch ---
 
   async formatPatch(hash: string): Promise<string> {
+    this.assertSafeRef(hash, 'format-patch');
     return this.exec(['format-patch', '-1', hash, '--stdout']);
   }
 
   async diffCommitToWorking(hash: string): Promise<DiffData[]> {
+    this.assertSafeRef(hash, 'diff');
     const raw = await this.exec(['diff', hash]);
     return parseDiff(raw);
   }
@@ -975,6 +1023,8 @@ export class GitService {
   }
 
   async worktreeAdd(worktreePath: string, branch?: string, newBranch?: string): Promise<void> {
+    if (newBranch) { this.assertSafeRef(newBranch, 'worktree add'); }
+    if (branch) { this.assertSafeRef(branch, 'worktree add'); }
     const args = ['worktree', 'add'];
     if (newBranch) {
       args.push('-b', newBranch);
@@ -1000,11 +1050,14 @@ export class GitService {
   // --- Tag Remote Operations ---
 
   async pushTag(name: string, remote?: string): Promise<string> {
+    this.assertSafeRef(name, 'push refs/tags');
+    if (remote) { this.assertSafeRef(remote, 'push refs/tags'); }
     const r = remote || 'origin';
     return this.exec(['push', r, `refs/tags/${name}`]);
   }
 
   async pushTagToAllRemotes(name: string): Promise<void> {
+    this.assertSafeRef(name, 'push refs/tags');
     const remotes = await this.getRemoteNames();
     for (const r of remotes) {
       await this.exec(['push', r, `refs/tags/${name}`]);
@@ -1012,16 +1065,21 @@ export class GitService {
   }
 
   async pushAllTags(remote?: string): Promise<string> {
+    if (remote) { this.assertSafeRef(remote, 'push --tags'); }
     const r = remote || 'origin';
     return this.exec(['push', r, '--tags']);
   }
 
   async deleteRemoteBranch(name: string, remote?: string): Promise<string> {
+    this.assertSafeRef(name, 'push --delete');
+    if (remote) { this.assertSafeRef(remote, 'push --delete'); }
     const r = remote || 'origin';
     return this.exec(['push', r, '--delete', name]);
   }
 
   async deleteRemoteTag(name: string, remote?: string): Promise<string> {
+    this.assertSafeRef(name, 'push :refs/tags');
+    if (remote) { this.assertSafeRef(remote, 'push :refs/tags'); }
     const r = remote || 'origin';
     return this.exec(['push', r, `:refs/tags/${name}`]);
   }
@@ -1029,6 +1087,14 @@ export class GitService {
   // --- Image at ref (binary-safe) ---
 
   async getImageBase64(ref: string, filePath: string): Promise<string> {
+    this.assertSafeRef(ref, 'show');
+    if (typeof filePath !== 'string' || filePath.length === 0) {
+      throw new GitError('Invalid filePath for show', null, []);
+    }
+    // Reject absolute paths and any segment equal to '..' to keep reads within the repo tree.
+    if (filePath.startsWith('/') || filePath.split(/[\\/]/).includes('..')) {
+      throw new GitError(`Unsafe filePath: ${filePath}`, null, []);
+    }
     const MAX_IMAGE_SIZE = 50 * 1024 * 1024; // 50MB limit
     return new Promise((resolve, reject) => {
       const proc = spawn('git', ['show', `${ref}:${filePath}`], {

@@ -20,7 +20,7 @@ export const ko: Record<string, string> = {
   'push.title': 'Push',
   'push.confirm': '{branch}을(를) 리모트에 push 하시겠습니까?',
   'push.forcePush': 'Force push',
-  'push.forceWarning': 'Force push는 원격 변경 사항을 <span style="color: #f44336;">덮어쓸 수 있습니다</span>. 주의해서 사용하세요.',
+  'push.forceWarning': 'Force push는 원격 변경 사항을 <span class="modal-emph modal-emph--danger">덮어쓸 수 있습니다</span>. 주의해서 사용하세요.',
   'push.cancel': '취소',
   'push.push': 'Push',
   'push.forcePushBtn': 'Force Push',
@@ -269,8 +269,8 @@ export const ko: Record<string, string> = {
   'merge.noFf': 'No Fast-forward — 항상 merge commit 생성',
   'merge.ffOnly': 'Fast-forward Only — 불가능하면 실패',
   'merge.squash': 'Squash — 모든 commit을 하나로 합침',
-  'merge.squashWarning': '원본 commit이 히스토리에 <span style="color: #f44336;">보존되지 않습니다</span>.',
-  'merge.conflictWarning': '{count}개 파일에서 <span style="color: #f44336;">충돌</span>이 감지되었습니다',
+  'merge.squashWarning': '원본 commit이 히스토리에 <span class="modal-emph modal-emph--danger">보존되지 않습니다</span>.',
+  'merge.conflictWarning': '{count}개 파일에서 <span class="modal-emph modal-emph--danger">충돌</span>이 감지되었습니다',
   'merge.noConflict': '충돌이 감지되지 않았습니다',
   'merge.moreFiles': '개 파일 더 보기',
   'merge.collapse': '접기',
@@ -291,7 +291,7 @@ export const ko: Record<string, string> = {
   'reset.softOption': 'Soft — 모든 변경 사항을 staged 상태로 유지',
   'reset.mixedOption': 'Mixed — 모든 변경 사항을 unstaged 상태로 유지',
   'reset.hardOption': 'Hard — 모든 변경 사항 삭제',
-  'reset.hardWarning': '커밋되지 않은 모든 변경 사항이 <span style="color: #f44336;">영구적으로 손실</span>됩니다.',
+  'reset.hardWarning': '커밋되지 않은 모든 변경 사항이 <span class="modal-emph modal-emph--danger">영구적으로 손실</span>됩니다.',
   'reset.resetBtn': 'Reset',
 
   // Common labels
@@ -302,23 +302,23 @@ export const ko: Record<string, string> = {
 
   // Delete branch confirmation
   'deleteBranch.title': '브랜치 삭제',
-  'deleteBranch.confirm': '브랜치 "{name}"을(를) 삭제하시겠습니까?',
+  'deleteBranch.confirm': '브랜치 <span class="modal-pill modal-pill--danger">{name}</span>을(를) 삭제하시겠습니까?',
   'deleteBranch.force': 'Merge되지 않은 브랜치도 강제 삭제 (-D)',
   'deleteBranch.deleteRemote': '리모트 브랜치도 함께 삭제',
   'deleteBranch.worktreeWarning': '연결된 worktree "{name}"도 함께 삭제됩니다.',
 
   // Delete tag confirmation
   'deleteTag.title': '태그 삭제',
-  'deleteTag.confirm': '태그 "{name}"을(를) 삭제하시겠습니까?',
+  'deleteTag.confirm': '태그 <span class="modal-pill modal-pill--tag">{name}</span>을(를) 삭제하시겠습니까?',
   'deleteTag.deleteRemote': '리모트에서도 삭제',
 
   // Delete remote tag confirmation
   'deleteRemoteTag.title': '리모트 태그 삭제',
-  'deleteRemoteTag.confirm': '리모트에서 태그 "{name}"을(를) 삭제하시겠습니까? 이 작업은 <span style="color: #f44336;">되돌릴 수 없습니다</span>.',
+  'deleteRemoteTag.confirm': '리모트에서 태그 <span class="modal-pill modal-pill--danger">{name}</span>을(를) 삭제하시겠습니까? 이 작업은 <span class="modal-emph modal-emph--danger">되돌릴 수 없습니다</span>.',
 
   // Delete remote branch
   'deleteRemoteBranch.title': '리모트 브랜치 삭제',
-  'deleteRemoteBranch.confirm': '리모트에서 브랜치 {name}을(를) 삭제하시겠습니까? 이 작업은 <span style="color: #f44336;">되돌릴 수 없습니다</span>.',
+  'deleteRemoteBranch.confirm': '리모트에서 브랜치 <span class="modal-pill modal-pill--danger">{name}</span>을(를) 삭제하시겠습니까? 이 작업은 <span class="modal-emph modal-emph--danger">되돌릴 수 없습니다</span>.',
 
   // Stash drop confirmation
   'stashDrop.title': 'Stash 삭제',
@@ -326,10 +326,10 @@ export const ko: Record<string, string> = {
 
   // Stash pop confirmation
   'stashApply.title': 'Stash Apply',
-  'stashApply.desc': '현재 브랜치에 stash를 적용합니다. Stash 항목은 <span style="color: #4da6ff;">유지</span>됩니다.',
+  'stashApply.desc': '현재 브랜치에 stash를 적용합니다. Stash 항목은 <span class="modal-emph modal-emph--info">유지</span>됩니다.',
   'stashApply.apply': 'Apply',
   'stashPop.title': 'Stash Pop',
-  'stashPop.desc': 'Stash를 적용하고 삭제합니다. 적용 후 stash 항목이 <span style="color: #f44336;">삭제</span>됩니다.',
+  'stashPop.desc': 'Stash를 적용하고 삭제합니다. 적용 후 stash 항목이 <span class="modal-emph modal-emph--danger">삭제</span>됩니다.',
   'stashPop.confirm': 'Stash "{message}"을(를) 적용하고 삭제하시겠습니까? 적용 후 stash 항목이 삭제됩니다.',
   'stashPop.pop': 'Pop',
 
@@ -352,7 +352,7 @@ export const ko: Record<string, string> = {
 
   // Conflict resolution
   'conflict.abortTitle': '작업 중단',
-  'conflict.abortConfirm': '현재 {operation} 작업을 중단하시겠습니까? 작업이 <span style="color: #f44336;">중단</span>되고 변경사항이 <span style="color: #f44336;">되돌려집니다</span>.',
+  'conflict.abortConfirm': '현재 {operation} 작업을 중단하시겠습니까? 작업이 <span class="modal-emph modal-emph--danger">중단</span>되고 변경사항이 <span class="modal-emph modal-emph--danger">되돌려집니다</span>.',
   'conflict.abort': '중단',
   'conflict.resolveSuccess': '{operation} 작업이 완료되었습니다.',
 
@@ -434,7 +434,7 @@ export const ko: Record<string, string> = {
   'checkout.stashTracked': '수정된 파일만 stash',
   'checkout.stashAll': '수정 + 새 파일 모두 stash',
   'checkout.discardAll': '모든 변경 사항 삭제',
-  'checkout.discardWarning': '수정 및 새 파일을 포함한 모든 변경 사항이 <span style="color: #f44336;">영구적으로 삭제</span>됩니다.',
+  'checkout.discardWarning': '수정 및 새 파일을 포함한 모든 변경 사항이 <span class="modal-emph modal-emph--danger">영구적으로 삭제</span>됩니다.',
   'checkout.checkout': 'Checkout',
   'checkout.worktreeBlockedTitle': '브랜치 사용 중',
   'checkout.worktreeBlockedDesc': '이 브랜치는 다른 worktree에서 사용 중입니다.',

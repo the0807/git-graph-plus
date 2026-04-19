@@ -3,6 +3,14 @@ import { ko } from './ko';
 
 const dictionaries: Record<string, Record<string, string>> = { en, ko };
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+}
+
 class I18n {
   locale = $state('en');
   private dict = $state<Record<string, string>>(en);
@@ -18,7 +26,10 @@ class I18n {
     let str = this.dict[key] ?? en[key] ?? key;
     if (params) {
       for (const [k, v] of Object.entries(params)) {
-        str = str.replaceAll(`{${k}}`, String(v));
+        const replacement = escapeHtml(String(v));
+        // Use a function replacer so `$&`, `$1`, etc. in replacement are not
+        // interpreted as special replacement patterns by replaceAll.
+        str = str.replaceAll(`{${k}}`, () => replacement);
       }
     }
     return str;
