@@ -423,8 +423,8 @@
             <div class="diff-empty">{t('details.binaryFile')}</div>
           {:else if diffMode === 'inline'}
             <div class="diff-content">
-              {#each selectedDiff.hunks as hunk}
-                <div class="hunk-header">{hunk.header}</div>
+              {#each selectedDiff.hunks as hunk, hunkIdx}
+                {#if hunkIdx > 0}<div class="hunk-separator" aria-hidden="true"></div>{/if}
                 {#each hunk.lines as line, lineIndex}
                   <div class="diff-line diff-{line.type}">
                     <span class="line-num old">{line.oldLineNumber ?? ''}</span>
@@ -437,8 +437,8 @@
             </div>
           {:else}
             <div class="diff-sbs">
-              {#each selectedDiff.hunks as hunk}
-                <div class="hunk-header">{hunk.header}</div>
+              {#each selectedDiff.hunks as hunk, hunkIdx}
+                {#if hunkIdx > 0}<div class="hunk-separator" aria-hidden="true"></div>{/if}
                 <div
                   class="sbs-container"
                   onscroll={(e) => {
@@ -452,11 +452,11 @@
                   }}
                 >
                   <div class="sbs-left">
-                    {#each hunk.lines as line}
+                    {#each hunk.lines as line, lineIndex}
                       {#if line.type === 'context' || line.type === 'delete'}
                         <div class="diff-line diff-{line.type}">
                           <span class="line-num">{line.oldLineNumber ?? ''}</span>
-                          <span class="line-content">{line.content}</span>
+                          <span class="line-content">{@html getHighlighted(hunk.oldStart, lineIndex, line.content)}</span>
                         </div>
                       {:else}
                         <div class="diff-line diff-empty-line">
@@ -467,11 +467,11 @@
                     {/each}
                   </div>
                   <div class="sbs-right">
-                    {#each hunk.lines as line}
+                    {#each hunk.lines as line, lineIndex}
                       {#if line.type === 'context' || line.type === 'add'}
                         <div class="diff-line diff-{line.type}">
                           <span class="line-num">{line.newLineNumber ?? ''}</span>
-                          <span class="line-content">{line.content}</span>
+                          <span class="line-content">{@html getHighlighted(hunk.oldStart, lineIndex, line.content)}</span>
                         </div>
                       {:else}
                         <div class="diff-line diff-empty-line">
@@ -805,12 +805,11 @@
 
   .diff-content { padding: 0; }
 
-  .hunk-header {
-    padding: 4px 12px;
-    background: rgba(100, 100, 100, 0.1);
-    border-bottom: 1px solid var(--border-color);
-    font-size: 11px;
-    color: var(--text-secondary);
+  .hunk-separator {
+    height: 0;
+    border-top: 1px dashed var(--border-color);
+    margin: 6px 0;
+    opacity: 0.6;
   }
 
   .diff-line {

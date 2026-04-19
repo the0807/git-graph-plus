@@ -199,7 +199,7 @@ export class MainPanel {
           if (message.payload.clean) {
             await this.gitService.clean();
           }
-          await this.gitService.checkout(message.payload.ref, message.payload.force);
+          await this.gitService.checkout(message.payload.ref, { force: message.payload.force, merge: message.payload.merge });
           if (message.payload.pullAfter) {
             await this.gitService.pull();
           }
@@ -218,7 +218,7 @@ export class MainPanel {
             if (message.payload.clean) {
               await this.gitService.clean();
             }
-            await this.gitService.createAndCheckoutBranch(message.payload.name, message.payload.startPoint);
+            await this.gitService.createAndCheckoutBranch(message.payload.name, message.payload.startPoint, { merge: message.payload.merge });
           } else {
             await this.gitService.createBranch(message.payload.name, message.payload.startPoint);
           }

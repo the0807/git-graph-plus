@@ -156,6 +156,30 @@ describe('GitService', () => {
       await expect(service.checkout('main')).resolves.toBeUndefined();
     });
 
+    it('checkout passes --merge when merge option set', async () => {
+      const calls: string[][] = [];
+      mockExec(service, async (args) => { calls.push(args); return ''; });
+      await service.checkout('main', { merge: true });
+      expect(calls[0]).toContain('--merge');
+      expect(calls[0]).toContain('main');
+    });
+
+    it('checkout passes --force when force option set', async () => {
+      const calls: string[][] = [];
+      mockExec(service, async (args) => { calls.push(args); return ''; });
+      await service.checkout('main', { force: true });
+      expect(calls[0]).toContain('--force');
+      expect(calls[0]).not.toContain('--merge');
+    });
+
+    it('checkout uses plain form by default', async () => {
+      const calls: string[][] = [];
+      mockExec(service, async (args) => { calls.push(args); return ''; });
+      await service.checkout('main');
+      expect(calls[0]).not.toContain('--force');
+      expect(calls[0]).not.toContain('--merge');
+    });
+
     it('interactiveRebase accepts normal base', async () => {
       // Avoid actually running the spawn/rebase; just verify the ref check passes and
       // the action validator catches a bad action before spawn.

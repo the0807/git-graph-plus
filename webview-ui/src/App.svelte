@@ -470,10 +470,12 @@
     onCheckout={(localName, dirtyOption) => {
       const remote = modalStore.checkoutRemote.remoteName;
       const existingPayload = modalStore.checkoutRemote.dirtyPayload;
+      const wasDirty = modalStore.checkoutRemote.dirty;
       modalStore.closeCheckoutRemote();
       const dp = Object.keys(existingPayload).length > 0 ? existingPayload
-        : dirtyOption === 'stash' ? { stash: true }
-        : dirtyOption === 'stashAll' ? { stash: true, stashUntracked: true }
+        : !wasDirty ? {}
+        : dirtyOption === 'keep' ? { merge: true }
+        : dirtyOption === 'stash' ? { stash: true, stashUntracked: true }
         : dirtyOption === 'discard' ? { force: true, clean: true }
         : {};
       vscode.postMessage({ type: 'createBranch', payload: { name: localName, startPoint: remote, checkout: true, ...dp } });

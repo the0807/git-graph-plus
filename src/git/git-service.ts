@@ -261,10 +261,11 @@ export class GitService {
     return raw.trim().length > 0;
   }
 
-  async checkout(ref: string, force?: boolean): Promise<void> {
+  async checkout(ref: string, options?: { force?: boolean; merge?: boolean }): Promise<void> {
     this.assertSafeRef(ref, 'checkout');
     const args = ['checkout'];
-    if (force) { args.push('--force'); }
+    if (options?.force) { args.push('--force'); }
+    if (options?.merge) { args.push('--merge'); }
     args.push(ref);
     await this.exec(args);
   }
@@ -297,9 +298,11 @@ export class GitService {
     await this.exec(args);
   }
 
-  async createAndCheckoutBranch(name: string, startPoint?: string): Promise<void> {
+  async createAndCheckoutBranch(name: string, startPoint?: string, options?: { merge?: boolean }): Promise<void> {
     this.assertSafeRef(name, 'checkout -b');
-    const args = ['checkout', '-b', name];
+    const args = ['checkout'];
+    if (options?.merge) { args.push('--merge'); }
+    args.push('-b', name);
     if (startPoint) {
       this.assertSafeRef(startPoint, 'checkout -b');
       if (await this.isRemoteBranch(startPoint)) {

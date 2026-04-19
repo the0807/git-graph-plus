@@ -234,7 +234,7 @@
   let showCheckoutCommitModal = $state(false);
   let checkoutCommitHash = $state('');
   let checkoutCommitDirty = $state(false);
-  let checkoutCommitOption = $state<'keep' | 'stash' | 'stashAll' | 'discard'>('keep');
+  let checkoutCommitOption = $state<'keep' | 'stash' | 'discard'>('keep');
 
   function openCheckoutCommitModal(hash: string) {
     checkoutCommitHash = hash;
@@ -1240,11 +1240,7 @@
         </label>
         <label class="modal-radio">
           <input type="radio" name="commit-dirty-option" value="stash" bind:group={checkoutCommitOption} />
-          <span>{t('checkout.stashTracked')}</span>
-        </label>
-        <label class="modal-radio">
-          <input type="radio" name="commit-dirty-option" value="stashAll" bind:group={checkoutCommitOption} />
-          <span>{t('checkout.stashAll')}</span>
+          <span>{t('checkout.stash')}</span>
         </label>
         <label class="modal-radio">
           <input type="radio" name="commit-dirty-option" value="discard" bind:group={checkoutCommitOption} />
@@ -1255,7 +1251,7 @@
         <p class="modal-warning" role="alert">{@html t('checkout.discardWarning')}</p>
       {/if}
     {/if}
-    {@const dirtyPayload: Record<string, boolean> = checkoutCommitDirty ? (checkoutCommitOption === 'stash' ? { stash: true } : checkoutCommitOption === 'stashAll' ? { stash: true, stashUntracked: true } : checkoutCommitOption === 'discard' ? { force: true, clean: true } : {}) : {}}
+    {@const dirtyPayload: Record<string, boolean> = checkoutCommitDirty ? (checkoutCommitOption === 'keep' ? { merge: true } : checkoutCommitOption === 'stash' ? { stash: true, stashUntracked: true } : checkoutCommitOption === 'discard' ? { force: true, clean: true } : {}) : {}}
     <div class="form-actions">
       <button onclick={() => { showCheckoutCommitModal = false; }}>{t('common.cancel')}</button>
       {#if !isBranchName && linkedBranches.length > 0}

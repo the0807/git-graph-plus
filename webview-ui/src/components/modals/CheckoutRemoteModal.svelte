@@ -8,13 +8,13 @@
     defaultLocalName: string;
     dirty: boolean;
     onClose: () => void;
-    onCheckout: (localName: string, dirtyOption: 'keep' | 'stash' | 'stashAll' | 'discard') => void;
+    onCheckout: (localName: string, dirtyOption: 'keep' | 'stash' | 'discard') => void;
   }
 
   let { remoteName, defaultLocalName, dirty, onClose, onCheckout }: Props = $props();
   // svelte-ignore state_referenced_locally
   let localName = $state(defaultLocalName);
-  let dirtyOption = $state<'keep' | 'stash' | 'stashAll' | 'discard'>('keep');
+  let dirtyOption = $state<'keep' | 'stash' | 'discard'>('keep');
   let nameInput: HTMLInputElement | undefined = $state();
 
   onMount(() => { nameInput?.focus(); });
@@ -52,11 +52,7 @@
       </label>
       <label class="modal-radio">
         <input type="radio" name="remote-dirty-option" value="stash" bind:group={dirtyOption} />
-        <span>{t('checkout.stashTracked')}</span>
-      </label>
-      <label class="modal-radio">
-        <input type="radio" name="remote-dirty-option" value="stashAll" bind:group={dirtyOption} />
-        <span>{t('checkout.stashAll')}</span>
+        <span>{t('checkout.stash')}</span>
       </label>
       <label class="modal-radio">
         <input type="radio" name="remote-dirty-option" value="discard" bind:group={dirtyOption} />

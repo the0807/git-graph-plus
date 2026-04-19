@@ -7,9 +7,9 @@ export type WebviewMessage =
   | { type: 'getRepoList' }
   | { type: 'checkDirty' }
   | { type: 'predictConflicts'; payload: { ours: string; theirs: string } }
-  | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean; force?: boolean; stash?: boolean; stashUntracked?: boolean; clean?: boolean } }
+  | { type: 'checkout'; payload: { ref: string; pullAfter?: boolean; force?: boolean; merge?: boolean; stash?: boolean; stashUntracked?: boolean; clean?: boolean } }
   | { type: 'getCommitDiff'; payload: { hash: string } }
-  | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean; stash?: boolean; stashUntracked?: boolean; force?: boolean; clean?: boolean } }
+  | { type: 'createBranch'; payload: { name: string; startPoint?: string; checkout?: boolean; stash?: boolean; stashUntracked?: boolean; force?: boolean; clean?: boolean; merge?: boolean } }
   | { type: 'deleteBranch'; payload: { name: string; force?: boolean; worktreePath?: string; deleteRemote?: boolean } }
   | { type: 'deleteRemoteBranch'; payload: { remote: string; name: string } }
   | { type: 'renameBranch'; payload: { oldName: string; newName: string } }
