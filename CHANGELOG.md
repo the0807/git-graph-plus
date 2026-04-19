@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.2 (2026-04-19)
+
+### Security
+- **Ref injection hardening**: `GitService.assertSafeRef` rejects empty refs and refs starting with `-` across all methods that forward user input to `git` (checkout, branch ops, merge, rebase, interactiveRebase, cherry-pick, revert, reset, diff, show, tag, ls-tree, format-patch, log, addRemote, setUpstream, bisect, worktreeAdd, pushTag, deleteRemoteBranch/Tag)
+- **Path traversal guard**: `getImageBase64` rejects absolute paths and `..` segments
+- **Webview HTML escape**: i18n `t()` now escapes parameter values before placeholder substitution; pill markup moved into translation templates. Function replacer avoids `$&`/`$1` pattern interpretation in `replaceAll`
+
+### Bug Fixes
+- **View provider dispose leak**: TreeView providers now registered in `context.subscriptions` so their `dispose()` runs on deactivation
+- **FileWatcher leak on repo switch**: `MainPanel.switchRepo` removes the stale `FileWatcher` from the disposables array before pushing the replacement
+- **Package hygiene**: `.claude/` excluded from `.vsix` so local Claude Code settings no longer ship to the marketplace
+
+### UI/UX
+- **Modal text readability**: `.modal-desc` uses `word-break: keep-all` + `overflow-wrap: anywhere` + tighter line-height for natural Korean line wrapping; emphasized phrases no longer break mid-syllable
+- **Emphasis class refactor**: Inline `style="color: ..."` replaced with `.modal-emph--danger` / `.modal-emph--info` utility classes across all translations
+- **Submenu position fix**: Context submenu wrapped in `position: relative` container so `top: 0` aligns with the trigger row regardless of separators or preceding item count
+
+### Tests
+- Added 24 new `GitService` validation tests covering ref rejection (`-foo`, `--hack`, empty) and filePath traversal (94 tests total)
+
 ## 0.2.1 (2026-03-24)
 
 ### New Features
