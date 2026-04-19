@@ -2,7 +2,7 @@
   "name": "git-graph-plus",
   "displayName": "Git Graph Plus",
   "description": "A modern, full-featured Git GUI for VS Code",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "publisher": "the0807",
   "repository": {
     "type": "git",
@@ -54,12 +54,12 @@
       {
         "command": "gitGraphPlus.pull",
         "title": "%command.pull%",
-        "icon": "$(repo-pull)"
+        "icon": "$(arrow-down)"
       },
       {
         "command": "gitGraphPlus.push",
         "title": "%command.push%",
-        "icon": "$(repo-push)"
+        "icon": "$(arrow-up)"
       },
       {
         "command": "gitGraphPlus.checkoutBranch",
@@ -166,23 +166,29 @@
       "scm": [
         {
           "id": "gitGraphPlus.branches",
-          "name": "Branches"
+          "name": "Branches",
+          "icon": "$(git-branch)",
+          "visibility": "visible"
         },
         {
           "id": "gitGraphPlus.remotes",
-          "name": "Remotes"
+          "name": "Remotes",
+          "icon": "$(cloud)"
         },
         {
           "id": "gitGraphPlus.tags",
-          "name": "Tags"
+          "name": "Tags",
+          "icon": "$(tag)"
         },
         {
           "id": "gitGraphPlus.stashes",
-          "name": "Stashes"
+          "name": "Stashes",
+          "icon": "$(archive)"
         },
         {
           "id": "gitGraphPlus.worktrees",
-          "name": "Worktrees"
+          "name": "Worktrees",
+          "icon": "$(worktree)"
         }
       ]
     },
@@ -217,9 +223,19 @@
           "group": "navigation@3"
         },
         {
-          "command": "gitGraphPlus.createBranch",
+          "command": "gitGraphPlus.pull",
           "when": "view == gitGraphPlus.branches",
           "group": "navigation@4"
+        },
+        {
+          "command": "gitGraphPlus.push",
+          "when": "view == gitGraphPlus.branches",
+          "group": "navigation@5"
+        },
+        {
+          "command": "gitGraphPlus.createBranch",
+          "when": "view == gitGraphPlus.branches",
+          "group": "navigation@6"
         },
         {
           "command": "gitGraphPlus.createTag",
