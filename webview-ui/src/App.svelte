@@ -3,7 +3,7 @@
   import { getVsCodeApi } from './lib/vscode-api';
   import { commitStore } from './lib/stores/commits.svelte';
   import { branchStore } from './lib/stores/branches.svelte';
-  import { uiStore } from './lib/stores/ui.svelte';
+  import { uiStore, BOTTOM_PANEL_DEFAULT_RATIO, BOTTOM_PANEL_MIN_RATIO, BOTTOM_PANEL_MAX_RATIO } from './lib/stores/ui.svelte';
   import { i18n, t } from './lib/i18n/index.svelte';
   import CommitGraph from './components/graph/CommitGraph.svelte';
   import BottomPanel from './components/layout/BottomPanel.svelte';
@@ -51,6 +51,8 @@
   let stashSaveKeepIndex = $state(false);
   let deleteWorktreeBranch = $state(false);
   onMount(() => {
+    uiStore.bottomPanelHeight = Math.round(window.innerHeight * BOTTOM_PANEL_DEFAULT_RATIO);
+
     function handleMessage(event: MessageEvent) {
       const msg = event.data;
       switch (msg.type) {
@@ -208,7 +210,7 @@
 
     function onMouseMove(e: MouseEvent) {
       const delta = startY - e.clientY;
-      uiStore.bottomPanelHeight = Math.max(100, Math.min(window.innerHeight * 0.7, startHeight + delta));
+      uiStore.bottomPanelHeight = Math.max(window.innerHeight * BOTTOM_PANEL_MIN_RATIO, Math.min(window.innerHeight * BOTTOM_PANEL_MAX_RATIO, startHeight + delta));
     }
 
     function onMouseUp() {

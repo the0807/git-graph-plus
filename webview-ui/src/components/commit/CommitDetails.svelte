@@ -402,7 +402,7 @@
       </div>
 
       {#if selectedDiff}
-        <div class="diff-panel">
+        <div class="diff-wrapper">
           <div class="diff-toolbar">
             <span class="diff-file-name">{selectedDiff.file}</span>
             <div class="diff-mode-toggle">
@@ -417,6 +417,7 @@
             </div>
           </div>
 
+          <div class="diff-panel">
           {#if selectedDiff.isBinary && selectedDiff.isImage}
             <ImageDiff file={selectedDiff.file} staged={false} commitHash={commit?.hash ?? ''} />
           {:else if selectedDiff.isBinary}
@@ -485,6 +486,7 @@
               {/each}
             </div>
           {/if}
+          </div>
         </div>
       {/if}
     </div>
@@ -760,12 +762,19 @@
   }
 
   /* ── Diff panel ── */
-  .diff-panel {
+  .diff-wrapper {
     flex: 1;
     min-width: 0;
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     font-family: var(--vscode-editor-font-family, monospace);
     font-size: var(--vscode-editor-font-size, 12px);
+  }
+
+  .diff-panel {
+    flex: 1;
+    overflow: auto;
   }
 
   .diff-toolbar {
@@ -775,8 +784,7 @@
     padding: 4px 12px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
-    position: sticky;
-    top: 0;
+    flex-shrink: 0;
     z-index: 5;
   }
 
@@ -803,7 +811,7 @@
     color: var(--button-fg);
   }
 
-  .diff-content { padding: 0; }
+  .diff-content { padding: 0; min-width: max-content; }
 
   .hunk-separator {
     height: 0;
@@ -847,9 +855,7 @@
   :global(body.vscode-light) .diff-delete .line-prefix { color: #b71c1c; }
 
   .line-content {
-    flex: 1;
     white-space: pre;
-    overflow-x: auto;
   }
 
   .diff-empty {
@@ -859,16 +865,16 @@
   }
 
   /* Side-by-side */
-  .diff-sbs { overflow-x: auto; }
+  .diff-sbs { min-width: max-content; }
 
   .sbs-container {
     display: flex;
-    overflow-y: auto;
   }
 
   .sbs-left, .sbs-right {
     flex: 1;
-    min-width: 0;
+    min-width: 50%;
+    overflow: hidden;
   }
 
   .sbs-left { border-right: 1px solid var(--border-color); }

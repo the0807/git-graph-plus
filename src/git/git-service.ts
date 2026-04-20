@@ -475,6 +475,12 @@ export class GitService {
     await this.exec(['remote', 'add', name, url]);
   }
 
+  async getRemoteUrl(remote: string): Promise<string> {
+    this.assertSafeRef(remote, 'remote get-url');
+    const raw = await this.exec(['remote', 'get-url', remote]);
+    return raw.trim();
+  }
+
   async removeRemote(name: string): Promise<void> {
     this.assertSafeRef(name, 'remote remove');
     await this.exec(['remote', 'remove', name]);

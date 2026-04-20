@@ -174,8 +174,10 @@ export class MainPanel {
           break;
         }
         case 'getCommitDiff': {
-          const commitDiffs = await this.gitService.showCommitDiff(message.payload.hash);
-          const commitFiles = await this.gitService.showCommitFiles(message.payload.hash);
+          const [commitDiffs, commitFiles] = await Promise.all([
+            this.gitService.showCommitDiff(message.payload.hash),
+            this.gitService.showCommitFiles(message.payload.hash),
+          ]);
           this.panel.webview.postMessage({
             type: 'commitDiffData',
             payload: { diffs: commitDiffs, files: commitFiles },
@@ -833,13 +835,41 @@ export class MainPanel {
       const errorMessage = err instanceof GitError ? err.stderr.trim().split('\n')[0] : err instanceof Error ? err.message : String(err);
 
       // Detect authentication errors and show a helpful message
-      if (err instanceof GitError && /terminal prompts disabled|Authentication failed|could not read Username|could not read Password/.test(err.stderr)) {
+      if (err instanceof GitError && /terminal prompts disabled|Authentication failed|could not read Username|could not read Password|Permission denied.*publickey|Host key verification failed|Could not read from remote/.test(err.stderr)) {
+        let remoteUrl = '';
+        try {
+          remoteUrl = await this.gitService.getRemoteUrl('origin');
+        } catch { /* ignore */ }
+
+        const isSSH = remoteUrl.startsWith('git@') || remoteUrl.startsWith('ssh://');
+        const isHTTPS = remoteUrl.startsWith('https://') || remoteUrl.startsWith('http://');
+
+        let msg: string;
+        let hint: string;
+        if (isSSH) {
+          msg = vscode.l10n.t('SSH authentication failed. Check that your SSH key is configured correctly.');
+          hint = 'ssh-add ~/.ssh/id_ed25519  (or your key path)';
+        } else if (isHTTPS) {
+          msg = vscode.l10n.t('HTTPS authentication failed. Your credentials may have expired.');
+          hint = 'gh auth login  (or reconfigure your credential helper)';
+        } else {
+          msg = vscode.l10n.t('Authentication required. Please configure your Git credentials.');
+          hint = '';
+        }
+
+        const detail = err.stderr.trim().split('\n')[0];
+        this.panel.webview.postMessage({ type: 'error', payload: { message: msg } });
+
         const action = await vscode.window.showErrorMessage(
-          vscode.l10n.t('Authentication required. Please configure your Git credentials.'),
+          `${msg}${hint ? `\n→ ${hint}` : ''}`,
+          { detail, modal: false },
           vscode.l10n.t('Open Terminal'),
+          vscode.l10n.t('Show Error'),
         );
-        if (action) {
+        if (action === vscode.l10n.t('Open Terminal')) {
           vscode.commands.executeCommand('workbench.action.terminal.new');
+        } else if (action === vscode.l10n.t('Show Error')) {
+          vscode.window.showErrorMessage(err.stderr.trim());
         }
         return;
       }

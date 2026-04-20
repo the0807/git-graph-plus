@@ -1,3 +1,7 @@
+export const BOTTOM_PANEL_DEFAULT_RATIO = 0.35;
+export const BOTTOM_PANEL_MIN_RATIO = 0.2;
+export const BOTTOM_PANEL_MAX_RATIO = 0.7;
+
 class UiStore {
   selectedCommitHash = $state<string | null>(null);
   comparing = $state(false);
