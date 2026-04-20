@@ -366,7 +366,8 @@
           "enum": [
             "auto",
             "en",
-            "ko"
+            "ko",
+            "zh-cn"
           ],
           "default": "auto",
           "description": "UI language (auto = follow VS Code language setting)"

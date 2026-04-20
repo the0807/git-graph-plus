@@ -1,0 +1,447 @@
+export const zh: Record<string, string> = {
+  // Toolbar
+  'toolbar.history': '历史',
+  'toolbar.log': '日志',
+  'toolbar.stats': '统计',
+  'toolbar.fetch': '抓取',
+  'toolbar.pull': '拉取',
+  'toolbar.push': '推送',
+  'toolbar.refresh': '刷新',
+  'toolbar.stashDesc': '储藏（保存未提交的更改）',
+  'toolbar.fetchAll': '抓取全部（下载远程更改）',
+  'toolbar.pullDesc': '拉取（抓取 + 合并）',
+  'toolbar.pushDesc': '推送（上传本地提交）',
+  'toolbar.refreshDesc': '刷新（Ctrl+R）',
+  'toolbar.noRemotes': '未配置远程仓库。请先添加一个远程仓库。',
+  'toolbar.addRemote': '添加远程仓库',
+  'toolbar.detachedHead': '（分离头指针）',
+
+  // Push modal
+  'push.title': '推送',
+  'push.confirm': '将 {branch} 推送到远程仓库？',
+  'push.forcePush': '强制推送',
+  'push.forceWarning': '强制推送可能会<span class="modal-emph modal-emph--danger">覆盖</span>远程更改。请谨慎使用。',
+  'push.cancel': '取消',
+  'push.push': '推送',
+  'push.forcePushBtn': '强制推送',
+  'push.branch': '分支',
+  'push.to': '到',
+  'push.new': '新建（{target}）',
+  'push.createTracking': '创建跟踪引用',
+  'push.pushAllTags': '推送所有标签',
+
+  // Sidebar sections
+  'sidebar.local': '本地',
+  'sidebar.remotes': '远程仓库',
+  'sidebar.tags': '标签',
+  'sidebar.stashes': '储藏',
+  'sidebar.worktrees': '工作树',
+
+  // Sidebar context menu
+  'sidebar.checkout': '检出',
+  'sidebar.mergeInto': '合并到当前分支',
+  'sidebar.rebaseOnto': '将当前分支变基到此处',
+  'sidebar.rename': '重命名',
+  'sidebar.delete': '删除',
+  'sidebar.fetchRemote': '抓取 {name}',
+  'sidebar.removeRemote': '移除 {name}',
+  'sidebar.apply': '应用',
+  'sidebar.pop': '应用并删除储藏',
+  'sidebar.drop': '删除',
+  'sidebar.deleteTag': '删除标签',
+  'sidebar.pushTag': '推送到远程仓库',
+  'sidebar.pushAllTags': '推送所有标签',
+  'sidebar.deleteRemoteTag': '从远程仓库删除',
+
+  // Create branch modal
+  'createBranch.title': '创建分支',
+  'createBranch.desc': '创建新分支',
+  'createBranch.createAt': '基于：',
+  'createBranch.name': '分支名：',
+  'createBranch.namePlaceholder': '输入分支名',
+  'createBranch.startPoint': '起点（可选）',
+  'createBranch.checkout': '创建后检出',
+  'createBranch.create': '创建',
+  'createBranch.createAndCheckout': '创建并检出',
+  'createBranch.branchExists': '名为“{name}”的分支已存在。',
+  'createBranch.tagConflict': '名为“{name}”的标签已存在。',
+
+  // Rename branch modal
+  'renameBranch.title': '重命名分支',
+  'renameBranch.desc': '重命名分支 {name}',
+  'renameBranch.newName': '新名称',
+  'renameBranch.rename': '重命名',
+
+  // Add remote modal
+  'addRemote.title': '添加远程仓库',
+  'addRemote.name': '名称',
+  'addRemote.url': 'URL',
+  'addRemote.add': '添加',
+
+  // Stash modal
+  'stash.title': '储藏更改',
+  'stash.message': '消息（可选）',
+  'stash.includeUntracked': '包含未跟踪的文件',
+  'stash.keepIndex': '保留已暂存的更改',
+  'stash.stash': '储藏',
+
+  // Create tag modal
+  'createTag.title': '创建标签',
+  'createTag.desc': '创建附注标签',
+  'createTag.createAt': '基于：',
+  'createTag.name': '标签名：',
+  'createTag.namePlaceholder': '输入标签名',
+  'createTag.message': '消息：',
+  'createTag.messagePlaceholder': '可选',
+  'createTag.target': '目标（可选，默认为 HEAD）',
+  'createTag.pushToRemotes': '推送到所有远程仓库',
+  'createTag.create': '创建',
+  'createTag.createAndPush': '创建并推送',
+
+  // Graph
+  'graph.loading': '正在加载提交',
+  'graph.noCommits': '未找到提交',
+  'graph.noResults': '无匹配提交',
+  'graph.searchResults': '显示 {count} 条搜索结果',
+  'graph.description': '描述',
+  'graph.author': '作者',
+  'graph.date': '日期',
+  'graph.sha': 'SHA',
+
+  // Graph context menu
+  'graph.checkoutHash': '检出 {hash}',
+  'graph.createBranchHere': '在此处创建分支',
+  'graph.cherryPick': '遴选',
+  'graph.revert': '还原',
+  'graph.interactiveRebase': '从此处交互式变基',
+  'graph.resetToHere': '将当前分支重置到此处',
+  'graph.compareWith': '与 {hash} 比较',
+  'graph.cancelCompare': '取消比较',
+  'graph.selectForCompare': '选择用于比较',
+  'graph.comparingFrom': '点击一个提交以进行比较',
+  'graph.newTag': '新建标签',
+  'graph.mergeInto': "合并到 '{branch}'",
+  'graph.rebaseTo': "将 '{branch}' 变基到此处",
+  'graph.interactiveRebaseTo': "将 '{branch}' 交互式变基到此处",
+  'graph.resetBranchToHere': "将 '{branch}' 重置到此处",
+  'graph.checkoutCommit': '检出提交',
+  'graph.cherryPickCommit': '遴选提交',
+  'graph.revertCommit': '还原提交',
+  'graph.savePatch': '另存为补丁',
+  'graph.compareToLocal': '与本地更改比较',
+  'graph.copySHA': '复制提交 SHA',
+  'graph.copyBranchName': '复制分支名',
+  'graph.copyTagName': '复制标签名',
+  'graph.deleteTag': '删除标签',
+  'graph.rename': '重命名分支',
+  'graph.deleteBranch': '删除分支',
+  'graph.deleteRemoteBranch': '删除远程分支',
+  'graph.removeWorktree': '移除工作树',
+  'graph.setUpstream': '设置上游',
+
+  // Reset modal
+  'reset.title': '重置到 {hash}',
+  'reset.confirm': '将当前分支重置到 {hash}',
+  'reset.soft': '软重置',
+  'reset.softDesc': '保留所有更改并暂存',
+  'reset.mixed': '混合重置',
+  'reset.mixedDesc': '保留更改但不暂存',
+  'reset.hard': '硬重置',
+  'reset.hardDesc': '丢弃所有更改',
+  'reset.reset': '执行 {mode} 重置',
+
+  // Interactive rebase
+  'rebase.title': '交互式变基',
+  'rebase.loading': '正在加载提交',
+  'rebase.noCommits': '没有提交需要变基',
+  'rebase.instructions': '拖拽或使用箭头重新排序。点击操作进行更改。',
+  'rebase.start': '开始变基',
+  'rebase.dropWarning': '将丢弃 {count} 个提交。',
+  'rebase.action.pick': '使用提交',
+  'rebase.action.reword': '编辑消息',
+  'rebase.action.edit': '暂停以修改',
+  'rebase.action.squash': '合并到上一个提交',
+  'rebase.action.fixup': '合并，丢弃消息',
+  'rebase.action.drop': '移除提交',
+
+  // Commit details
+  'details.commit': '提交',
+  'details.author': '作者',
+  'details.date': '日期',
+  'details.parents': '父提交',
+  'details.refs': '引用',
+  'details.changes': '更改',
+  'details.browseFiles': '浏览文件',
+  'details.inline': '内联',
+  'details.sideBySide': '并排',
+  'details.binaryFile': '二进制文件',
+  'details.selectCommit': '选择一个提交以查看详情',
+
+  // Search bar
+  'search.placeholder': '搜索提交（消息、作者、哈希）',
+  'search.search': '搜索',
+  'search.clear': '清除',
+  'search.noResults': '无结果',
+  'search.prev': '上一个匹配（Shift+Enter）',
+  'search.next': '下一个匹配（Enter）',
+  'search.filters': '筛选',
+  'search.authorFilter': '作者筛选',
+
+  // Activity log
+  'activityLog.title': '活动日志',
+  'activityLog.auto': '自动',
+  'activityLog.showAll': '全部',
+  'activityLog.refresh': '刷新',
+  'activityLog.empty': '尚未执行任何命令',
+
+  // Stats
+  'stats.contributors': '贡献者（{count}）',
+  'stats.commitsByDayHour': '按天/小时统计提交（共 {count}）',
+  'stats.loading': '正在加载统计信息',
+  'stats.less': '收起',
+  'stats.more': '展开',
+
+  // Checkout remote branch modal
+  'checkoutRemote.title': '检出远程分支',
+  'checkoutRemote.desc': '创建跟踪远程仓库“{remote}”的本地分支并切换到它。',
+  'checkoutRemote.remote': '远程仓库',
+  'checkoutRemote.localName': '本地分支',
+  'checkoutRemote.checkout': '检出',
+
+  // Checkout commit modal
+  'checkoutCommit.title': '检出',
+  'checkoutCommit.desc': '检出提交',
+  'checkoutCommit.branchDesc': '切换到该分支。',
+  'checkoutCommit.checkout': '检出',
+  'checkoutCommit.checkoutBranch': '检出 {name}',
+  'checkoutCommit.checkoutRemote': '检出 {name}',
+  'checkoutCommit.detachedWarning': '此提交处没有分支。您将处于分离头指针状态。',
+
+  // Checkout and Fast-Forward modal
+  'fastForward.title': '检出并快进',
+  'fastForward.desc': '检出本地分支并将其快进到远程分支。',
+  'fastForward.switchTo': '切换到：',
+  'fastForward.fastForwardTo': '快进到：',
+
+  // Checkout branch modal (pull after checkout)
+  'checkoutBranch.title': '检出分支',
+  'checkoutBranch.desc': '此分支落后远程 {count} 个提交。检出后拉取？',
+  'checkoutBranch.behind': '落后 {count}',
+  'checkoutBranch.checkoutOnly': '仅检出',
+  'checkoutBranch.checkoutAndPull': '检出并拉取',
+
+  // Fetch modal
+  'fetch.title': '抓取',
+  'fetch.desc': '从远程仓库抓取最新更改。',
+  'fetch.remote': '远程仓库',
+  'fetch.allRemotes': '所有远程仓库',
+  'fetch.prune': '修剪已删除的远程分支',
+  'fetch.fetch': '抓取',
+
+  // Push modal (inline)
+  'push.desc': '将本地提交推送到远程仓库。',
+  'push.forcePushOption': '强制推送',
+
+  // Pull modal
+  'pull.title': '拉取',
+  'pull.desc': '从远程仓库拉取更改。',
+  'pull.rebase': '使用变基而不是合并',
+  'pull.stash': '储藏并重新应用本地更改',
+  'pull.pull': '拉取',
+
+  // Cherry-pick modal
+  'cherryPick.title': '遴选提交',
+  'cherryPick.desc': '将选定的提交应用到当前分支。',
+  'cherryPick.noCommit': '应用更改但不提交',
+  'cherryPick.cherryPick': '遴选',
+
+  // Revert modal
+  'revert.title': '还原提交',
+  'revert.desc': '创建一个新提交，用于撤销选定提交的更改。',
+  'revert.noCommit': '应用更改但不提交',
+  'revert.revert': '还原',
+
+  // Merge modal
+  'merge.title': '合并分支',
+  'merge.desc': '将选定的分支合并到当前分支。',
+  'merge.mergeType': '合并类型：',
+  'merge.default': '默认 — 尽可能快进',
+  'merge.noFf': '禁用快进 — 始终创建合并提交',
+  'merge.ffOnly': '仅快进 — 无法快进时失败',
+  'merge.squash': '压缩 — 将所有提交合并为一个',
+  'merge.squashWarning': '原始提交在历史中<span class="modal-emph modal-emph--danger">将不会被保留</span>。',
+  'merge.conflictWarning': '在 {count} 个文件中检测到<span class="modal-emph modal-emph--danger">冲突</span>',
+  'merge.noConflict': '未检测到冲突',
+  'merge.moreFiles': '还有 {count} 个文件',
+  'merge.collapse': '收起',
+  'merge.merge': '合并',
+
+  // Rebase modal
+  'rebaseBranch.title': '变基分支',
+  'rebaseBranch.desc': '将当前分支变基到选定的分支上。这将重写提交历史。',
+  'rebaseBranch.rebase': '变基',
+  'rebase.autostash': '储藏并重新应用本地更改（仅跟踪文件）',
+
+  // Reset modal
+  'reset.modalTitle': '将分支重置到修订版本',
+  'reset.desc': '将分支头移动到选定的修订版本。',
+  'reset.branch': '分支：',
+  'reset.moveTo': '移动到：',
+  'reset.resetType': '重置类型：',
+  'reset.softOption': '软重置 — 保留所有更改并暂存',
+  'reset.mixedOption': '混合重置 — 保留所有更改但不暂存',
+  'reset.hardOption': '硬重置 — 丢弃所有更改',
+  'reset.hardWarning': '所有未提交的更改将<span class="modal-emph modal-emph--danger">永久丢失</span>。',
+  'reset.resetBtn': '重置',
+
+  // Common labels
+  'common.commit': '提交：',
+  'common.onto': '变基到：',
+  'common.branch': '分支：',
+  'common.options': '选项：',
+
+  // Delete branch confirmation
+  'deleteBranch.title': '删除分支',
+  'deleteBranch.confirm': '确定要删除分支 <span class="modal-pill modal-pill--danger">{name}</span> 吗？',
+  'deleteBranch.force': '即使未完全合并也强制删除（-D）',
+  'deleteBranch.deleteRemote': '同时删除远程分支',
+  'deleteBranch.worktreeWarning': '关联的工作树“{name}”也将被移除。',
+
+  // Delete tag confirmation
+  'deleteTag.title': '删除标签',
+  'deleteTag.confirm': '确定要删除标签 <span class="modal-pill modal-pill--tag">{name}</span> 吗？',
+  'deleteTag.deleteRemote': '同时从远程仓库删除',
+
+  // Delete remote tag confirmation
+  'deleteRemoteTag.title': '删除远程标签',
+  'deleteRemoteTag.confirm': '确定要从远程仓库删除标签 <span class="modal-pill modal-pill--danger">{name}</span> 吗？此操作<span class="modal-emph modal-emph--danger">无法撤销</span>。',
+
+  // Delete remote branch
+  'deleteRemoteBranch.title': '删除远程分支',
+  'deleteRemoteBranch.confirm': '确定要从远程仓库删除分支 <span class="modal-pill modal-pill--danger">{name}</span> 吗？此操作<span class="modal-emph modal-emph--danger">无法撤销</span>。',
+
+  // Stash drop confirmation
+  'stashDrop.title': '删除储藏',
+  'stashDrop.confirm': '确定要删除储藏“{message}”吗？此操作无法撤销。',
+
+  // Stash pop confirmation
+  'stashApply.title': '应用储藏',
+  'stashApply.desc': '将储藏应用到当前分支。储藏条目将<span class="modal-emph modal-emph--info">保留</span>。',
+  'stashApply.apply': '应用',
+  'stashPop.title': '应用并删除储藏',
+  'stashPop.desc': '应用并删除储藏。应用后储藏条目将<span class="modal-emph modal-emph--danger">被删除</span>。',
+  'stashPop.confirm': '应用并删除储藏“{message}”？应用后储藏条目将被删除。',
+  'stashPop.pop': '应用并删除',
+
+  // Stash save modal
+  'stashSave.title': '储藏更改',
+  'stashSave.message': '消息（可选）',
+  'stashSave.placeholder': '储藏消息',
+  'stashSave.save': '储藏',
+
+  // Worktree modals
+  'worktree.addTitle': '添加工作树',
+  'worktree.startAt': '基于：',
+  'worktree.branchName': '分支名：',
+  'worktree.branchPlaceholder': '输入分支名',
+  'worktree.location': '位置：',
+  'worktree.add': '添加工作树',
+  'worktree.removeTitle': '移除工作树',
+  'worktree.removeConfirm': '确定要移除位于“{path}”的工作树吗？',
+  'worktree.deleteBranch': '同时删除分支“{name}”',
+
+  // Conflict resolution
+  'conflict.abortTitle': '中止操作',
+  'conflict.abortConfirm': '中止当前 {operation}？操作将被<span class="modal-emph modal-emph--danger">取消</span>，更改将被<span class="modal-emph modal-emph--danger">还原</span>。',
+  'conflict.abort': '中止',
+  'conflict.resolveSuccess': '{operation} 已成功完成。',
+
+  // Common
+  'common.cancel': '取消',
+  'common.close': '关闭',
+  'common.dismiss': '忽略',
+  'common.error': '错误',
+
+  // Repo selector
+  'repo.switchRepo': '切换仓库',
+
+  // Git Flow
+  'flow.button': 'Git Flow',
+  'flow.notInstalled': '未安装 git-flow。',
+  'flow.initialize': '初始化 Git Flow',
+  'flow.startFeature': '开始功能',
+  'flow.startRelease': '开始发布',
+  'flow.startHotfix': '开始热修复',
+  'flow.finish': '完成 {name}',
+  'flow.init.title': '初始化 Git Flow',
+  'flow.init.desc': '在现有 Git 仓库中初始化 Git Flow 以开始使用。',
+  'flow.init.productionBranch': '生产分支',
+  'flow.init.developBranch': '开发分支',
+  'flow.init.featurePrefix': '功能分支前缀',
+  'flow.init.releasePrefix': '发布分支前缀',
+  'flow.init.hotfixPrefix': '热修复分支前缀',
+  'flow.init.versionTagPrefix': '版本标签前缀',
+  'flow.init.submit': '初始化',
+  'flow.start.feature.title': '开始功能',
+  'flow.start.feature.desc': "基于 '{developBranch}' 创建新的功能分支并切换到它。",
+  'flow.start.release.title': '开始发布',
+  'flow.start.release.desc': "基于 '{developBranch}' 创建新的发布分支并切换到它。",
+  'flow.start.hotfix.title': '开始热修复',
+  'flow.start.hotfix.desc': "基于 '{productionBranch}' 创建新的热修复分支并切换到它。",
+  'flow.start.name': '名称',
+  'flow.start.submit': '开始 {type}',
+  'flow.finish.feature.title': '完成功能',
+  'flow.finish.release.title': '完成发布',
+  'flow.finish.hotfix.title': '完成热修复',
+  'flow.finish.confirm': '完成 {name}。将执行以下操作：',
+  'flow.finish.feature.step1': '{name} → 合并到 {developBranch}',
+  'flow.finish.feature.step2': '删除 {name} 分支',
+  'flow.finish.feature.step3': '检出 {developBranch}',
+  'flow.finish.release.step1': '{name} → 合并到 {productionBranch}',
+  'flow.finish.release.step2': '创建 {tag} 标签',
+  'flow.finish.release.step3': '{productionBranch} → 合并到 {developBranch}（同步）',
+  'flow.finish.release.step4': '删除 {name} 分支',
+  'flow.finish.hotfix.step1': '{name} → 合并到 {productionBranch}',
+  'flow.finish.hotfix.step2': '创建 {tag} 标签',
+  'flow.finish.hotfix.step3': '{productionBranch} → 合并到 {developBranch}（同步）',
+  'flow.finish.hotfix.step4': '删除 {name} 分支',
+  'flow.finish.submit': '完成',
+
+  // Bisect
+  'bisect.selectBad': '二分查找：标记为坏',
+  'bisect.startGood': '二分查找：开始（好）',
+  'bisect.cancelSelect': '取消二分查找选择',
+  'bisect.clickGoodPrompt': '点击一个好提交',
+  'bisect.banner.title': '正在进行二分查找',
+  'bisect.banner.remaining': '大约剩余 {count} 步',
+  'bisect.banner.current': '当前提交：',
+  'bisect.banner.found': '已找到有问题的提交！',
+  'bisect.banner.good': '好',
+  'bisect.banner.bad': '坏',
+  'bisect.banner.skip': '跳过',
+  'bisect.banner.reset': '重置',
+
+  // LFS
+  'lfs.locked': '由 {owner} 锁定',
+  'lfs.lock': 'LFS 锁定',
+  'lfs.unlock': 'LFS 解锁',
+  'lfs.unlockForce': 'LFS 强制解锁',
+  'lfs.fileHistory': '显示文件历史',
+  'checkout.blockedTitle': '检出分支',
+  'checkout.blockedDesc': '您有未提交的本地更改。',
+  'checkout.localChanges': '本地更改：',
+  'checkout.keepChanges': '保留更改并检出',
+  'checkout.stash': '储藏并检出',
+  'checkout.discardAll': '丢弃所有更改',
+  'checkout.discardWarning': '所有更改（包括新文件）将<span class="modal-emph modal-emph--danger">永久丢失</span>。',
+  'checkout.checkout': '检出',
+  'checkout.worktreeBlockedTitle': '分支正在使用',
+  'checkout.worktreeBlockedDesc': '此分支已在另一个工作树中检出。',
+  'checkout.openInNewWindow': '在新窗口中打开',
+  'copiedToClipboard': '已复制到剪贴板',
+  'setUpstream.title': '设置上游',
+  'setUpstream.desc': '为 {branch} 设置上游跟踪分支',
+  'setUpstream.remote': '远程仓库',
+  'setUpstream.remoteBranch': '远程分支',
+  'setUpstream.set': '设置上游',
+};
