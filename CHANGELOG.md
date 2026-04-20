@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.4 (2026-04-20)
+
+### New Features
+- **Simplified Chinese (zh-cn) localization**: Full UI translation contributed by @baiyibs
+
+### Improvements
+- **Diff toolbar fixed on scroll**: File name and inline/side-by-side toggle stay visible when scrolling horizontally
+- **Diff horizontal scroll**: Entire diff scrolls as one unit instead of per-line scrollbars
+- **Side-by-side diff**: Long lines no longer overlap adjacent panel
+- **Bottom panel height**: Now scales with window size (default 35%, min 20%, max 70%)
+- **Commit diff load time**: Diff and file list requests run in parallel, reducing latency by ~50%
+
+### Bug Fixes
+- **Auth error infinite spinner**: Loading indicator now clears immediately when authentication fails
+- **Auth error messaging**: SSH vs HTTPS failures show distinct messages with actionable hints; "Show Error" button exposes raw git output
+
 ## 0.2.3 (2026-04-19)
 
 ### New Features
