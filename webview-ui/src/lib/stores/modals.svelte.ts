@@ -65,6 +65,21 @@ class ModalStore {
   openSetUpstream(branchName: string) { this.setUpstream = { show: true, branchName }; }
   closeSetUpstream() { this.setUpstream = { show: false, branchName: '' }; }
 
+  // ── Fetch ──
+  fetch = $state({ show: false });
+  openFetch() { this.fetch = { show: true }; }
+  closeFetch() { this.fetch = { show: false }; }
+
+  // ── Pull ──
+  pull = $state({ show: false });
+  openPull() { this.pull = { show: true }; }
+  closePull() { this.pull = { show: false }; }
+
+  // ── Push ──
+  push = $state({ show: false });
+  openPush() { this.push = { show: true }; }
+  closePush() { this.push = { show: false }; }
+
   // ── Flow Init ──
   flowInit = $state({ show: false });
   openFlowInit() { this.flowInit = { show: true }; }

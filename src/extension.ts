@@ -146,56 +146,20 @@ export function activate(context: vscode.ExtensionContext) {
       MainPanel.currentPanel?.postRefresh();
     }),
 
-    vscode.commands.registerCommand('gitGraphPlus.fetch', async () => {
-      try {
-        const remotes = await gitService.remotes();
-        let remote: string | undefined;
-
-        if (remotes.length > 1) {
-          const fetchAll = vscode.l10n.t('fetchAllRemotes');
-          const items = [fetchAll, ...remotes.map(r => r.name)];
-          const picked = await vscode.window.showQuickPick(items, {
-            placeHolder: vscode.l10n.t('selectRemoteToFetch'),
-          });
-          if (!picked) { return; }
-          if (picked !== fetchAll) { remote = picked; }
-        }
-
-        await vscode.window.withProgress(
-          { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('fetching') },
-          async () => { await gitService.fetch(remote, { prune: true }); }
-        );
-        refreshAll();
-        MainPanel.currentPanel?.postRefresh();
-      } catch (err: unknown) {
-        vscode.window.showErrorMessage(vscode.l10n.t('fetchFailed', err instanceof Error ? err.message : String(err)));
-      }
+    vscode.commands.registerCommand('gitGraphPlus.fetch', () => {
+      MainPanel.showModalWithPanel(context.extensionUri, { modal: 'fetch' });
     }),
 
-    vscode.commands.registerCommand('gitGraphPlus.pull', async () => {
-      try {
-        await vscode.window.withProgress(
-          { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('pulling') },
-          async () => { await gitService.pull(); }
-        );
-        refreshAll();
-        MainPanel.currentPanel?.postRefresh();
-      } catch (err: unknown) {
-        vscode.window.showErrorMessage(vscode.l10n.t('pullFailed', err instanceof Error ? err.message : String(err)));
-      }
+    vscode.commands.registerCommand('gitGraphPlus.pull', () => {
+      MainPanel.showModalWithPanel(context.extensionUri, { modal: 'pull' });
     }),
 
-    vscode.commands.registerCommand('gitGraphPlus.push', async () => {
-      try {
-        await vscode.window.withProgress(
-          { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('pushing') },
-          async () => { await gitService.push(undefined, undefined, { setUpstream: true }); }
-        );
-        refreshAll();
-        MainPanel.currentPanel?.postRefresh();
-      } catch (err: unknown) {
-        vscode.window.showErrorMessage(vscode.l10n.t('pushFailed', err instanceof Error ? err.message : String(err)));
-      }
+    vscode.commands.registerCommand('gitGraphPlus.push', () => {
+      MainPanel.showModalWithPanel(context.extensionUri, { modal: 'push' });
+    }),
+
+    vscode.commands.registerCommand('gitGraphPlus.publishBranch', () => {
+      MainPanel.showModalWithPanel(context.extensionUri, { modal: 'push' });
     }),
 
     vscode.commands.registerCommand('gitGraphPlus.checkoutBranch', async (refOrItem: string | any) => {

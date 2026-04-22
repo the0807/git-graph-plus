@@ -4,6 +4,7 @@
   "command.fetch": "Git Graph+: Fetch",
   "command.pull": "Git Graph+: Pull",
   "command.push": "Git Graph+: Push",
+  "command.publishBranch": "Git Graph+: Publish Branch",
   "command.createBranch": "Create Branch",
   "command.stashSave": "Stash Changes",
   "command.createTag": "Create Tag",

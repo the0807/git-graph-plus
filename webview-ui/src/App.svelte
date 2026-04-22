@@ -131,6 +131,12 @@
           } else if (msg.payload.modal === 'addWorktree') {
             addWorktreeDefaultPath = msg.payload.defaultPath;
             showAddWorktreeModal = true;
+          } else if (msg.payload.modal === 'fetch') {
+            modalStore.openFetch();
+          } else if (msg.payload.modal === 'pull') {
+            modalStore.openPull();
+          } else if (msg.payload.modal === 'push') {
+            modalStore.openPush();
           }
           break;
       }

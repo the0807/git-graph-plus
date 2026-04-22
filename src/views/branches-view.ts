@@ -31,6 +31,8 @@ export class BranchesViewProvider implements vscode.TreeDataProvider<BranchTreeI
       const branches = await this.gitService.branches();
       if (id !== this.fetchId) return; // superseded by newer request
       this.cache = buildBranchTree(branches.filter(b => !b.remote));
+      const current = branches.find(b => b.current && !b.remote);
+      vscode.commands.executeCommand('setContext', 'gitGraphPlus.currentBranchHasUpstream', current ? !!current.upstream : true);
     } catch { /* keep old cache */ }
     if (id === this.fetchId) {
       this.pending = null;

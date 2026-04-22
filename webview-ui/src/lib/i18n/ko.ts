@@ -27,7 +27,7 @@ export const ko: Record<string, string> = {
   'push.branch': '브랜치',
   'push.to': '대상',
   'push.new': 'new ({target})',
-  'push.createTracking': 'Tracking reference 생성',
+  'push.createTracking': 'Upstream 설정',
   'push.pushAllTags': '모든 태그 push',
 
   // Sidebar sections

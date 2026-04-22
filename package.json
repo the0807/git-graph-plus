@@ -62,6 +62,11 @@
         "icon": "$(arrow-up)"
       },
       {
+        "command": "gitGraphPlus.publishBranch",
+        "title": "%command.publishBranch%",
+        "icon": "$(cloud-upload)"
+      },
+      {
         "command": "gitGraphPlus.checkoutBranch",
         "title": "Checkout Branch",
         "icon": "$(arrow-right)"
@@ -229,7 +234,12 @@
         },
         {
           "command": "gitGraphPlus.push",
-          "when": "view == gitGraphPlus.branches",
+          "when": "view == gitGraphPlus.branches && gitGraphPlus.currentBranchHasUpstream != false",
+          "group": "navigation@5"
+        },
+        {
+          "command": "gitGraphPlus.publishBranch",
+          "when": "view == gitGraphPlus.branches && gitGraphPlus.currentBranchHasUpstream == false",
           "group": "navigation@5"
         },
         {

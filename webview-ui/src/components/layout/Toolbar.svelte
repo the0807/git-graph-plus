@@ -132,6 +132,12 @@
     return () => window.removeEventListener('message', handler);
   });
 
+  $effect(() => {
+    if (modalStore.fetch.show) { modalStore.closeFetch(); doFetch(); }
+    if (modalStore.pull.show) { modalStore.closePull(); doPull(); }
+    if (modalStore.push.show) { modalStore.closePush(); doPush(); }
+  });
+
   let ahead = $derived(branchStore.currentBranch?.ahead ?? 0);
   let behind = $derived(branchStore.currentBranch?.behind ?? 0);
   let activeRepoInfo = $derived(uiStore.repos.find(r => r.path === uiStore.activeRepo) ?? uiStore.repos[0]);
@@ -238,7 +244,13 @@
       disabled={operating !== null}
       title={t('toolbar.pushDesc')}
     >
-      {#if operating === 'push'}<span class="spinner"></span>{:else}<i class="codicon codicon-arrow-up"></i>{/if}
+      {#if operating === 'push'}
+        <span class="spinner"></span>
+      {:else if !hasUpstream && branchStore.currentBranch}
+        <i class="codicon codicon-cloud-upload unpublished-icon"></i>
+      {:else}
+        <i class="codicon codicon-arrow-up"></i>
+      {/if}
       {#if ahead > 0}<span class="btn-badge push-badge">{ahead}</span>{/if}
     </button>
     <span class="separator"></span>
@@ -637,6 +649,10 @@
 
   .push-badge {
     background: color-mix(in srgb, var(--vscode-gitDecoration-addedResourceForeground, #73c991) 25%, transparent);
+    color: var(--vscode-gitDecoration-addedResourceForeground, #73c991);
+  }
+
+  .unpublished-icon {
     color: var(--vscode-gitDecoration-addedResourceForeground, #73c991);
   }
 

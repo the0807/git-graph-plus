@@ -4,6 +4,7 @@
   "command.fetch": "Git Graph+: Fetch",
   "command.pull": "Git Graph+: Pull",
   "command.push": "Git Graph+: Push",
+  "command.publishBranch": "Git Graph+: 브랜치 게시",
   "command.createBranch": "브랜치 생성",
   "command.stashSave": "변경 사항 Stash",
   "command.createTag": "태그 생성",

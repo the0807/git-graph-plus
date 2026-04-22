@@ -4,6 +4,7 @@
   "command.fetch": "Git Graph+: 抓取",
   "command.pull": "Git Graph+: 拉取",
   "command.push": "Git Graph+: 推送",
+  "command.publishBranch": "Git Graph+: 发布分支",
   "command.createBranch": "创建分支",
   "command.stashSave": "储藏更改",
   "command.createTag": "创建标签",
