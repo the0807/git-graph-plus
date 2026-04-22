@@ -1034,23 +1034,26 @@ export class MainPanel {
       await this.refreshAll();
     }
 
-    // Auto-refresh conflict status when index changes (file staged/resolved)
-    if (this.allConflictFiles.length > 0) {
-      const stillConflicting = await this.gitService.getConflictFiles();
-      const conflictSet = new Set(stillConflicting);
-      const opState = await this.gitService.getOperationState();
-      if (opState.type) {
-        this.panel.webview.postMessage({
-          type: 'conflictData',
-          payload: {
-            operation: opState.type,
-            files: this.allConflictFiles.map(f => ({ path: f, resolved: !conflictSet.has(f) })),
-          },
-        });
-      } else {
-        // Operation was completed or aborted
-        this.allConflictFiles = [];
+    // Detect conflict state (from external terminal operations or index changes)
+    const conflictFiles = await this.gitService.getConflictFiles();
+    const opState = await this.gitService.getOperationState();
+
+    if (conflictFiles.length > 0 && opState.type) {
+      // New or updated conflict (merge/rebase started externally or in-progress)
+      if (this.allConflictFiles.length === 0) {
+        this.allConflictFiles = conflictFiles;
       }
+      const conflictSet = new Set(conflictFiles);
+      this.panel.webview.postMessage({
+        type: 'conflictData',
+        payload: {
+          operation: opState.type,
+          files: this.allConflictFiles.map(f => ({ path: f, resolved: !conflictSet.has(f) })),
+        },
+      });
+    } else if (this.allConflictFiles.length > 0 && !opState.type) {
+      // Operation was completed or aborted externally
+      this.allConflictFiles = [];
     }
   }
 

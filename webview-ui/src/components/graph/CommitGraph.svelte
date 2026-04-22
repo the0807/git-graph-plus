@@ -965,7 +965,7 @@
                     return localInfo?.upstream ?? null;
                   })() : null}
                   {@const isWtBranch = (ref.type === 'branch' || ref.type === 'head') && worktreeBranches.has(ref.name)}
-                  {@const badgeColor = ref.type === 'tag' ? '#f0c040' : ref.type === 'stash' ? '#c24de0' : isWtBranch ? '#4caf50' : nodeColor}
+                  {@const badgeColor = ref.type === 'tag' ? '#f0c040' : ref.type === 'stash' ? 'var(--text-secondary, #888)' : isWtBranch ? '#4caf50' : nodeColor}
                   {#if hasRemote && trackedUpstream}
                     <span
                       class="ref-badge badge-cloud-only"
