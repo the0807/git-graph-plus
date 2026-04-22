@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.5 (2026-04-22)
+
+### New Features
+- **Publish branch button**: Branches with no upstream now show a `cloud-upload` icon (green) in the webview toolbar; clicking it opens the push modal with upstream setup
+- **Sidebar buttons open webview modals**: Fetch, pull, and push buttons in the branches view toolbar now open the same confirmation modals as the webview toolbar
+
+### Improvements
+- **External conflict detection**: Merge/rebase conflicts triggered from the terminal are now automatically detected and show the conflict resolution UI in the webview
+- **Push modal label**: "Create tracking reference" renamed to "Upstream 설정 / Set upstream"
+- **Stash badge color**: Stash ref badges in the commit graph changed from purple to gray
+
 ## 0.2.4 (2026-04-20)
 
 ### New Features
