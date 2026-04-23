@@ -399,7 +399,8 @@ export class GitService {
         return { path: rest.join('\t'), status: status[0] }; // R100 → R
       });
     } catch {
-      const raw = await this.exec(['diff-tree', '--no-commit-id', '--name-status', '-r', hash]);
+      // Root commit has no parent — --root compares against empty tree
+      const raw = await this.exec(['diff-tree', '--no-commit-id', '--name-status', '-r', '--root', hash]);
       return raw.trim().split('\n').filter(Boolean).map(line => {
         const [status, ...rest] = line.split('\t');
         return { path: rest.join('\t'), status: status[0] };
