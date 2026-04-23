@@ -227,6 +227,7 @@
     >
       {#if operating === 'fetch'}<span class="spinner"></span>{:else}<i class="codicon codicon-cloud-download"></i>{/if}
     </button>
+    <span class="separator"></span>
     <button
       class="toolbar-btn"
       class:has-badge={behind > 0}
@@ -237,6 +238,7 @@
       {#if operating === 'pull'}<span class="spinner"></span>{:else}<i class="codicon codicon-arrow-down"></i>{/if}
       {#if behind > 0}<span class="btn-badge pull-badge">{behind}</span>{/if}
     </button>
+    <span class="separator"></span>
     <button
       class="toolbar-btn"
       class:has-badge={ahead > 0}
