@@ -133,8 +133,10 @@ export class MainPanel {
     try {
       switch (message.type) {
         case 'getLog': {
-          const maxCommits = vscode.workspace.getConfiguration('gitGraphPlus').get<number>('maxCommits', 1000);
-          const logPayload = { ...message.payload, limit: message.payload.limit ?? maxCommits };
+          const cfg = vscode.workspace.getConfiguration('gitGraphPlus');
+          const maxCommits = cfg.get<number>('maxCommits', 1000);
+          const sortOrder = cfg.get<'date' | 'topological'>('graphSortOrder', 'date');
+          const logPayload = { ...message.payload, limit: message.payload.limit ?? maxCommits, sortOrder };
           const [commits, logBranches] = await Promise.all([
             this.gitService.log(logPayload),
             this.gitService.branches(),

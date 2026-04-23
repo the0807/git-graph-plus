@@ -124,7 +124,7 @@ export class GitService {
       args.push('--glob=refs/heads', '--glob=refs/remotes', '--glob=refs/tags');
     }
 
-    args.push('--topo-order');
+    args.push(options?.sortOrder === 'topological' ? '--topo-order' : '--date-order');
 
     if (options?.limit) {
       args.push(`--max-count=${options.limit}`);

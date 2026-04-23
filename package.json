@@ -381,6 +381,19 @@
           ],
           "default": "auto",
           "description": "UI language (auto = follow VS Code language setting)"
+        },
+        "gitGraphPlus.graphSortOrder": {
+          "type": "string",
+          "enum": [
+            "date",
+            "topological"
+          ],
+          "enumDescriptions": [
+            "Sort commits by commit date (--date-order)",
+            "Sort commits by topology, parents after children (--topo-order)"
+          ],
+          "default": "date",
+          "description": "Commit sort order in the graph"
         }
       }
     }
