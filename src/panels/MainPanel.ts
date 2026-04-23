@@ -1052,8 +1052,12 @@ export class MainPanel {
         },
       });
     } else if (this.allConflictFiles.length > 0 && !opState.type) {
-      // Operation was completed or aborted externally
+      // Operation was completed or aborted externally — notify webview to dismiss conflict UI
       this.allConflictFiles = [];
+      this.panel.webview.postMessage({
+        type: 'operationComplete',
+        payload: { operation: 'merge', success: true },
+      });
     }
   }
 
