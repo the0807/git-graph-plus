@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.6 (2026-04-23)
+
+### New Features
+- **Graph sort order setting**: Added `gitGraphPlus.graphSortOrder` configuration (`date` / `topological`). Default is `date` (`--date-order`) so commits are sorted chronologically across branches
+
+### Bug Fixes
+- **Conflict UI dismissal**: Conflict resolution banner now disappears automatically when a conflict is resolved and committed from the terminal or another UI
+- **Root commit diff**: First commit in the repository now correctly shows all added files in the file list
+- **Toolbar separators**: Fetch, pull, and push buttons now have separators between them, consistent with the rest of the toolbar
+
 ## 0.2.5 (2026-04-22)
 
 ### New Features
