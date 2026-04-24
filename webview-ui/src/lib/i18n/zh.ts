@@ -19,7 +19,9 @@ export const zh: Record<string, string> = {
   // Push modal
   'push.title': '推送',
   'push.confirm': '将 {branch} 推送到远程仓库？',
-  'push.forcePush': '强制推送',
+  'push.forceWithLease': 'Force with lease (--force-with-lease)',
+  'push.forceWithLeaseWarning': '如果远程有未拉取的提交则失败，但若本地引用匹配则可能<span class="modal-emph modal-emph--danger">覆盖</span>远程更改。请谨慎使用。',
+  'push.force': '强制推送 (--force)',
   'push.forceWarning': '强制推送可能会<span class="modal-emph modal-emph--danger">覆盖</span>远程更改。请谨慎使用。',
   'push.cancel': '取消',
   'push.push': '推送',

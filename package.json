@@ -385,14 +385,16 @@
         "gitGraphPlus.graphSortOrder": {
           "type": "string",
           "enum": [
+            "author-date",
             "date",
             "topological"
           ],
           "enumDescriptions": [
-            "Sort commits by commit date (--date-order)",
+            "Sort commits by author date (--author-date-order)",
+            "Sort commits by committer date (--date-order)",
             "Sort commits by topology, parents after children (--topo-order)"
           ],
-          "default": "date",
+          "default": "topological",
           "description": "Commit sort order in the graph"
         }
       }

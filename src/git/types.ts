@@ -140,5 +140,5 @@ export interface LogOptions {
   limit?: number;
   all?: boolean;
   skip?: number;
-  sortOrder?: 'date' | 'topological';
+  sortOrder?: 'author-date' | 'date' | 'topological';
 }

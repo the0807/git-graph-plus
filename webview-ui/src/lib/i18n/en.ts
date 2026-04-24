@@ -19,7 +19,9 @@ export const en: Record<string, string> = {
   // Push modal
   'push.title': 'Push',
   'push.confirm': 'Push {branch} to remote?',
-  'push.forcePush': 'Force push',
+  'push.forceWithLease': 'Force with lease (--force-with-lease)',
+  'push.forceWithLeaseWarning': 'Force with lease will fail if the remote has commits you haven\'t fetched, but will <span class="modal-emph modal-emph--danger">overwrite</span> if your local ref matches. Use with caution.',
+  'push.force': 'Force (--force)',
   'push.forceWarning': 'Force push may <span class="modal-emph modal-emph--danger">overwrite</span> remote changes. Use with caution.',
   'push.cancel': 'Cancel',
   'push.push': 'Push',

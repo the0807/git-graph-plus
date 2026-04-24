@@ -17,7 +17,7 @@
   let fetchAllRemotes = $state(false);
   let fetchRemote = $state('origin');
   let showPushConfirm = $state(false);
-  let forcePush = $state(false);
+  let forceMode = $state<'none' | 'with-lease' | 'force'>('none');
   let pushSetUpstream = $state(true);
   let pushRemote = $state('origin');
   let pushAllTags = $state(false);
@@ -85,7 +85,7 @@
       return;
     }
     showPushConfirm = true;
-    forcePush = false;
+    forceMode = 'none';
     pushSetUpstream = true;
     pushAllTags = false;
     pushRemote = branchStore.remotes[0].name;
@@ -97,7 +97,8 @@
     const current = branchStore.currentBranch;
     const remote = hasUpstream ? undefined : pushRemote;
     const branch = hasUpstream ? undefined : pushBranchName;
-    vscode.postMessage({ type: 'push', payload: { remote, branch, force: forcePush, setUpstream: !hasUpstream && pushSetUpstream } });
+    const force = forceMode === 'none' ? undefined : forceMode;
+    vscode.postMessage({ type: 'push', payload: { remote, branch, force, setUpstream: !hasUpstream && pushSetUpstream } });
     if (pushAllTags) {
       vscode.postMessage({ type: 'pushAllTags', payload: { remote: pushRemote } });
     }
@@ -380,13 +381,21 @@
       </label>
     </div>
     <div class="modal-form-group">
-      <label class="modal-checkbox modal-checkbox--danger">
-        <input type="checkbox" bind:checked={forcePush} />
-        <span>{t('push.forcePushOption')}</span>
+      <label class="modal-checkbox">
+        <input type="checkbox" checked={forceMode === 'with-lease'} onchange={() => { forceMode = forceMode === 'with-lease' ? 'none' : 'with-lease'; }} />
+        <span>{t('push.forceWithLease')}</span>
       </label>
     </div>
-    {#if forcePush}
-      <p class="modal-warning" role="alert">{@html t('push.forceWarning')}</p>
+    <div class="modal-form-group">
+      <label class="modal-checkbox modal-checkbox--danger">
+        <input type="checkbox" checked={forceMode === 'force'} onchange={() => { forceMode = forceMode === 'force' ? 'none' : 'force'; }} />
+        <span>{t('push.force')}</span>
+      </label>
+    </div>
+    {#if forceMode === 'with-lease'}
+      <p class="modal-warning" role="alert"><span>{@html t('push.forceWithLeaseWarning')}</span></p>
+    {:else if forceMode === 'force'}
+      <p class="modal-warning" role="alert"><span>{@html t('push.forceWarning')}</span></p>
     {/if}
     <div class="form-actions">
       <button onclick={() => { showPushConfirm = false; }}>{t('common.cancel')}</button>

@@ -69,8 +69,7 @@
     background: var(--vscode-editorWidget-background, var(--bg-secondary));
     border: 1px solid rgba(128, 128, 128, 0.3);
     border-radius: 12px;
-    min-width: 400px;
-    max-width: 520px;
+    width: 480px;
     max-height: 80vh;
     display: flex;
     flex-direction: column;

@@ -124,7 +124,11 @@ export class GitService {
       args.push('--glob=refs/heads', '--glob=refs/remotes', '--glob=refs/tags');
     }
 
-    args.push(options?.sortOrder === 'topological' ? '--topo-order' : '--date-order');
+    args.push(
+      options?.sortOrder === 'topological' ? '--topo-order' :
+      options?.sortOrder === 'date' ? '--date-order' :
+      '--author-date-order'
+    );
 
     if (options?.limit) {
       args.push(`--max-count=${options.limit}`);
@@ -452,9 +456,11 @@ export class GitService {
     return this.exec(args);
   }
 
-  async push(remote?: string, branch?: string, options?: { force?: boolean; setUpstream?: boolean }): Promise<string> {
+  async push(remote?: string, branch?: string, options?: { force?: 'with-lease' | 'force'; setUpstream?: boolean }): Promise<string> {
     const args = ['push'];
-    if (options?.force) {
+    if (options?.force === 'force') {
+      args.push('--force');
+    } else if (options?.force === 'with-lease') {
       args.push('--force-with-lease');
     }
     if (options?.setUpstream) {

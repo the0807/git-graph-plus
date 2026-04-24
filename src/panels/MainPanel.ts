@@ -41,6 +41,9 @@ export class MainPanel {
         if (e.affectsConfiguration('gitGraphPlus.autoRefresh')) {
           this.fileWatcher.enabled = vscode.workspace.getConfiguration('gitGraphPlus').get<boolean>('autoRefresh', true);
         }
+        if (e.affectsConfiguration('gitGraphPlus.graphSortOrder') || e.affectsConfiguration('gitGraphPlus.maxCommits')) {
+          this.refreshAll();
+        }
       })
     );
 
@@ -135,7 +138,7 @@ export class MainPanel {
         case 'getLog': {
           const cfg = vscode.workspace.getConfiguration('gitGraphPlus');
           const maxCommits = cfg.get<number>('maxCommits', 1000);
-          const sortOrder = cfg.get<'date' | 'topological'>('graphSortOrder', 'date');
+          const sortOrder = cfg.get<'author-date' | 'date' | 'topological'>('graphSortOrder', 'topological');
           const logPayload = { ...message.payload, limit: message.payload.limit ?? maxCommits, sortOrder };
           const [commits, logBranches] = await Promise.all([
             this.gitService.log(logPayload),
@@ -967,7 +970,7 @@ export class MainPanel {
     this.refreshQueued = false;
     try {
       const [allCommits, branches, tags, remotes, stashes, worktrees] = await Promise.all([
-        this.gitService.log({ limit: vscode.workspace.getConfiguration('gitGraphPlus').get<number>('maxCommits', 1000) }),
+        this.gitService.log({ limit: vscode.workspace.getConfiguration('gitGraphPlus').get<number>('maxCommits', 1000), sortOrder: vscode.workspace.getConfiguration('gitGraphPlus').get<'author-date' | 'date' | 'topological'>('graphSortOrder', 'topological') }),
         this.gitService.branches(),
         this.gitService.tags(),
         this.gitService.remotes(),

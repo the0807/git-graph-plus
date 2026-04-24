@@ -19,7 +19,9 @@ export const ko: Record<string, string> = {
   // Push modal
   'push.title': 'Push',
   'push.confirm': '{branch}을(를) 리모트에 push 하시겠습니까?',
-  'push.forcePush': 'Force push',
+  'push.forceWithLease': 'Force with lease (--force-with-lease)',
+  'push.forceWithLeaseWarning': 'fetch하지 않은 커밋이 원격에 있으면 실패하지만, 로컬 ref가 일치하면 <span class="modal-emph modal-emph--danger">덮어쓸 수 있습니다</span>. 주의해서 사용하세요.',
+  'push.force': 'Force (--force)',
   'push.forceWarning': 'Force push는 원격 변경 사항을 <span class="modal-emph modal-emph--danger">덮어쓸 수 있습니다</span>. 주의해서 사용하세요.',
   'push.cancel': '취소',
   'push.push': 'Push',
