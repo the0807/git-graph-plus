@@ -55,6 +55,11 @@ class ModalStore {
   openStashApply(index: number, message: string, drop: boolean) { this.stashApply = { show: true, index, message, drop }; }
   closeStashApply() { this.stashApply = { show: false, index: 0, message: '', drop: false }; }
 
+  // ── Stash Rename ──
+  stashRename = $state({ show: false, index: 0, message: '' });
+  openStashRename(index: number, message: string) { this.stashRename = { show: true, index, message }; }
+  closeStashRename() { this.stashRename = { show: false, index: 0, message: '' }; }
+
   // ── Stash Save ──
   stashSave = $state({ show: false });
   openStashSave() { this.stashSave = { show: true }; }

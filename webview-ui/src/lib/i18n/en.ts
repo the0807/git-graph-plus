@@ -349,6 +349,11 @@ export const en: Record<string, string> = {
   'stashSave.placeholder': 'Stash message',
   'stashSave.save': 'Stash',
 
+  // Stash rename modal
+  'stashRename.title': 'Rename Stash',
+  'stashRename.newMessage': 'New message',
+  'stashRename.rename': 'Rename',
+
   // Worktree modals
   'worktree.addTitle': 'Add Worktree',
   'worktree.startAt': 'Start at:',

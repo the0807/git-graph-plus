@@ -457,6 +457,11 @@ export class MainPanel {
           await this.refreshAll();
           break;
         }
+        case 'stashRename': {
+          await this.gitService.stashRename(message.payload.index, message.payload.message);
+          await this.refreshAll();
+          break;
+        }
         case 'worktreeAdd': {
           const homeDir = process.env.HOME || process.env.USERPROFILE || '';
           const wtPath = message.payload.path.replace(/^~/, homeDir);

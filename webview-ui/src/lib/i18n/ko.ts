@@ -349,6 +349,11 @@ export const ko: Record<string, string> = {
   'stashSave.placeholder': 'Stash 메시지',
   'stashSave.save': 'Stash',
 
+  // Stash rename modal
+  'stashRename.title': 'Stash 이름 변경',
+  'stashRename.newMessage': '새 메시지',
+  'stashRename.rename': '변경',
+
   // Worktree modals
   'worktree.addTitle': 'Worktree 추가',
   'worktree.startAt': '시작점:',

@@ -692,6 +692,13 @@ export class GitService {
     await this.exec(['stash', 'drop', `stash@{${index}}`]);
   }
 
+  async stashRename(index: number, newMessage: string): Promise<void> {
+    if (!Number.isInteger(index) || index < 0) throw new Error('Invalid stash index');
+    const sha = (await this.exec(['rev-parse', `stash@{${index}}`])).trim();
+    await this.exec(['stash', 'drop', `stash@{${index}}`]);
+    await this.exec(['stash', 'store', '-m', newMessage, sha]);
+  }
+
   async cherryPick(hash: string, options?: { noCommit?: boolean }): Promise<void> {
     this.assertSafeRef(hash, 'cherry-pick');
     const args = ['cherry-pick'];

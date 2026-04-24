@@ -33,6 +33,7 @@ export type WebviewMessage =
   | { type: 'removeRemote'; payload: { name: string } }
   | { type: 'openDiff'; payload: { file: string; commitHash?: string; ref1?: string; ref2?: string } }
   | { type: 'stashDrop'; payload: { index: number } }
+  | { type: 'stashRename'; payload: { index: number; message: string } }
   | { type: 'worktreeAdd'; payload: { path: string; branch?: string; newBranch?: string } }
   | { type: 'worktreeRemove'; payload: { path: string; deleteBranch?: string } }
   | { type: 'createTag'; payload: { name: string; ref?: string; message?: string } }

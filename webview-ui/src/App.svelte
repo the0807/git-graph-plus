@@ -47,6 +47,8 @@
   let showAddWorktreeModal = $state(false);
   let addWorktreeDefaultPath = $state('');
   let renameBranchNew = $state('');
+  let stashRenameNew = $state('');
+  $effect(() => { if (modalStore.stashRename.show) stashRenameNew = modalStore.stashRename.message; });
   let stashSaveMessage = $state('');
   let stashSaveIncludeUntracked = $state(true);
   let stashSaveKeepIndex = $state(false);
@@ -408,6 +410,25 @@
     <div class="form-actions">
       <button onclick={() => { modalStore.closeRenameBranch(); }}>{t('common.cancel')}</button>
       <button class="primary" disabled={!renameBranchNew.trim() || renameBranchNew === modalStore.renameBranch.oldName} onclick={() => { const old = modalStore.renameBranch.oldName; modalStore.closeRenameBranch(); vscode.postMessage({ type: 'renameBranch', payload: { oldName: old, newName: renameBranchNew } }); }}>{t('renameBranch.rename')}</button>
+    </div>
+  </Modal>
+{/if}
+
+{#if modalStore.stashRename.show}
+  <Modal title={t('stashRename.title')} onClose={() => { modalStore.closeStashRename(); }}>
+    <div class="modal-context-card">
+      <i class="codicon codicon-archive"></i>
+      <span class="modal-pill modal-pill--source">{'stash@{' + modalStore.stashRename.index + '}'}</span>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-field-label" for="stash-rename-input">{t('stashRename.newMessage')}</label>
+      <!-- svelte-ignore a11y_autofocus -->
+      <input id="stash-rename-input" class="modal-input" type="text" bind:value={stashRenameNew} autofocus
+        onkeydown={(e) => { if (e.key === 'Enter' && stashRenameNew.trim()) { const idx = modalStore.stashRename.index; modalStore.closeStashRename(); vscode.postMessage({ type: 'stashRename', payload: { index: idx, message: stashRenameNew } }); } }} />
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { modalStore.closeStashRename(); }}>{t('common.cancel')}</button>
+      <button class="primary" disabled={!stashRenameNew.trim()} onclick={() => { const idx = modalStore.stashRename.index; modalStore.closeStashRename(); vscode.postMessage({ type: 'stashRename', payload: { index: idx, message: stashRenameNew } }); }}>{t('stashRename.rename')}</button>
     </div>
   </Modal>
 {/if}

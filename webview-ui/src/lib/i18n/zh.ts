@@ -349,6 +349,11 @@ export const zh: Record<string, string> = {
   'stashSave.placeholder': '储藏消息',
   'stashSave.save': '储藏',
 
+  // Stash rename modal
+  'stashRename.title': '重命名储藏',
+  'stashRename.newMessage': '新消息',
+  'stashRename.rename': '重命名',
+
   // Worktree modals
   'worktree.addTitle': '添加工作树',
   'worktree.startAt': '基于：',

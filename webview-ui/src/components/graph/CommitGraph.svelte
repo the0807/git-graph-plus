@@ -597,6 +597,11 @@
             },
             { separator: true, label: '', action: () => {} },
             {
+              label: t('sidebar.rename'),
+              action: () => modalStore.openStashRename(stashIndex, stashEntry?.message ?? ''),
+            },
+            { separator: true, label: '', action: () => {} },
+            {
               label: t('sidebar.drop'),
               action: () => vscode.postMessage({ type: 'stashDrop', payload: { index: stashIndex } }),
               danger: true,
@@ -606,177 +611,123 @@
       }
     }
 
-    // Separator after refs (only if there were any refs)
-    if (refs.length > 0) {
-      items.push({ separator: true, label: '', action: () => {} });
-    }
+    const isStashCommit = commit.refs.some(r => r.type === 'stash');
+    const sep = { separator: true, label: '', action: () => {} };
 
-    // ── Create actions ──
-    items.push(
-      {
-        label: t('graph.createBranchHere'),
-        action: () => { modalStore.openCreateBranch(commit.hash, commit.subject); },
-      },
-      {
-        label: t('graph.newTag'),
-        action: () => { modalStore.openCreateTag(commit.hash, commit.subject); },
-      },
-    );
+    // Groups are collected separately, then joined with separators at the end.
+    // Each non-empty group gets a separator before it (after the refs block).
+    const groups: any[][] = [];
 
-    // ── Branch operations ──
-    const hasBranchOrTag = commit.refs.some(r => r.type === 'head' || r.type === 'branch' || r.type === 'remote-branch' || r.type === 'tag');
-    if (hasBranchOrTag) {
-      const localRef = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
-      const remoteRef = commit.refs.find(r => r.type === 'remote-branch');
-      const tagRef = commit.refs.find(r => r.type === 'tag');
-      const mergeRef = localRef?.name ?? (remoteRef ? `${remoteRef.remote}/${remoteRef.name}` : undefined) ?? tagRef?.name ?? commit.hash;
-      if (mergeRef !== currentBranch) {
-        items.push(
-          { separator: true, label: '', action: () => {} },
-          {
-            label: t('graph.mergeInto', { branch: currentBranch }),
-            action: () => { modalStore.openMerge(mergeRef, branchStore.currentBranch?.name ?? 'current branch'); },
-          },
-        );
+    if (!isStashCommit) {
+      // ── Create ──
+      groups.push([
+        { label: t('graph.createBranchHere'), action: () => { modalStore.openCreateBranch(commit.hash, commit.subject); } },
+        { label: t('graph.newTag'),           action: () => { modalStore.openCreateTag(commit.hash, commit.subject); } },
+      ]);
+
+      // ── Branch / tag operations (merge, rebase, interactive rebase) ──
+      const branchOps: any[] = [];
+      const hasBranchOrTag = commit.refs.some(r => r.type === 'head' || r.type === 'branch' || r.type === 'remote-branch' || r.type === 'tag');
+      if (hasBranchOrTag) {
+        const localRef  = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
+        const remoteRef = commit.refs.find(r => r.type === 'remote-branch');
+        const tagRef    = commit.refs.find(r => r.type === 'tag');
+        const mergeRef  = localRef?.name ?? (remoteRef ? `${remoteRef.remote}/${remoteRef.name}` : undefined) ?? tagRef?.name ?? commit.hash;
+        if (mergeRef !== currentBranch) {
+          branchOps.push({ label: t('graph.mergeInto', { branch: currentBranch }), action: () => { modalStore.openMerge(mergeRef, branchStore.currentBranch?.name ?? 'current branch'); } });
+        }
       }
-    }
-    const isOnCurrentBranch = currentBranchCommits.has(commit.hash);
-    if (!isOnCurrentBranch) {
-      items.push(
-        ...(!hasBranchOrTag ? [{ separator: true, label: '', action: () => {} }] : []),
-        {
-          label: t('graph.rebaseTo', { branch: currentBranch }),
-          action: () => { rebaseTarget = commit.hash; showRebaseModal = true; },
-        },
-      );
-    }
-    items.push(
-      ...(isOnCurrentBranch && !hasBranchOrTag ? [{ separator: true, label: '', action: () => {} }] : []),
-      {
-        label: t('graph.interactiveRebaseTo', { branch: currentBranch }),
-        action: () => { interactiveRebaseBase = commit.hash; },
-      },
-    );
+      const isOnCurrentBranch = currentBranchCommits.has(commit.hash);
+      if (!isOnCurrentBranch) {
+        branchOps.push({ label: t('graph.rebaseTo', { branch: currentBranch }), action: () => { rebaseTarget = commit.hash; showRebaseModal = true; } });
+      }
+      branchOps.push({ label: t('graph.interactiveRebaseTo', { branch: currentBranch }), action: () => { interactiveRebaseBase = commit.hash; } });
+      groups.push(branchOps);
 
-    // ── Reset ──
-    const isHead = commit.refs.some(r => r.type === 'head');
-    if (!isHead) {
-      items.push(
-        { separator: true, label: '', action: () => {} },
-        {
-          label: t('graph.resetBranchToHere', { branch: currentBranch }),
-          action: () => { resetTarget = commit.hash; resetMode = 'mixed'; showResetModal = true; },
-        },
-      );
-    }
+      // ── Reset ──
+      const isHead = commit.refs.some(r => r.type === 'head');
+      if (!isHead) {
+        groups.push([{ label: t('graph.resetBranchToHere', { branch: currentBranch }), action: () => { resetTarget = commit.hash; resetMode = 'mixed'; showResetModal = true; } }]);
+      }
 
-    // ── Commit operations ──
-    items.push(
-      { separator: true, label: '', action: () => {} },
-      {
-        label: t('graph.checkoutCommit'),
-        action: () => {
-          const localRef = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
-          if (localRef) {
-            doCheckout(localRef.name);
-          } else {
-            const remoteRef = commit.refs.find(r => r.type === 'remote-branch' && r.name !== 'HEAD');
-            if (remoteRef) {
-              doCheckoutRemote(`${remoteRef.remote}/${remoteRef.name}`, remoteRef.name);
+      // ── Commit operations ──
+      groups.push([
+        {
+          label: t('graph.checkoutCommit'),
+          action: () => {
+            const localRef = commit.refs.find(r => r.type === 'head' || r.type === 'branch');
+            if (localRef) {
+              doCheckout(localRef.name);
             } else {
-              openCheckoutCommitModal(commit.hash);
+              const remoteRef = commit.refs.find(r => r.type === 'remote-branch' && r.name !== 'HEAD');
+              if (remoteRef) { doCheckoutRemote(`${remoteRef.remote}/${remoteRef.name}`, remoteRef.name); }
+              else            { openCheckoutCommitModal(commit.hash); }
             }
-          }
+          },
         },
-      },
-      {
-        label: t('graph.cherryPickCommit'),
-        action: () => { cherryPickTarget = commit.hash; cherryPickNoCommit = false; showCherryPickModal = true; },
-      },
-      {
-        label: t('graph.revertCommit'),
-        action: () => { revertTarget = commit.hash; revertNoCommit = false; showRevertModal = true; },
-      },
-      {
-        label: t('graph.savePatch'),
-        action: () => vscode.postMessage({ type: 'saveCommitPatch', payload: { hash: commit.hash } }),
-      },
-    );
+        { label: t('graph.cherryPickCommit'), action: () => { cherryPickTarget = commit.hash; cherryPickNoCommit = false; showCherryPickModal = true; } },
+        { label: t('graph.revertCommit'),     action: () => { revertTarget = commit.hash; revertNoCommit = false; showRevertModal = true; } },
+        { label: t('graph.savePatch'),        action: () => vscode.postMessage({ type: 'saveCommitPatch', payload: { hash: commit.hash } }) },
+      ]);
 
-    // ── Compare ──
-    items.push({ separator: true, label: '', action: () => {} });
-    items.push({
-      label: t('graph.compareToLocal'),
-      action: () => {
-        uiStore.comparing = true;
-        uiStore.selectedCommitHash = null;
-        uiStore.compareRef1 = commit.hash;
-        uiStore.compareRef2 = null;
-        uiStore.showBottomPanel = true;
-        vscode.postMessage({ type: 'compareToWorking', payload: { hash: commit.hash } });
-      },
-    });
-
-    if (compareBase) {
-      items.push({
-        label: t('graph.compareWith', { hash: compareBase.substring(0, 7) }),
+      // ── Compare ──
+      const compareGroup: any[] = [{
+        label: t('graph.compareToLocal'),
         action: () => {
-          uiStore.comparing = true;
-          uiStore.selectedCommitHash = null;
-          uiStore.compareRef1 = compareBase;
-          uiStore.compareRef2 = commit.hash;
+          uiStore.comparing = true; uiStore.selectedCommitHash = null;
+          uiStore.compareRef1 = commit.hash; uiStore.compareRef2 = null;
           uiStore.showBottomPanel = true;
-          vscode.postMessage({ type: 'compareCommits', payload: { ref1: compareBase!, ref2: commit.hash } });
-          compareBase = null;
+          vscode.postMessage({ type: 'compareToWorking', payload: { hash: commit.hash } });
         },
-      });
-      items.push({
-        label: t('graph.cancelCompare'),
-        action: () => { compareBase = null; },
-      });
-    } else {
-      items.push({
-        label: t('graph.selectForCompare'),
-        action: () => { compareBase = commit.hash; uiStore.selectedCommitHash = null; uiStore.showBottomPanel = false; },
-      });
-    }
+      }];
+      if (compareBase) {
+        compareGroup.push({
+          label: t('graph.compareWith', { hash: compareBase.substring(0, 7) }),
+          action: () => {
+            uiStore.comparing = true; uiStore.selectedCommitHash = null;
+            uiStore.compareRef1 = compareBase; uiStore.compareRef2 = commit.hash;
+            uiStore.showBottomPanel = true;
+            vscode.postMessage({ type: 'compareCommits', payload: { ref1: compareBase!, ref2: commit.hash } });
+            compareBase = null;
+          },
+        });
+        compareGroup.push({ label: t('graph.cancelCompare'), action: () => { compareBase = null; } });
+      } else {
+        compareGroup.push({ label: t('graph.selectForCompare'), action: () => { compareBase = commit.hash; uiStore.selectedCommitHash = null; uiStore.showBottomPanel = false; } });
+      }
+      groups.push(compareGroup);
 
-    // ── Bisect ──
-    items.push({ separator: true, label: '', action: () => {} });
-    if (bisectBadCommit) {
-      items.push({
-        label: t('bisect.startGood'),
-        action: () => {
-          const bad = bisectBadCommit!;
-          bisectBadCommit = null;
-          bisectStartBad = bad;
-          bisectStartGood = commit.hash;
-          vscode.postMessage({ type: 'bisectStart', payload: { bad, good: commit.hash } });
-        },
-      });
-      items.push({
-        label: t('bisect.cancelSelect'),
-        action: () => { bisectBadCommit = null; },
-      });
+      // ── Bisect ──
+      if (bisectBadCommit) {
+        groups.push([
+          { label: t('bisect.startGood'), action: () => { const bad = bisectBadCommit!; bisectBadCommit = null; bisectStartBad = bad; bisectStartGood = commit.hash; vscode.postMessage({ type: 'bisectStart', payload: { bad, good: commit.hash } }); } },
+          { label: t('bisect.cancelSelect'), action: () => { bisectBadCommit = null; } },
+        ]);
+      } else {
+        groups.push([{ label: t('bisect.selectBad'), action: () => { bisectBadCommit = commit.hash; uiStore.selectedCommitHash = null; uiStore.showBottomPanel = false; } }]);
+      }
     } else {
-      items.push({
-        label: t('bisect.selectBad'),
+      // ── Stash: compare to working ──
+      groups.push([{
+        label: t('graph.compareToLocal'),
         action: () => {
-          bisectBadCommit = commit.hash;
-          uiStore.selectedCommitHash = null;
-          uiStore.showBottomPanel = false;
+          uiStore.comparing = true; uiStore.selectedCommitHash = null;
+          uiStore.compareRef1 = commit.hash; uiStore.compareRef2 = null;
+          uiStore.showBottomPanel = true;
+          vscode.postMessage({ type: 'compareToWorking', payload: { hash: commit.hash } });
         },
-      });
+      }]);
     }
 
     // ── Copy SHA ──
-    items.push(
-      { separator: true, label: '', action: () => {} },
-      {
-        label: t('graph.copySHA'),
-        action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: commit.hash } }),
-      },
-    );
+    groups.push([{ label: t('graph.copySHA'), action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: commit.hash } }) }]);
+
+    // Flatten groups with separators between them, preceded by a separator if there were refs
+    if (refs.length > 0) items.push(sep);
+    for (let i = 0; i < groups.length; i++) {
+      if (i > 0) items.push(sep);
+      items.push(...groups[i]);
+    }
 
     contextMenu = { x: e.clientX, y: e.clientY, items };
   }
