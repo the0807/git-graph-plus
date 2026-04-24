@@ -51,6 +51,7 @@
   let stashSaveIncludeUntracked = $state(true);
   let stashSaveKeepIndex = $state(false);
   let deleteWorktreeBranch = $state(false);
+  let tagDetailsModal = $state<{ name: string; hash: string; message?: string; isAnnotated: boolean } | null>(null);
   onMount(() => {
     uiStore.bottomPanelHeight = Math.round(window.innerHeight * BOTTOM_PANEL_DEFAULT_RATIO);
 
@@ -74,6 +75,9 @@
         case 'repoList':
           uiStore.repos = msg.payload.repos;
           uiStore.activeRepo = msg.payload.active;
+          break;
+        case 'tagDetailsData':
+          tagDetailsModal = msg.payload;
           break;
         case 'conflictData':
           conflict = msg.payload;
@@ -494,6 +498,56 @@
   />
 {/if}
 
+{#if modalStore.pushTag.show}
+  <Modal title={t('pushTag.title')} onClose={() => { modalStore.closePushTag(); }}>
+    <p class="modal-desc">{t('pushTag.desc')}</p>
+    <div class="modal-context-card">
+      <i class="codicon codicon-tag"></i>
+      <span class="modal-pill modal-pill--tag">{modalStore.pushTag.tagName}</span>
+      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
+      <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
+      {#if branchStore.remotes.length > 1}
+        <ColorSelect
+          options={branchStore.remotes.map(r => ({ value: r.name, label: r.name, color: '' }))}
+          value={modalStore.pushTag.remote}
+          onChange={(v) => { modalStore.pushTag.remote = v; }}
+          showDot={false}
+        />
+      {:else}
+        <span class="modal-pill modal-pill--target">{modalStore.pushTag.remote}</span>
+      {/if}
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { modalStore.closePushTag(); }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => {
+        vscode.postMessage({ type: 'pushTag', payload: { name: modalStore.pushTag.tagName, remote: modalStore.pushTag.remote } });
+        modalStore.closePushTag();
+      }}>{t('pushTag.push')}</button>
+    </div>
+  </Modal>
+{/if}
+
+{#if tagDetailsModal}
+  <Modal title={t('graph.showTagDetails', { tag: tagDetailsModal.name })} onClose={() => { tagDetailsModal = null; }}>
+    <div class="tag-details">
+      <div class="tag-details-row">
+        <span class="tag-details-label">{t('graph.tagLabel')}:</span>
+        <span class="tag-details-value"><span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i> {tagDetailsModal.name}</span></span>
+      </div>
+      {#if tagDetailsModal.message}
+        <div class="tag-details-row tag-details-message-row">
+          <span class="tag-details-label">{t('createTag.message')}</span>
+          <textarea class="tag-details-message" readonly rows="6">{tagDetailsModal.message}</textarea>
+        </div>
+      {/if}
+
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { tagDetailsModal = null; }}>{t('common.close')}</button>
+    </div>
+  </Modal>
+{/if}
+
 {#if showDeleteRemoteTagModal}
   <Modal title={t('deleteRemoteTag.title')} onClose={() => { showDeleteRemoteTagModal = false; }}>
     <p class="modal-desc">{@html t('deleteRemoteTag.confirm', { name: deleteRemoteTagName })}</p>
@@ -740,6 +794,51 @@
   .app-container.resizing {
     cursor: ns-resize;
     user-select: none;
+  }
+
+  .tag-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px 12px;
+    padding: 4px 0 8px;
+    align-items: center;
+  }
+
+  .tag-details-row {
+    display: contents;
+  }
+
+  .tag-details-message-row .tag-details-label {
+    align-self: start;
+    padding-top: 6px;
+  }
+
+  .tag-details-label {
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  .tag-details-value {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    font-size: 13px;
+  }
+
+  .tag-details-message {
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;
+    background: var(--vscode-input-background, var(--bg-secondary));
+    border: 1px solid var(--vscode-input-border, var(--border-color));
+    border-radius: 3px;
+    color: var(--text-primary);
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 13px;
+    padding: 6px 8px;
+    line-height: 1.5;
+    outline: none;
   }
 
   .error-bar {

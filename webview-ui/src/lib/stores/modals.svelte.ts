@@ -94,6 +94,11 @@ class ModalStore {
   flowFinish = $state({ show: false, flowType: '' as string, branchName: '' });
   openFlowFinish(flowType: string, branchName: string) { this.flowFinish = { show: true, flowType, branchName }; }
   closeFlowFinish() { this.flowFinish = { show: false, flowType: '', branchName: '' }; }
+
+  // ── Push Tag ──
+  pushTag = $state({ show: false, tagName: '', remote: 'origin' });
+  openPushTag(tagName: string, remote = 'origin') { this.pushTag = { show: true, tagName, remote }; }
+  closePushTag() { this.pushTag = { show: false, tagName: '', remote: 'origin' }; }
 }
 
 export const modalStore = new ModalStore();

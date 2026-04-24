@@ -548,14 +548,15 @@
           ],
         });
       } else if (ref.type === 'tag') {
+        const defaultRemote = branchStore.remotes[0]?.name ?? 'origin';
         items.push({
           label: ref.name,
           icon: 'tag',
           action: () => {},
           children: [
             {
-              label: t('sidebar.checkout'),
-              action: () => doCheckout(ref.name),
+              label: t('graph.showTagDetails', { tag: ref.name }),
+              action: () => vscode.postMessage({ type: 'showTagDetails', payload: { name: ref.name } }),
             },
             {
               label: t('graph.mergeInto', { branch: currentBranch }),
@@ -571,6 +572,10 @@
             {
               label: t('graph.copyTagName'),
               action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: ref.name } }),
+            },
+            {
+              label: t('graph.pushTag', { tag: ref.name, remote: defaultRemote }),
+              action: () => modalStore.openPushTag(ref.name, defaultRemote),
             },
           ],
         });

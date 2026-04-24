@@ -75,7 +75,8 @@ export type WebviewMessage =
   | { type: 'openConflictFile'; payload: { file: string } }
   | { type: 'setUpstream'; payload: { branch: string; remote: string; remoteBranch: string } }
   | { type: 'openWorktreeInNewWindow'; payload: { path: string } }
-  | { type: 'showNotification'; payload: { message: string } };
+  | { type: 'showNotification'; payload: { message: string } }
+  | { type: 'showTagDetails'; payload: { name: string } };
 
 // Messages from Extension → Webview
 export type ExtensionMessage =
@@ -97,6 +98,7 @@ export type ExtensionMessage =
   | { type: 'lsTreeData'; payload: { ref: string; path?: string; entries: Array<{ mode: string; type: 'blob' | 'tree'; hash: string; name: string }> } }
   | { type: 'submoduleData'; payload: Array<{ hash: string; path: string; status: string }> }
   | { type: 'lfsData'; payload: { files: Array<{ oid: string; path: string }>; locks: Array<{ path: string; owner: string; id: string }> } }
+  | { type: 'tagDetailsData'; payload: { name: string; hash: string; message?: string; isAnnotated: boolean } }
   | { type: 'setLocale'; payload: { locale: string; homeDir?: string } }
   | { type: 'repoList'; payload: { repos: Array<{ path: string; name: string; type: 'root' | 'submodule' | 'nested' }>; active: string } }
   | { type: 'worktreeData'; payload: WorktreeInfo[] }

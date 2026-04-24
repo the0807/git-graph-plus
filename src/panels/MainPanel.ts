@@ -505,6 +505,14 @@ export class MainPanel {
           await this.refreshAll();
           break;
         }
+        case 'showTagDetails': {
+          const tags = await this.gitService.tags();
+          const tag = tags.find(t => t.name === message.payload.name);
+          if (tag) {
+            this.panel.webview.postMessage({ type: 'tagDetailsData', payload: tag });
+          }
+          break;
+        }
         case 'searchCommits': {
           const results = await this.gitService.searchCommits(message.payload.query, {
             author: message.payload.author,
