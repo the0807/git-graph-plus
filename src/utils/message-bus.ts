@@ -74,7 +74,8 @@ export type WebviewMessage =
   | { type: 'abortOperation' }
   | { type: 'openConflictFile'; payload: { file: string } }
   | { type: 'setUpstream'; payload: { branch: string; remote: string; remoteBranch: string } }
-  | { type: 'openWorktreeInNewWindow'; payload: { path: string } };
+  | { type: 'openWorktreeInNewWindow'; payload: { path: string } }
+  | { type: 'showNotification'; payload: { message: string } };
 
 // Messages from Extension → Webview
 export type ExtensionMessage =

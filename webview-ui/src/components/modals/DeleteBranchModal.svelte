@@ -37,6 +37,7 @@
     <label class="modal-checkbox modal-checkbox--danger">
       <input type="checkbox" bind:checked={force} />
       <span>{t('deleteBranch.force')}</span>
+      <span class="modal-flag-badge">-D</span>
     </label>
     {#if hasRemote}
       <label class="modal-checkbox modal-checkbox--danger" style="margin-top: 6px;">
@@ -56,3 +57,6 @@
     <button class="danger-btn" bind:this={deleteBtn} onclick={() => onDelete(force, linkedWorktree?.path, deleteRemote)}>{t('sidebar.delete')}</button>
   </div>
 </Modal>
+
+<style>
+</style>

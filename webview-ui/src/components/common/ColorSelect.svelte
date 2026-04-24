@@ -4,6 +4,7 @@
     label: string;
     color: string;
     warning?: string;
+    flag?: string;
   }
 
   interface Props {
@@ -60,6 +61,7 @@
       <span class="sizer-item">
         {#if showDot}<span class="dot" style="background: transparent"></span>{/if}
         <span>{opt.label}</span>
+        {#if opt.flag}<span class="flag-badge">{opt.flag}</span>{/if}
         <i class="codicon codicon-chevron-down chevron"></i>
       </span>
     {/each}
@@ -67,6 +69,7 @@
   <button class="color-select-btn" bind:this={btnEl} onclick={(e) => { e.stopPropagation(); toggle(); }}>
     {#if showDot}<span class="dot" style="background: {current.color}"></span>{/if}
     <span class="label">{current.label}</span>
+    {#if current.flag}<span class="flag-badge">{current.flag}</span>{/if}
     <i class="codicon codicon-chevron-down chevron"></i>
   </button>
   {#if open}
@@ -79,6 +82,7 @@
         >
           {#if showDot}<span class="dot" style="background: {opt.color}"></span>{/if}
           <span>{opt.label}</span>
+          {#if opt.flag}<span class="flag-badge">{opt.flag}</span>{/if}
           {#if opt.warning}<i class="codicon codicon-warning warning-icon"></i>{/if}
         </button>
       {/each}
@@ -213,5 +217,16 @@
     color: #f0a020;
     font-size: 11px;
     line-height: 1.3;
+  }
+
+  .flag-badge {
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 11px;
+    padding: 1px 6px;
+    background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.1));
+    border: 1px solid var(--vscode-editorWidget-border, rgba(128, 128, 128, 0.25));
+    border-radius: 100px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
   }
 </style>

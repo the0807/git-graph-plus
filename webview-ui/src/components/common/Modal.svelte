@@ -364,4 +364,16 @@
     background: var(--vscode-errorForeground, #f44336) !important;
     color: #fff !important;
   }
+
+  :global(.modal-flag-badge) {
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 11px;
+    padding: 1px 6px;
+    background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.1));
+    border: 1px solid var(--vscode-editorWidget-border, rgba(128, 128, 128, 0.25));
+    border-radius: 100px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    margin-left: 4px;
+  }
 </style>

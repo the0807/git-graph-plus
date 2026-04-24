@@ -17,13 +17,13 @@ export class FileWatcher implements vscode.Disposable {
     const gitDir = path.join(repoPath, '.git');
 
     // Only watch specific files that indicate meaningful state changes
-    // HEAD — branch switch, commit
+    // HEAD - branch switch, commit
     this.addWatcher(new vscode.RelativePattern(gitDir, 'HEAD'));
-    // refs — branch/tag create/delete/update
+    // refs - branch/tag create/delete/update
     this.addWatcher(new vscode.RelativePattern(gitDir, 'refs/**'));
-    // index — staging changes
+    // index - staging changes
     this.addWatcher(new vscode.RelativePattern(gitDir, 'index'));
-    // MERGE_HEAD, REBASE_HEAD — operation status
+    // MERGE_HEAD, REBASE_HEAD - operation status
     this.addWatcher(new vscode.RelativePattern(gitDir, 'MERGE_HEAD'));
     this.addWatcher(new vscode.RelativePattern(gitDir, 'REBASE_HEAD'));
     // stash ref

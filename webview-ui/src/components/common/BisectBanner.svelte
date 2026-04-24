@@ -82,7 +82,7 @@
       {:else}
         {t('bisect.banner.title')}
         {#if remainingSteps}
-          <span class="bisect-remaining"> — {t('bisect.banner.remaining', { count: remainingSteps })}</span>
+          <span class="bisect-remaining"> - {t('bisect.banner.remaining', { count: remainingSteps })}</span>
         {/if}
       {/if}
     </span>

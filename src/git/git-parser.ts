@@ -26,7 +26,7 @@ export function parseGraphLog(raw: string, marker = '\x1E', sep = '\x1F', remote
   for (const line of lines) {
     const markerIdx = line.indexOf(marker);
     if (markerIdx === -1) {
-      // Pure graph line (between commits) — skip
+      // Pure graph line (between commits) - skip
       continue;
     }
 

@@ -46,7 +46,7 @@ export class RepoDiscoveryService {
           });
         }
       } catch {
-        // Not a git repo — still scan children for nested repos
+        // Not a git repo - still scan children for nested repos
       }
     }
 
@@ -95,7 +95,7 @@ export class RepoDiscoveryService {
 
     const dirs = entries.filter(e => e.isDirectory() && !IGNORED_DIRS.has(e.name) && !e.name.startsWith('.'));
 
-    // Check all children in parallel — detect repos by .git presence, not rev-parse
+    // Check all children in parallel - detect repos by .git presence, not rev-parse
     const results = await Promise.all(dirs.map(async (entry) => {
       const childPath = path.join(dir, entry.name);
       const hasGit = await this.hasGitDir(childPath);

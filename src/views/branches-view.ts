@@ -55,7 +55,7 @@ export class BranchesViewProvider implements vscode.TreeDataProvider<BranchTreeI
 
     if (this.cache) return this.cache;
 
-    // Direct fetch as fallback — always returns data
+    // Direct fetch as fallback - always returns data
     try {
       const branches = await this.gitService.branches();
       this.cache = buildBranchTree(branches.filter(b => !b.remote));

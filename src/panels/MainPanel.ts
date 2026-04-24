@@ -578,6 +578,10 @@ export class MainPanel {
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'copied', success: true } });
           break;
         }
+        case 'showNotification': {
+          vscode.window.showInformationMessage(message.payload.message);
+          break;
+        }
         case 'saveCommitPatch': {
           const patch = await this.gitService.formatPatch(message.payload.hash);
           const uri = await vscode.window.showSaveDialog({
@@ -1057,7 +1061,7 @@ export class MainPanel {
         },
       });
     } else if (this.allConflictFiles.length > 0 && !opState.type) {
-      // Operation was completed or aborted externally — notify webview to dismiss conflict UI
+      // Operation was completed or aborted externally - notify webview to dismiss conflict UI
       this.allConflictFiles = [];
       this.panel.webview.postMessage({
         type: 'operationComplete',

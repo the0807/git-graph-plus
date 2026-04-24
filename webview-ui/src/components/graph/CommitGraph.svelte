@@ -278,7 +278,7 @@
       showWorktreeBlockedModal = true;
       return;
     }
-    // Check if local branch is behind remote — offer fast-forward
+    // Check if local branch is behind remote - offer fast-forward
     if (!skipBehindCheck) {
       const branch = branchStore.branches.find(b => !b.remote && b.name === ref);
       if (branch?.behind && branch.behind > 0 && branch.upstream) {
@@ -316,7 +316,7 @@
     if (localBranch) {
       doCheckout(localBranch.name, false, dirtyPayload);
     } else if (Object.keys(dirtyPayload).length > 0) {
-      // Dirty already handled — skip dirty check in modal
+      // Dirty already handled - skip dirty check in modal
       modalStore.openCheckoutRemote(remoteName, branchName, false, dirtyPayload);
     } else {
       // No local branch → check dirty, then show create modal
@@ -821,7 +821,7 @@
 
     <!-- Virtual scroll container -->
     <div class="scroll-content" style="height: {totalHeight}px; position: relative;">
-      <!-- SVG for graph — SourceGit-style Path + Link + Dot rendering -->
+      <!-- SVG for graph - SourceGit-style Path + Link + Dot rendering -->
       <svg
         class="graph-lines"
         width={graphWidth}
@@ -1124,9 +1124,9 @@
         <div class="modal-field-label">{t('reset.resetType')}</div>
         <ColorSelect
           options={[
-            { value: 'soft', label: t('reset.softOption'), color: '#4caf50' },
-            { value: 'mixed', label: t('reset.mixedOption'), color: '#ff9800' },
-            { value: 'hard', label: t('reset.hardOption'), color: '#f44336', warning: t('reset.hardWarning') },
+            { value: 'soft', label: t('reset.softOption'), color: '#4caf50', flag: '--soft' },
+            { value: 'mixed', label: t('reset.mixedOption'), color: '#ff9800', flag: '--mixed' },
+            { value: 'hard', label: t('reset.hardOption'), color: '#f44336', warning: t('reset.hardWarning'), flag: '--hard' },
           ]}
           value={resetMode}
           onChange={(v) => { resetMode = v as typeof resetMode; }}
@@ -1378,7 +1378,7 @@
     padding: 0 10px;
   }
 
-  /* ---- SVG layer — must be ABOVE rows so nodes/lines are visible ---- */
+  /* ---- SVG layer - must be ABOVE rows so nodes/lines are visible ---- */
   .graph-lines {
     pointer-events: none;
     z-index: 3;

@@ -91,7 +91,7 @@
                 <div
                   class="heatmap-cell"
                   style="background: {getHeatColor(count)}"
-                  title="{WEEKDAYS[d]} {h.toString().padStart(2, '0')}:00 — {count} commits"
+                  title="{WEEKDAYS[d]} {h.toString().padStart(2, '0')}:00 - {count} commits"
                 ></div>
               {/each}
             </div>

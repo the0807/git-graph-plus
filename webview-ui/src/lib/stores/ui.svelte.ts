@@ -12,13 +12,11 @@ class UiStore {
   showBottomPanel = $state(true);
   sidebarWidth = $state(220);
   errorMessage = $state<string | null>(null);
-  successMessage = $state<string | null>(null);
   repos = $state<Array<{ path: string; name: string; type: 'root' | 'submodule' | 'nested' }>>([]);
   activeRepo = $state('');
   homeDir = $state('');
   operating = $state<string | null>(null);
   private errorTimer: ReturnType<typeof setTimeout> | null = null;
-  private successTimer: ReturnType<typeof setTimeout> | null = null;
 
   selectCommit(hash: string | null) {
     this.selectedCommitHash = hash;
@@ -32,20 +30,6 @@ class UiStore {
 
   setViewMode(mode: 'graph' | 'log' | 'stats') {
     this.viewMode = mode;
-  }
-
-  setSuccess(message: string | null) {
-    if (this.successTimer) {
-      clearTimeout(this.successTimer);
-      this.successTimer = null;
-    }
-    this.successMessage = message;
-    if (message) {
-      this.successTimer = setTimeout(() => {
-        this.successMessage = null;
-        this.successTimer = null;
-      }, 5000);
-    }
   }
 
   setError(message: string | null) {

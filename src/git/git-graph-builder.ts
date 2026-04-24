@@ -348,7 +348,7 @@ export function buildFullGraph(commits: Commit[], branches: BranchInfo[] = []): 
     else if (commit.parents.length > 1) dotType = 'merge';
     result.dots.push({ center: position, color: dotColor, type: dotType, localOnly: isLocalOnly, remoteTip: isRemoteOnly });
 
-    // Merge parents — skip for remote-tip commits unless they are merge commits
+    // Merge parents - skip for remote-tip commits unless they are merge commits
     if (!remoteTipSet.has(commit.hash) || commit.parents.length > 1) {
       for (let j = 1; j < commit.parents.length; j++) {
         const parentHash = commit.parents[j];

@@ -76,6 +76,7 @@
     <label class="modal-checkbox">
       <input type="checkbox" bind:checked={autostash} />
       <span>{t('rebase.autostash')}</span>
+      <span class="modal-flag-badge">--autostash</span>
     </label>
   </div>
   <div class="form-actions">
@@ -124,4 +125,5 @@
     font-size: 11px;
     margin: 0 0 6px;
   }
+
 </style>

@@ -78,9 +78,9 @@
     <ColorSelect
       options={[
         { value: 'default', label: t('merge.default'), color: '#4caf50' },
-        { value: 'no-ff', label: t('merge.noFf'), color: '#2196f3' },
-        { value: 'ff-only', label: t('merge.ffOnly'), color: '#ff9800' },
-        { value: 'squash', label: t('merge.squash'), color: '#9c27b0', warning: t('merge.squashWarning') },
+        { value: 'no-ff', label: t('merge.noFf'), color: '#2196f3', flag: '--no-ff' },
+        { value: 'ff-only', label: t('merge.ffOnly'), color: '#ff9800', flag: '--ff-only' },
+        { value: 'squash', label: t('merge.squash'), color: '#9c27b0', warning: t('merge.squashWarning'), flag: '--squash' },
       ]}
       value={mergeMode}
       onChange={(v) => { mergeMode = v as typeof mergeMode; }}

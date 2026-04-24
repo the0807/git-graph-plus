@@ -92,7 +92,7 @@
             bisectMessage = null;
           }
           if (msg.payload.operation === 'copied') {
-            uiStore.setSuccess(t('copiedToClipboard'));
+            vscode.postMessage({ type: 'showNotification', payload: { message: t('copiedToClipboard') } });
           }
           conflict = null;
           break;
@@ -206,7 +206,7 @@
     searchNavigateHash = hash;
   }
 
-  // Draggable resize handle — track active listeners for cleanup
+  // Draggable resize handle - track active listeners for cleanup
   let resizeCleanup: (() => void) | null = null;
 
   function startResize(e: MouseEvent) {
@@ -252,7 +252,7 @@
           <button class="conflict-btn conflict-btn--abort" onclick={() => { showAbortConfirmModal = true; }}>
             <i class="codicon codicon-discard"></i> Abort
           </button>
-          <button class="conflict-btn conflict-btn--continue" disabled={conflict.files.some(f => !f.resolved)} onclick={() => { const op = conflict?.operation ?? 'merge'; vscode.postMessage({ type: 'continueOperation' }); conflict = null; uiStore.setSuccess(t('conflict.resolveSuccess', { operation: op })); }}>
+          <button class="conflict-btn conflict-btn--continue" disabled={conflict.files.some(f => !f.resolved)} onclick={() => { const op = conflict?.operation ?? 'merge'; vscode.postMessage({ type: 'continueOperation' }); conflict = null; vscode.postMessage({ type: 'showNotification', payload: { message: t('conflict.resolveSuccess', { operation: op }) } }); }}>
             <i class="codicon codicon-check"></i> Resolve
           </button>
         </div>
@@ -294,14 +294,6 @@
         <button class="danger-btn" onclick={() => { showAbortConfirmModal = false; vscode.postMessage({ type: 'abortOperation' }); conflict = null; }}>{t('conflict.abort')}</button>
       </div>
     </Modal>
-  {/if}
-
-  {#if uiStore.successMessage}
-    <div class="success-bar">
-      <i class="codicon codicon-check"></i>
-      <span class="success-text">{uiStore.successMessage}</span>
-      <button class="success-dismiss" onclick={() => uiStore.setSuccess(null)} title="Dismiss"><i class="codicon codicon-close"></i></button>
-    </div>
   {/if}
 
   {#if uiStore.errorMessage}
@@ -455,12 +447,14 @@
       <label class="modal-checkbox">
         <input type="checkbox" bind:checked={stashSaveIncludeUntracked} />
         <span>{t('stash.includeUntracked')}</span>
+        <span class="modal-flag-badge">--include-untracked</span>
       </label>
     </div>
     <div class="modal-form-group">
       <label class="modal-checkbox">
         <input type="checkbox" bind:checked={stashSaveKeepIndex} />
         <span>{t('stash.keepIndex')}</span>
+        <span class="modal-flag-badge">--keep-index</span>
       </label>
     </div>
     <div class="form-actions">
@@ -617,12 +611,14 @@
       <label class="modal-checkbox">
         <input type="checkbox" bind:checked={modalStore.pull.rebase} />
         <span>{t('pull.rebase')}</span>
+        <span class="modal-flag-badge">--rebase</span>
       </label>
     </div>
     <div class="modal-form-group">
       <label class="modal-checkbox">
         <input type="checkbox" bind:checked={modalStore.pull.stash} />
         <span>{t('pull.stash')}</span>
+        <span class="modal-flag-badge">--autostash</span>
       </label>
     </div>
     <div class="form-actions">
@@ -681,6 +677,7 @@
           checked={modalStore.push.forceMode === 'with-lease'}
           onchange={() => { modalStore.push.forceMode = modalStore.push.forceMode === 'with-lease' ? 'none' : 'with-lease'; }} />
         <span>{t('push.forceWithLease')}</span>
+        <span class="modal-flag-badge">--force-with-lease</span>
       </label>
     </div>
     <div class="modal-form-group">
@@ -689,6 +686,7 @@
           checked={modalStore.push.forceMode === 'force'}
           onchange={() => { modalStore.push.forceMode = modalStore.push.forceMode === 'force' ? 'none' : 'force'; }} />
         <span>{t('push.force')}</span>
+        <span class="modal-flag-badge">--force</span>
       </label>
     </div>
     {#if modalStore.push.forceMode === 'with-lease'}
@@ -730,6 +728,7 @@
 {/if}
 
 <style>
+
   .app-container {
     display: flex;
     flex-direction: column;
@@ -741,34 +740,6 @@
   .app-container.resizing {
     cursor: ns-resize;
     user-select: none;
-  }
-
-  .success-bar {
-    display: flex;
-    align-items: center;
-    padding: 6px 14px;
-    background: rgba(76, 175, 80, 0.1);
-    border-bottom: 1px solid rgba(76, 175, 80, 0.3);
-    font-size: 12px;
-    color: #4caf50;
-    gap: 8px;
-  }
-
-  .success-text {
-    flex: 1;
-  }
-
-  .success-dismiss {
-    background: transparent;
-    border: none;
-    color: #4caf50;
-    cursor: pointer;
-    padding: 2px 4px;
-    opacity: 0.7;
-  }
-
-  .success-dismiss:hover {
-    opacity: 1;
   }
 
   .error-bar {
@@ -1018,16 +989,6 @@
   }
 
   /* ---- Light theme overrides ---- */
-  :global(body.vscode-light) .success-bar {
-    background: rgba(46, 125, 50, 0.06);
-    border-bottom-color: rgba(46, 125, 50, 0.2);
-    color: #2e7d32;
-  }
-
-  :global(body.vscode-light) .success-dismiss {
-    color: #2e7d32;
-  }
-
   :global(body.vscode-light) .conflict-icon {
     color: #9a6700;
   }
