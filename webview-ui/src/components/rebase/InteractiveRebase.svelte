@@ -167,23 +167,6 @@
               {info.label}
               <i class="codicon codicon-chevron-down action-chevron"></i>
             </button>
-
-            {#if showActionMenu === index}
-              <!-- svelte-ignore a11y_no_static_element_interactions -->
-              <div class="action-dropdown" style="left: {dropdownPos.x}px; top: {dropdownPos.y}px;" onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
-                {#each ACTIONS as act}
-                  <button
-                    class="action-option"
-                    class:active={todo.action === act.value}
-                    onclick={() => setAction(index, act.value)}
-                  >
-                    <i class="codicon codicon-{act.icon}" style="color: {act.color}"></i>
-                    <span>{act.label}</span>
-                    <span class="action-desc">{t(`rebase.action.${act.value}`)}</span>
-                  </button>
-                {/each}
-              </div>
-            {/if}
           </div>
 
           <span class="todo-hash">{todo.hash.substring(0, 7)}</span>
@@ -200,6 +183,24 @@
         </div>
       {/each}
     </div>
+
+    {#if showActionMenu !== null}
+      {@const activeAction = todos[showActionMenu]?.action}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div class="action-dropdown" style="left: {dropdownPos.x}px; top: {dropdownPos.y}px;" onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
+        {#each ACTIONS as act}
+          <button
+            class="action-option"
+            class:active={activeAction === act.value}
+            onclick={() => setAction(showActionMenu!, act.value)}
+          >
+            <i class="codicon codicon-{act.icon}" style="color: {act.color}"></i>
+            <span>{act.label}</span>
+            <span class="action-desc">{t(`rebase.action.${act.value}`)}</span>
+          </button>
+        {/each}
+      </div>
+    {/if}
 
     {#if dropCount > 0}
       <div class="rebase-warning">

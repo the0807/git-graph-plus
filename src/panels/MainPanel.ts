@@ -18,6 +18,7 @@ export class MainPanel {
   private fileWatcher: FileWatcher;
   private disposables: vscode.Disposable[] = [];
   private allConflictFiles: string[] = [];
+  private currentLimit = 1000;
   public static onSidebarRefresh: (() => void) | null = null;
 
   private constructor(
@@ -137,19 +138,24 @@ export class MainPanel {
       switch (message.type) {
         case 'getLog': {
           const cfg = vscode.workspace.getConfiguration('gitGraphPlus');
-          const maxCommits = cfg.get<number>('maxCommits', 1000);
           const sortOrder = cfg.get<'author-date' | 'date' | 'topological'>('graphSortOrder', 'topological');
-          const logPayload = { ...message.payload, limit: message.payload.limit ?? maxCommits, sortOrder };
-          const [commits, logBranches] = await Promise.all([
+          const requestedLimit = message.payload.limit ?? 1000;
+          this.currentLimit = requestedLimit;
+          const logPayload = { ...message.payload, limit: requestedLimit + 1, sortOrder };
+          const [allFetched, logBranches] = await Promise.all([
             this.gitService.log(logPayload),
             this.gitService.branches(),
           ]);
+          const hasMore = allFetched.length > requestedLimit;
+          const commits = hasMore ? allFetched.slice(0, requestedLimit) : allFetched;
           const graph = commits.length > 0 ? buildGraph(commits, logBranches) : [];
           const fullGraph = commits.length > 0 ? buildFullGraph(commits, logBranches) : { paths: [], links: [], dots: [], commitLeftMargin: [] };
           this.panel.webview.postMessage({
             type: 'logData',
             payload: {
               commits,
+              hasMore,
+              currentLimit: requestedLimit,
               graph,
               paths: fullGraph.paths,
               links: fullGraph.links,
@@ -185,7 +191,7 @@ export class MainPanel {
           ]);
           this.panel.webview.postMessage({
             type: 'commitDiffData',
-            payload: { diffs: commitDiffs, files: commitFiles },
+            payload: { hash: message.payload.hash, diffs: commitDiffs, files: commitFiles },
           });
           break;
         }
@@ -585,7 +591,7 @@ export class MainPanel {
         case 'saveCommitPatch': {
           const patch = await this.gitService.formatPatch(message.payload.hash);
           const uri = await vscode.window.showSaveDialog({
-            defaultUri: vscode.Uri.file(`${message.payload.hash.substring(0, 7)}.patch`),
+            defaultUri: vscode.Uri.file(path.join(this.repoPath, `${message.payload.hash.substring(0, 7)}.patch`)),
             filters: { 'Patch files': ['patch'] },
           });
           if (uri) {
@@ -973,14 +979,18 @@ export class MainPanel {
     this.refreshing = true;
     this.refreshQueued = false;
     try {
-      const [allCommits, branches, tags, remotes, stashes, worktrees] = await Promise.all([
-        this.gitService.log({ limit: vscode.workspace.getConfiguration('gitGraphPlus').get<number>('maxCommits', 1000), sortOrder: vscode.workspace.getConfiguration('gitGraphPlus').get<'author-date' | 'date' | 'topological'>('graphSortOrder', 'topological') }),
+      const sortOrder = vscode.workspace.getConfiguration('gitGraphPlus').get<'author-date' | 'date' | 'topological'>('graphSortOrder', 'topological');
+      const refreshLimit = this.currentLimit || 1000;
+      const [allFetched, branches, tags, remotes, stashes, worktrees] = await Promise.all([
+        this.gitService.log({ limit: refreshLimit + 1, sortOrder }),
         this.gitService.branches(),
         this.gitService.tags(),
         this.gitService.remotes(),
         this.gitService.stashList(),
         this.gitService.worktreeList(),
       ]);
+      const hasMore = allFetched.length > refreshLimit;
+      const allCommits = hasMore ? allFetched.slice(0, refreshLimit) : allFetched;
       // Handle empty repository (0 commits) gracefully
       const graph = allCommits.length > 0 ? buildGraph(allCommits, branches) : [];
       const fg = allCommits.length > 0 ? buildFullGraph(allCommits, branches) : { paths: [], links: [], dots: [], commitLeftMargin: [] };
@@ -988,7 +998,7 @@ export class MainPanel {
       this.panel.webview.postMessage({
         type: 'fullRefresh',
         payload: {
-          logData: { commits: allCommits, graph, paths: fg.paths, links: fg.links, dots: fg.dots, commitLeftMargin: fg.commitLeftMargin },
+          logData: { commits: allCommits, hasMore, currentLimit: this.currentLimit, graph, paths: fg.paths, links: fg.links, dots: fg.dots, commitLeftMargin: fg.commitLeftMargin },
           branchData: { branches, tags, remotes, stashes, worktrees },
         },
       });

@@ -12,6 +12,10 @@ import { StatusBarManager } from './views/status-bar';
 import { RepoDiscoveryService } from './services/repo-discovery';
 
 export function activate(context: vscode.ExtensionContext) {
+  // Status bar is always visible regardless of workspace state
+  const statusBar = new StatusBarManager();
+  context.subscriptions.push(statusBar);
+
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
   if (!workspaceFolder) {
     return;
@@ -66,10 +70,6 @@ export function activate(context: vscode.ExtensionContext) {
     stashesProvider.prefetch(),
     worktreesProvider.prefetch(),
   ]).catch(() => {});
-
-  // --- Status Bar ---
-  const statusBar = new StatusBarManager();
-  context.subscriptions.push(statusBar);
 
   // --- File Watcher ---
   const fileWatcher = new FileWatcher(repoPath, () => {

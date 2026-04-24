@@ -64,6 +64,8 @@ export interface CommitGraphData {
   links?: GraphLinkData[];
   dots?: GraphDotData[];
   commitLeftMargin?: number[];
+  hasMore?: boolean;
+  currentLimit?: number;
 }
 
 export interface BranchInfo {

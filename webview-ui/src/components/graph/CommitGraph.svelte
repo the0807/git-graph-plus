@@ -1067,6 +1067,26 @@
       </div>
 
     </div>
+
+    {#if commitStore.hasMore && !isSearchActive}
+      <div class="load-more-row">
+        <button
+          class="load-more-btn"
+          disabled={commitStore.loadingMore}
+          onclick={() => {
+            commitStore.setLoadingMore(true);
+            vscode.postMessage({ type: 'getLog', payload: { limit: commitStore.currentLimit + 500 } });
+          }}
+        >
+          {#if commitStore.loadingMore}
+            <span class="spinner"></span>
+          {:else}
+            <i class="codicon codicon-chevron-down"></i>
+          {/if}
+          {t('graph.loadMore')}
+        </button>
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -1355,6 +1375,37 @@
     height: 100%;
     color: var(--text-secondary);
     font-size: 13px;
+  }
+
+  /* ---- Load More ---- */
+  .load-more-row {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0 12px;
+  }
+
+  .load-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 16px;
+    font-size: 12px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .load-more-btn:hover:not(:disabled) {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+    border-color: var(--text-secondary);
+  }
+
+  .load-more-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
 
   /* ---- Header ---- */

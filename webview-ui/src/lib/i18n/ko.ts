@@ -104,6 +104,7 @@ export const ko: Record<string, string> = {
   'graph.loading': 'Commit 로딩 중',
   'graph.noCommits': 'Commit을 찾을 수 없습니다',
   'graph.noResults': '일치하는 commit이 없습니다',
+  'graph.loadMore': 'Commit 더 불러오기',
   'graph.searchResults': '검색 결과 {count}개{plural}',
   'graph.description': '설명',
   'graph.author': '작성자',

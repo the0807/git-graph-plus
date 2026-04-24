@@ -349,11 +349,6 @@
     "configuration": {
       "title": "Git Graph+",
       "properties": {
-        "gitGraphPlus.maxCommits": {
-          "type": "number",
-          "default": 1000,
-          "description": "Maximum number of commits to load initially"
-        },
         "gitGraphPlus.autoRefresh": {
           "type": "boolean",
           "default": true,

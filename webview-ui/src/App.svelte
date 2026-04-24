@@ -147,7 +147,7 @@
 
     // Request initial data
     commitStore.setLoading(true);
-    vscode.postMessage({ type: 'getLog', payload: { limit: 1000 } });
+    vscode.postMessage({ type: 'getLog', payload: {} });
     vscode.postMessage({ type: 'getBranches' });
     vscode.postMessage({ type: 'checkFlowStatus' });
 
@@ -185,7 +185,7 @@
 
     if (ctrl && e.key === 'r') {
       e.preventDefault();
-      vscode.postMessage({ type: 'getLog', payload: { limit: 1000 } });
+      vscode.postMessage({ type: 'getLog', payload: { limit: commitStore.currentLimit || undefined } });
       vscode.postMessage({ type: 'getBranches' });
     }
 

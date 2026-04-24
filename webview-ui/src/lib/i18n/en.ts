@@ -104,6 +104,7 @@ export const en: Record<string, string> = {
   'graph.loading': 'Loading commits',
   'graph.noCommits': 'No commits found',
   'graph.noResults': 'No matching commits',
+  'graph.loadMore': 'Load more commits',
   'graph.searchResults': 'Showing {count} search result{plural}',
   'graph.description': 'Description',
   'graph.author': 'Author',

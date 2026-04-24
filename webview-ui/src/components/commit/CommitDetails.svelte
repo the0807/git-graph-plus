@@ -37,13 +37,18 @@
   // svelte-ignore state_referenced_locally
   let activeTab = $state<'commit' | 'changes'>(commit ? 'commit' : 'changes');
 
-  // Request commit diff when commit changes
+  let activeHash = '';
+
+  // Request commit diff only when hash actually changes (not on object reference changes from fullRefresh)
   $effect(() => {
-    if (commit?.hash) {
-      files = [];
-      diffs = [];
-      selectedFile = null;
-      vscode.postMessage({ type: 'getCommitDiff', payload: { hash: commit.hash } });
+    const hash = commit?.hash ?? '';
+    if (hash === activeHash) return;
+    activeHash = hash;
+    files = [];
+    diffs = [];
+    selectedFile = null;
+    if (hash) {
+      vscode.postMessage({ type: 'getCommitDiff', payload: { hash } });
       vscode.postMessage({ type: 'getLfsFiles' });
     }
   });
@@ -52,6 +57,8 @@
     function handleMessage(event: MessageEvent) {
       const msg = event.data;
       if (msg.type === 'commitDiffData') {
+        // Discard stale responses from previous commit selections
+        if (msg.payload.hash !== activeHash) return;
         files = msg.payload.files;
         diffs = msg.payload.diffs;
       }

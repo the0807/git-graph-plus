@@ -8,6 +8,9 @@ class CommitStore {
   dots = $state<GraphDotData[]>([]);
   commitLeftMargin = $state<number[]>([]);
   loading = $state(false);
+  loadingMore = $state(false);
+  hasMore = $state(false);
+  currentLimit = $state(0);
 
   setData(data: CommitGraphData) {
     this.commits = data.commits;
@@ -16,11 +19,18 @@ class CommitStore {
     this.links = data.links ?? [];
     this.dots = data.dots ?? [];
     this.commitLeftMargin = data.commitLeftMargin ?? [];
+    this.hasMore = data.hasMore ?? false;
+    if (data.currentLimit) this.currentLimit = data.currentLimit;
     this.loading = false;
+    this.loadingMore = false;
   }
 
   setLoading(value: boolean) {
     this.loading = value;
+  }
+
+  setLoadingMore(value: boolean) {
+    this.loadingMore = value;
   }
 
   getCommit(hash: string): Commit | undefined {
