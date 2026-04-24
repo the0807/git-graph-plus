@@ -66,19 +66,19 @@ class ModalStore {
   closeSetUpstream() { this.setUpstream = { show: false, branchName: '' }; }
 
   // ── Fetch ──
-  fetch = $state({ show: false });
-  openFetch() { this.fetch = { show: true }; }
-  closeFetch() { this.fetch = { show: false }; }
+  fetch = $state({ show: false, allRemotes: false, remote: 'origin' });
+  openFetch(remote = 'origin') { this.fetch = { show: true, allRemotes: false, remote }; }
+  closeFetch() { this.fetch = { show: false, allRemotes: false, remote: 'origin' }; }
 
   // ── Pull ──
-  pull = $state({ show: false });
-  openPull() { this.pull = { show: true }; }
-  closePull() { this.pull = { show: false }; }
+  pull = $state({ show: false, rebase: true, stash: false });
+  openPull() { this.pull = { show: true, rebase: true, stash: false }; }
+  closePull() { this.pull = { show: false, rebase: true, stash: false }; }
 
   // ── Push ──
-  push = $state({ show: false });
-  openPush() { this.push = { show: true }; }
-  closePush() { this.push = { show: false }; }
+  push = $state({ show: false, forceMode: 'none' as 'none' | 'with-lease' | 'force', setUpstream: true, remote: 'origin', allTags: false });
+  openPush(remote = 'origin') { this.push = { show: true, forceMode: 'none', setUpstream: true, remote, allTags: false }; }
+  closePush() { this.push = { show: false, forceMode: 'none', setUpstream: true, remote: 'origin', allTags: false }; }
 
   // ── Flow Init ──
   flowInit = $state({ show: false });

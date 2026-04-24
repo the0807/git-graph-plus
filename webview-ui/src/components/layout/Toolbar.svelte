@@ -5,33 +5,21 @@
   import { uiStore } from '../../lib/stores/ui.svelte';
   import { t } from '../../lib/i18n/index.svelte';
   import Modal from '../common/Modal.svelte';
-  import ColorSelect from '../common/ColorSelect.svelte';
   import AddRemoteModal from '../modals/AddRemoteModal.svelte';
   import { modalStore } from '../../lib/stores/modals.svelte';
   import type { FlowStatus, FlowBranches } from '../../lib/types';
 
   const vscode = getVsCodeApi();
 
-  let operating = $state<string | null>(null);
-  let showFetchConfirm = $state(false);
-  let fetchAllRemotes = $state(false);
-  let fetchRemote = $state('origin');
-  let showPushConfirm = $state(false);
-  let forceMode = $state<'none' | 'with-lease' | 'force'>('none');
-  let pushSetUpstream = $state(true);
-  let pushRemote = $state('origin');
-  let pushAllTags = $state(false);
-  let showPullConfirm = $state(false);
-  let pullRebase = $state(false);
-  let pullStash = $state(false);
   let showAddRemote = $state(false);
   let showRepoDropdown = $state(false);
   let showFlowDropdown = $state(false);
   let flowStatus = $state<FlowStatus | null>(null);
   let flowBranches = $state<FlowBranches>({ features: [], releases: [], hotfixes: [] });
+  let showNoRemotesError = $state(false);
 
   function refresh() {
-    operating = 'refresh';
+    uiStore.operating = 'refresh';
     vscode.postMessage({ type: 'getLog', payload: { limit: 1000 } });
     vscode.postMessage({ type: 'getBranches' });
     vscode.postMessage({ type: 'getRepoList' });
@@ -41,67 +29,18 @@
     uiStore.viewMode = 'graph';
   }
 
-  let showNoRemotesError = $state(false);
-
   function doFetch() {
-    if (branchStore.remotes.length === 0) {
-      showNoRemotesError = true;
-      return;
-    }
-    showFetchConfirm = true;
-    fetchAllRemotes = false;
-    fetchRemote = branchStore.remotes[0].name;
-  }
-
-  function confirmFetch() {
-    operating = 'fetch';
-    showFetchConfirm = false;
-    vscode.postMessage({ type: 'fetch', payload: { remote: fetchAllRemotes ? undefined : fetchRemote, prune: true } });
+    if (branchStore.remotes.length === 0) { showNoRemotesError = true; return; }
+    modalStore.openFetch(branchStore.remotes[0].name);
   }
 
   function doPull() {
-    showPullConfirm = true;
-    pullRebase = true;
-    pullStash = false;
+    modalStore.openPull();
   }
-
-  function confirmPull() {
-    operating = 'pull';
-    showPullConfirm = false;
-    vscode.postMessage({ type: 'pull', payload: { rebase: pullRebase, stash: pullStash } });
-  }
-
-  const hasUpstream = $derived(!!branchStore.currentBranch?.upstream);
-  const pushBranchName = $derived(branchStore.currentBranch?.name ?? 'branch');
-  const pushTarget = $derived.by(() => {
-    const current = branchStore.currentBranch;
-    if (current?.upstream) return current.upstream;
-    return `${pushRemote}/${pushBranchName}`;
-  });
 
   function doPush() {
-    if (branchStore.remotes.length === 0) {
-      showNoRemotesError = true;
-      return;
-    }
-    showPushConfirm = true;
-    forceMode = 'none';
-    pushSetUpstream = true;
-    pushAllTags = false;
-    pushRemote = branchStore.remotes[0].name;
-  }
-
-  function confirmPush() {
-    operating = 'push';
-    showPushConfirm = false;
-    const current = branchStore.currentBranch;
-    const remote = hasUpstream ? undefined : pushRemote;
-    const branch = hasUpstream ? undefined : pushBranchName;
-    const force = forceMode === 'none' ? undefined : forceMode;
-    vscode.postMessage({ type: 'push', payload: { remote, branch, force, setUpstream: !hasUpstream && pushSetUpstream } });
-    if (pushAllTags) {
-      vscode.postMessage({ type: 'pushAllTags', payload: { remote: pushRemote } });
-    }
+    if (branchStore.remotes.length === 0) { showNoRemotesError = true; return; }
+    modalStore.openPush(branchStore.remotes[0].name);
   }
 
   function openFlowDropdown() {
@@ -116,15 +55,14 @@
     vscode.postMessage({ type: 'switchRepo', payload: { path: repoPath } });
   }
 
-  // Listen for operation complete to clear spinner
   onMount(() => {
     function handler(event: MessageEvent) {
       const msg = event.data;
-      if ((msg.type === 'operationComplete' || msg.type === 'error') && operating) {
-        operating = null;
+      if ((msg.type === 'operationComplete' || msg.type === 'error') && uiStore.operating) {
+        uiStore.operating = null;
       }
-      if (msg.type === 'logData' && operating === 'refresh') {
-        operating = null;
+      if (msg.type === 'logData' && uiStore.operating === 'refresh') {
+        uiStore.operating = null;
       }
       if (msg.type === 'flowStatus') flowStatus = msg.payload;
       if (msg.type === 'flowBranches') flowBranches = msg.payload;
@@ -133,12 +71,7 @@
     return () => window.removeEventListener('message', handler);
   });
 
-  $effect(() => {
-    if (modalStore.fetch.show) { modalStore.closeFetch(); doFetch(); }
-    if (modalStore.pull.show) { modalStore.closePull(); doPull(); }
-    if (modalStore.push.show) { modalStore.closePush(); doPush(); }
-  });
-
+  const hasUpstream = $derived(!!branchStore.currentBranch?.upstream);
   let ahead = $derived(branchStore.currentBranch?.ahead ?? 0);
   let behind = $derived(branchStore.currentBranch?.behind ?? 0);
   let activeRepoInfo = $derived(uiStore.repos.find(r => r.path === uiStore.activeRepo) ?? uiStore.repos[0]);
@@ -214,7 +147,7 @@
     <button
       class="toolbar-btn"
       onclick={() => { modalStore.openStashSave(); }}
-      disabled={operating !== null}
+      disabled={uiStore.operating !== null}
       title={t('toolbar.stashDesc')}
     >
       <i class="codicon codicon-archive"></i>
@@ -223,20 +156,20 @@
     <button
       class="toolbar-btn"
       onclick={doFetch}
-      disabled={operating !== null}
+      disabled={uiStore.operating !== null}
       title={t('toolbar.fetchAll')}
     >
-      {#if operating === 'fetch'}<span class="spinner"></span>{:else}<i class="codicon codicon-cloud-download"></i>{/if}
+      {#if uiStore.operating === 'fetch'}<span class="spinner"></span>{:else}<i class="codicon codicon-cloud-download"></i>{/if}
     </button>
     <span class="separator"></span>
     <button
       class="toolbar-btn"
       class:has-badge={behind > 0}
       onclick={doPull}
-      disabled={operating !== null}
+      disabled={uiStore.operating !== null}
       title={t('toolbar.pullDesc')}
     >
-      {#if operating === 'pull'}<span class="spinner"></span>{:else}<i class="codicon codicon-arrow-down"></i>{/if}
+      {#if uiStore.operating === 'pull'}<span class="spinner"></span>{:else}<i class="codicon codicon-arrow-down"></i>{/if}
       {#if behind > 0}<span class="btn-badge pull-badge">{behind}</span>{/if}
     </button>
     <span class="separator"></span>
@@ -244,10 +177,10 @@
       class="toolbar-btn"
       class:has-badge={ahead > 0}
       onclick={doPush}
-      disabled={operating !== null}
+      disabled={uiStore.operating !== null}
       title={t('toolbar.pushDesc')}
     >
-      {#if operating === 'push'}
+      {#if uiStore.operating === 'push'}
         <span class="spinner"></span>
       {:else if !hasUpstream && branchStore.currentBranch}
         <i class="codicon codicon-cloud-upload unpublished-icon"></i>
@@ -257,8 +190,8 @@
       {#if ahead > 0}<span class="btn-badge push-badge">{ahead}</span>{/if}
     </button>
     <span class="separator"></span>
-    <button class="toolbar-btn icon-only" onclick={refresh} disabled={operating !== null} title={t('toolbar.refreshDesc')}>
-      {#if operating === 'refresh'}<span class="spinner"></span>{:else}<i class="codicon codicon-refresh"></i>{/if}
+    <button class="toolbar-btn icon-only" onclick={refresh} disabled={uiStore.operating !== null} title={t('toolbar.refreshDesc')}>
+      {#if uiStore.operating === 'refresh'}<span class="spinner"></span>{:else}<i class="codicon codicon-refresh"></i>{/if}
     </button>
     <span class="separator"></span>
     <div class="flow-wrapper">
@@ -317,121 +250,6 @@
     </div>
   </div>
 </div>
-
-{#if showFetchConfirm}
-  <Modal title={t('fetch.title')} onClose={() => { showFetchConfirm = false; }}>
-    <p class="modal-desc">{t('fetch.desc')}</p>
-    <div class="modal-form-group">
-      <div class="modal-field-label">{t('fetch.remote')}</div>
-      <ColorSelect
-        options={branchStore.remotes.map(r => ({ value: r.name, label: r.name, color: '' }))}
-        value={fetchRemote}
-        onChange={(v) => { fetchRemote = v; }}
-        showDot={false}
-      />
-    </div>
-    <div class="modal-form-group">
-      <label class="modal-checkbox">
-        <input type="checkbox" bind:checked={fetchAllRemotes} />
-        <span>{t('fetch.allRemotes')}</span>
-      </label>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showFetchConfirm = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={confirmFetch}>{t('fetch.fetch')}</button>
-    </div>
-  </Modal>
-{/if}
-
-{#if showPushConfirm}
-  <Modal title={t('push.title')} onClose={() => { showPushConfirm = false; }}>
-    <p class="modal-desc">{t('push.desc')}</p>
-    <div class="modal-context-card">
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
-      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
-      {#if hasUpstream}
-        <span class="modal-pill modal-pill--target">{pushTarget}</span>
-      {:else}
-        {#if branchStore.remotes.length > 1}
-          <ColorSelect
-            options={branchStore.remotes.map(r => ({ value: r.name, label: `new (${r.name}/${branchStore.currentBranch?.name ?? 'branch'})`, color: '' }))}
-            value={pushRemote}
-            onChange={(v) => { pushRemote = v; }}
-            showDot={false}
-          />
-        {:else}
-          <span class="modal-pill modal-pill--target">{t('push.new', { target: pushTarget })}</span>
-        {/if}
-      {/if}
-    </div>
-    {#if !hasUpstream}
-      <div class="modal-form-group">
-        <label class="modal-checkbox">
-          <input type="checkbox" bind:checked={pushSetUpstream} />
-          <span>{t('push.createTracking')}</span>
-        </label>
-      </div>
-    {/if}
-    <div class="modal-form-group">
-      <label class="modal-checkbox">
-        <input type="checkbox" bind:checked={pushAllTags} />
-        <span>{t('push.pushAllTags')}</span>
-      </label>
-    </div>
-    <div class="modal-form-group">
-      <label class="modal-checkbox">
-        <input type="checkbox" checked={forceMode === 'with-lease'} onchange={() => { forceMode = forceMode === 'with-lease' ? 'none' : 'with-lease'; }} />
-        <span>{t('push.forceWithLease')}</span>
-      </label>
-    </div>
-    <div class="modal-form-group">
-      <label class="modal-checkbox modal-checkbox--danger">
-        <input type="checkbox" checked={forceMode === 'force'} onchange={() => { forceMode = forceMode === 'force' ? 'none' : 'force'; }} />
-        <span>{t('push.force')}</span>
-      </label>
-    </div>
-    {#if forceMode === 'with-lease'}
-      <p class="modal-warning" role="alert"><span>{@html t('push.forceWithLeaseWarning')}</span></p>
-    {:else if forceMode === 'force'}
-      <p class="modal-warning" role="alert"><span>{@html t('push.forceWarning')}</span></p>
-    {/if}
-    <div class="form-actions">
-      <button onclick={() => { showPushConfirm = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={confirmPush}>{t('push.push')}</button>
-    </div>
-  </Modal>
-{/if}
-
-{#if showPullConfirm}
-  <Modal title={t('pull.title')} onClose={() => { showPullConfirm = false; }}>
-    <p class="modal-desc">{t('pull.desc')}</p>
-    <div class="modal-context-card">
-      <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
-      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.upstream ?? 'origin'}</span>
-      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
-    </div>
-    <div class="modal-form-group">
-      <label class="modal-checkbox">
-        <input type="checkbox" bind:checked={pullRebase} />
-        <span>{t('pull.rebase')}</span>
-      </label>
-    </div>
-    <div class="modal-form-group">
-      <label class="modal-checkbox">
-        <input type="checkbox" bind:checked={pullStash} />
-        <span>{t('pull.stash')}</span>
-      </label>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showPullConfirm = false; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={confirmPull}>{t('pull.pull')}</button>
-    </div>
-  </Modal>
-{/if}
 
 {#if showAddRemote}
   <AddRemoteModal
@@ -681,7 +499,6 @@
     margin-top: 16px;
   }
 
-
   .flow-wrapper {
     position: relative;
   }
@@ -741,6 +558,4 @@
     border-top: 1px solid var(--border-color);
     margin: 4px 0;
   }
-
-
 </style>

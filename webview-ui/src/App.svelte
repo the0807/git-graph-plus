@@ -19,6 +19,7 @@
   import CheckoutRemoteModal from './components/modals/CheckoutRemoteModal.svelte';
   import AddWorktreeModal from './components/modals/AddWorktreeModal.svelte';
   import Modal from './components/common/Modal.svelte';
+  import ColorSelect from './components/common/ColorSelect.svelte';
   import { modalStore } from './lib/stores/modals.svelte';
   import SetUpstreamModal from './components/modals/SetUpstreamModal.svelte';
   import FlowInitModal from './components/modals/FlowInitModal.svelte';
@@ -570,6 +571,145 @@
       vscode.postMessage({ type: 'flowAction', payload: { flowType: ft, action: 'start', name } });
     }}
   />
+{/if}
+
+{#if modalStore.fetch.show}
+  <Modal title={t('fetch.title')} onClose={() => { modalStore.closeFetch(); }}>
+    <p class="modal-desc">{t('fetch.desc')}</p>
+    <div class="modal-form-group">
+      <div class="modal-field-label">{t('fetch.remote')}</div>
+      <ColorSelect
+        options={branchStore.remotes.map(r => ({ value: r.name, label: r.name, color: '' }))}
+        value={modalStore.fetch.remote}
+        onChange={(v) => { modalStore.fetch.remote = v; }}
+        showDot={false}
+      />
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={modalStore.fetch.allRemotes} />
+        <span>{t('fetch.allRemotes')}</span>
+      </label>
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { modalStore.closeFetch(); }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => {
+        const { allRemotes, remote } = modalStore.fetch;
+        modalStore.closeFetch();
+        uiStore.operating = 'fetch';
+        vscode.postMessage({ type: 'fetch', payload: { remote: allRemotes ? undefined : remote, prune: true } });
+      }}>{t('fetch.fetch')}</button>
+    </div>
+  </Modal>
+{/if}
+
+{#if modalStore.pull.show}
+  <Modal title={t('pull.title')} onClose={() => { modalStore.closePull(); }}>
+    <p class="modal-desc">{t('pull.desc')}</p>
+    <div class="modal-context-card">
+      <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
+      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.upstream ?? 'origin'}</span>
+      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
+      <i class="codicon codicon-git-branch"></i>
+      <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={modalStore.pull.rebase} />
+        <span>{t('pull.rebase')}</span>
+      </label>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={modalStore.pull.stash} />
+        <span>{t('pull.stash')}</span>
+      </label>
+    </div>
+    <div class="form-actions">
+      <button onclick={() => { modalStore.closePull(); }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => {
+        const { rebase, stash } = modalStore.pull;
+        modalStore.closePull();
+        uiStore.operating = 'pull';
+        vscode.postMessage({ type: 'pull', payload: { rebase, stash } });
+      }}>{t('pull.pull')}</button>
+    </div>
+  </Modal>
+{/if}
+
+{#if modalStore.push.show}
+  {@const hasUpstream = !!branchStore.currentBranch?.upstream}
+  {@const pushBranchName = branchStore.currentBranch?.name ?? 'branch'}
+  {@const pushTarget = branchStore.currentBranch?.upstream ?? `${modalStore.push.remote}/${pushBranchName}`}
+  <Modal title={t('push.title')} onClose={() => { modalStore.closePush(); }}>
+    <p class="modal-desc">{t('push.desc')}</p>
+    <div class="modal-context-card">
+      <i class="codicon codicon-git-branch"></i>
+      <span class="modal-pill modal-pill--source">{pushBranchName}</span>
+      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
+      <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
+      {#if hasUpstream}
+        <span class="modal-pill modal-pill--target">{pushTarget}</span>
+      {:else if branchStore.remotes.length > 1}
+        <ColorSelect
+          options={branchStore.remotes.map(r => ({ value: r.name, label: `new (${r.name}/${pushBranchName})`, color: '' }))}
+          value={modalStore.push.remote}
+          onChange={(v) => { modalStore.push.remote = v; }}
+          showDot={false}
+        />
+      {:else}
+        <span class="modal-pill modal-pill--target">{t('push.new', { target: pushTarget })}</span>
+      {/if}
+    </div>
+    {#if !hasUpstream}
+      <div class="modal-form-group">
+        <label class="modal-checkbox">
+          <input type="checkbox" bind:checked={modalStore.push.setUpstream} />
+          <span>{t('push.createTracking')}</span>
+        </label>
+      </div>
+    {/if}
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox" bind:checked={modalStore.push.allTags} />
+        <span>{t('push.pushAllTags')}</span>
+      </label>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox">
+        <input type="checkbox"
+          checked={modalStore.push.forceMode === 'with-lease'}
+          onchange={() => { modalStore.push.forceMode = modalStore.push.forceMode === 'with-lease' ? 'none' : 'with-lease'; }} />
+        <span>{t('push.forceWithLease')}</span>
+      </label>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-checkbox modal-checkbox--danger">
+        <input type="checkbox"
+          checked={modalStore.push.forceMode === 'force'}
+          onchange={() => { modalStore.push.forceMode = modalStore.push.forceMode === 'force' ? 'none' : 'force'; }} />
+        <span>{t('push.force')}</span>
+      </label>
+    </div>
+    {#if modalStore.push.forceMode === 'with-lease'}
+      <p class="modal-warning" role="alert"><span>{@html t('push.forceWithLeaseWarning')}</span></p>
+    {:else if modalStore.push.forceMode === 'force'}
+      <p class="modal-warning" role="alert"><span>{@html t('push.forceWarning')}</span></p>
+    {/if}
+    <div class="form-actions">
+      <button onclick={() => { modalStore.closePush(); }}>{t('common.cancel')}</button>
+      <button class="primary" onclick={() => {
+        const { forceMode, setUpstream, remote, allTags } = modalStore.push;
+        const force = forceMode === 'none' ? undefined : forceMode;
+        const remoteArg = hasUpstream ? undefined : remote;
+        const branchArg = hasUpstream ? undefined : pushBranchName;
+        modalStore.closePush();
+        uiStore.operating = 'push';
+        vscode.postMessage({ type: 'push', payload: { remote: remoteArg, branch: branchArg, force, setUpstream: !hasUpstream && setUpstream } });
+        if (allTags) vscode.postMessage({ type: 'pushAllTags', payload: { remote } });
+      }}>{t('push.push')}</button>
+    </div>
+  </Modal>
 {/if}
 
 {#if modalStore.flowFinish.show && flowConfig}

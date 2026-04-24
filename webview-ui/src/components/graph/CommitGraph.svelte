@@ -454,10 +454,10 @@
                 label: t('sidebar.checkout'),
                 action: () => doCheckout(branchName),
               },
-              {
+              ...(branchName !== currentBranch ? [{
                 label: t('graph.mergeInto', { branch: currentBranch }),
                 action: () => { modalStore.openMerge(branchName, branchStore.currentBranch?.name ?? 'current branch'); },
-              },
+              }] : []),
               { separator: true, label: '', action: () => {} },
               {
                 label: t('graph.rename'),
@@ -491,10 +491,10 @@
                 label: t('sidebar.checkout'),
                 action: () => doCheckout(branchName),
               },
-              {
+              ...(branchName !== currentBranch ? [{
                 label: t('graph.mergeInto', { branch: currentBranch }),
                 action: () => { modalStore.openMerge(branchName, branchStore.currentBranch?.name ?? 'current branch'); },
-              },
+              }] : []),
               {
                 label: t('graph.setUpstream'),
                 action: () => {
@@ -625,13 +625,15 @@
       const remoteRef = commit.refs.find(r => r.type === 'remote-branch');
       const tagRef = commit.refs.find(r => r.type === 'tag');
       const mergeRef = localRef?.name ?? (remoteRef ? `${remoteRef.remote}/${remoteRef.name}` : undefined) ?? tagRef?.name ?? commit.hash;
-      items.push(
-        { separator: true, label: '', action: () => {} },
-        {
-          label: t('graph.mergeInto', { branch: currentBranch }),
-          action: () => { modalStore.openMerge(mergeRef, branchStore.currentBranch?.name ?? 'current branch'); },
-        },
-      );
+      if (mergeRef !== currentBranch) {
+        items.push(
+          { separator: true, label: '', action: () => {} },
+          {
+            label: t('graph.mergeInto', { branch: currentBranch }),
+            action: () => { modalStore.openMerge(mergeRef, branchStore.currentBranch?.name ?? 'current branch'); },
+          },
+        );
+      }
     }
     const isOnCurrentBranch = currentBranchCommits.has(commit.hash);
     if (!isOnCurrentBranch) {
@@ -652,13 +654,16 @@
     );
 
     // ── Reset ──
-    items.push(
-      { separator: true, label: '', action: () => {} },
-      {
-        label: t('graph.resetBranchToHere', { branch: currentBranch }),
-        action: () => { resetTarget = commit.hash; resetMode = 'mixed'; showResetModal = true; },
-      },
-    );
+    const isHead = commit.refs.some(r => r.type === 'head');
+    if (!isHead) {
+      items.push(
+        { separator: true, label: '', action: () => {} },
+        {
+          label: t('graph.resetBranchToHere', { branch: currentBranch }),
+          action: () => { resetTarget = commit.hash; resetMode = 'mixed'; showResetModal = true; },
+        },
+      );
+    }
 
     // ── Commit operations ──
     items.push(

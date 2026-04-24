@@ -16,6 +16,7 @@ class UiStore {
   repos = $state<Array<{ path: string; name: string; type: 'root' | 'submodule' | 'nested' }>>([]);
   activeRepo = $state('');
   homeDir = $state('');
+  operating = $state<string | null>(null);
   private errorTimer: ReturnType<typeof setTimeout> | null = null;
   private successTimer: ReturnType<typeof setTimeout> | null = null;
 
