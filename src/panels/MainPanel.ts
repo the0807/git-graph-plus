@@ -212,9 +212,19 @@ export class MainPanel {
           if (message.payload.clean) {
             await this.gitService.clean();
           }
-          await this.gitService.checkout(message.payload.ref, { force: message.payload.force, merge: message.payload.merge });
-          if (message.payload.pullAfter) {
-            await this.gitService.pull();
+          try {
+            await this.gitService.checkout(message.payload.ref, { force: message.payload.force, merge: message.payload.merge });
+            if (message.payload.pullAfter) {
+              await this.gitService.pull();
+            }
+          } finally {
+            if (message.payload.stash) {
+              try {
+                await this.gitService.stashPop(0);
+              } catch {
+                this.panel.webview.postMessage({ type: 'error', payload: { message: vscode.l10n.t('stashPopAfterCheckoutFailed') } });
+              }
+            }
           }
           this.panel.webview.postMessage({
             type: 'operationComplete',
@@ -231,7 +241,17 @@ export class MainPanel {
             if (message.payload.clean) {
               await this.gitService.clean();
             }
-            await this.gitService.createAndCheckoutBranch(message.payload.name, message.payload.startPoint, { merge: message.payload.merge });
+            try {
+              await this.gitService.createAndCheckoutBranch(message.payload.name, message.payload.startPoint, { merge: message.payload.merge });
+            } finally {
+              if (message.payload.stash) {
+                try {
+                  await this.gitService.stashPop(0);
+                } catch {
+                  this.panel.webview.postMessage({ type: 'error', payload: { message: vscode.l10n.t('stashPopAfterCheckoutFailed') } });
+                }
+              }
+            }
           } else {
             await this.gitService.createBranch(message.payload.name, message.payload.startPoint);
           }
@@ -660,10 +680,14 @@ export class MainPanel {
             if (flowType === 'feature') await this.gitService.flowFeatureStart(name);
             else if (flowType === 'release') await this.gitService.flowReleaseStart(name);
             else if (flowType === 'hotfix') await this.gitService.flowHotfixStart(name);
-          } else {
+            else throw new Error(`Unknown flow type: ${flowType}`);
+          } else if (action === 'finish') {
             if (flowType === 'feature') await this.gitService.flowFeatureFinish(name);
             else if (flowType === 'release') await this.gitService.flowReleaseFinish(name);
             else if (flowType === 'hotfix') await this.gitService.flowHotfixFinish(name);
+            else throw new Error(`Unknown flow type: ${flowType}`);
+          } else {
+            throw new Error(`Unknown flow action: ${action}`);
           }
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: `flow-${action}`, success: true } });
           await this.refreshAll();
@@ -823,13 +847,15 @@ export class MainPanel {
             const stillConflicting = await this.gitService.getConflictFiles();
             const conflictSet = new Set(stillConflicting);
             const opState = await this.gitService.getOperationState();
-            this.panel.webview.postMessage({
-              type: 'conflictData',
-              payload: {
-                operation: opState.type ?? 'merge',
-                files: this.allConflictFiles.map(f => ({ path: f, resolved: !conflictSet.has(f) })),
-              },
-            });
+            if (opState.type) {
+              this.panel.webview.postMessage({
+                type: 'conflictData',
+                payload: {
+                  operation: opState.type,
+                  files: this.allConflictFiles.map(f => ({ path: f, resolved: !conflictSet.has(f) })),
+                },
+              });
+            }
           }
           break;
         }

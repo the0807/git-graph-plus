@@ -67,4 +67,5 @@
   "pruneWorktreesFailed": "Prune worktrees failed: {0}",
   "noChangesToStash": "No local changes to stash",
   "stashPopAfterPullFailed": "Pull succeeded, but failed to restore stashed changes. Use 'git stash pop' manually.",
+  "stashPopAfterCheckoutFailed": "Checkout succeeded, but failed to restore stashed changes. Use 'git stash pop' manually."
 }

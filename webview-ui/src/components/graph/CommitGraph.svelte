@@ -562,6 +562,10 @@
               label: t('graph.mergeInto', { branch: currentBranch }),
               action: () => { modalStore.openMerge(ref.name, branchStore.currentBranch?.name ?? 'current branch'); },
             },
+            {
+              label: t('graph.pushTag', { tag: ref.name, remote: defaultRemote }),
+              action: () => modalStore.openPushTag(ref.name, defaultRemote),
+            },
             { separator: true, label: '', action: () => {} },
             {
               label: t('graph.deleteTag'),
@@ -572,10 +576,6 @@
             {
               label: t('graph.copyTagName'),
               action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: ref.name } }),
-            },
-            {
-              label: t('graph.pushTag', { tag: ref.name, remote: defaultRemote }),
-              action: () => modalStore.openPushTag(ref.name, defaultRemote),
             },
           ],
         });

@@ -56,19 +56,19 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 | **Interactive Rebase**   | 액션 드롭다운 (pick, reword, edit, squash, fixup, drop) 및 drop 경고가 포함된 시각적 UI |
 | **Cherry-pick & Revert** | 특정 커밋 적용 또는 되돌리기, `--no-commit` 옵션 포함                                   |
 | **Reset**                | soft, mixed, hard 모드로 임의의 커밋으로 reset                                          |
-| **태그**                 | 경량 또는 주석 태그 생성; 로컬 삭제 또는 리모트에서 삭제, push                          |
+| **태그**                 | 경량 또는 주석 태그 생성; 태그 상세 보기, 리모트에 push, 로컬/리모트 삭제               |
 | **Upstream 추적**        | upstream 설정 기반 로컬/리모트 브랜치 자동 매칭                                         |
 
 ### 리모트 작업
 
-| 기능                    | 설명                                                             |
-| ----------------------- | ---------------------------------------------------------------- |
-| **Fetch / Pull / Push** | 리모트 선택 다이얼로그 및 진행 상태 알림                         |
-| **리모트 관리**         | 리모트 추가 및 제거                                              |
-| **강제 Push**           | `--force-with-lease` 안전 장치 사용, 시각적 경고 표시            |
-| **자동 Fetch**          | 설정 가능한 주기적 fetch 간격 (1–60분)                           |
-| **리모트 Checkout**     | 로컬 트래킹 브랜치 생성 다이얼로그와 함께 리모트 브랜치 checkout |
-| **Pull 제안**           | 리모트보다 뒤처진 브랜치 checkout 시 자동 pull 제안              |
+| 기능                    | 설명                                                                    |
+| ----------------------- | ----------------------------------------------------------------------- |
+| **Fetch / Pull / Push** | 리모트 선택 다이얼로그 및 진행 상태 알림                                |
+| **리모트 관리**         | 리모트 추가 및 제거                                                     |
+| **강제 Push**           | `--force-with-lease` (안전) 또는 `--force` (강제) 모드, 시각적 경고 표시 |
+| **자동 Fetch**          | 설정 가능한 주기적 fetch 간격 (1–60분)                                  |
+| **리모트 Checkout**     | 로컬 트래킹 브랜치 생성 다이얼로그와 함께 리모트 브랜치 checkout        |
+| **Pull 제안**           | 리모트보다 뒤처진 브랜치 checkout 시 자동 pull 제안                     |
 
 ### 충돌 해결
 
@@ -95,11 +95,11 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 
 ### Stash & Worktree
 
-| 기능                | 설명                                                               |
-| ------------------- | ------------------------------------------------------------------ |
-| **Stash**           | 저장, 적용, pop, 삭제 — untracked 파일 및 keep-index 옵션 포함     |
-| **그래프 내 Stash** | 커밋 그래프에 stash 항목이 배지로 표시되며 전용 컨텍스트 메뉴 제공 |
-| **Worktree**        | 목록, 추가, 제거, 정리 및 연결된 브랜치 정리                       |
+| 기능                | 설명                                                                       |
+| ------------------- | -------------------------------------------------------------------------- |
+| **Stash**           | 저장, 적용, pop, 삭제, 이름 변경 — untracked 파일 및 keep-index 옵션 포함  |
+| **그래프 내 Stash** | 커밋 그래프에 stash 항목이 배지로 표시되며 전용 컨텍스트 메뉴 제공         |
+| **Worktree**        | 목록, 추가, 제거, 정리 및 연결된 브랜치 정리                               |
 
 ### 고급 도구
 
@@ -130,7 +130,7 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 
 ### 다국어 지원
 
-- 영어 (기본) 및 한국어
+- 영어 (기본), 한국어, 중국어 간체
 - `gitGraphPlus.locale` 설정으로 변경 가능
 - Git 용어 (commit, merge, rebase, push, pull, fetch 등)는 번역하지 않음
 
@@ -149,13 +149,13 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 
 ## 설정
 
-| 설정                             | 기본값 | 설명                                  |
-| -------------------------------- | ------ | ------------------------------------- |
-| `gitGraphPlus.maxCommits`        | `1000` | 처음에 불러올 최대 커밋 수            |
-| `gitGraphPlus.autoRefresh`       | `true` | 리포지토리 변경 감지 시 자동 새로고침 |
-| `gitGraphPlus.autoFetch`         | `true` | 리모트에서 주기적으로 자동 fetch      |
-| `gitGraphPlus.autoFetchInterval` | `10`   | 자동 fetch 간격 (분, 1–60)            |
-| `gitGraphPlus.locale`            | `auto` | UI 언어 (`auto`, `en`, `ko`)          |
+| 설정                             | 기본값        | 설명                                                          |
+| -------------------------------- | ------------- | ------------------------------------------------------------- |
+| `gitGraphPlus.autoRefresh`       | `true`        | 리포지토리 변경 감지 시 자동 새로고침                         |
+| `gitGraphPlus.autoFetch`         | `true`        | 리모트에서 주기적으로 자동 fetch                              |
+| `gitGraphPlus.autoFetchInterval` | `10`          | 자동 fetch 간격 (분, 1–60)                                    |
+| `gitGraphPlus.graphSortOrder`    | `topological` | 커밋 정렬 순서 (`topological`, `date`, `author-date`)         |
+| `gitGraphPlus.locale`            | `auto`        | UI 언어 (`auto`, `en`, `ko`, `zh-cn`)                         |
 
 ---
 

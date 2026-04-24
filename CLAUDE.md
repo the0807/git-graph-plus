@@ -61,15 +61,15 @@ npm run package            # vsce package → .vsix file
 - **`src/components/common/`** — Shared UI: context menus, search bar, image diff, stats view, bisect banner.
 - **`src/components/rebase/`** — Interactive rebase UI with drag-to-reorder.
 - **`src/lib/stores/`** — Svelte stores for shared state management.
-- **`src/lib/i18n/`** — Frontend internationalization (English/Korean).
+- **`src/lib/i18n/`** — Frontend internationalization (English/Korean/Chinese Simplified).
 - **`src/lib/vscode-api.ts`** — Typed wrapper for `acquireVsCodeApi()` messaging.
 
 ### Extension ↔ Webview Communication
 All communication is via `postMessage` / `onDidReceiveMessage`. Message types are defined in `src/utils/message-bus.ts` (`WebviewMessage` for webview→extension, `ExtensionMessage` for extension→webview). `MainPanel.ts` is the message router that dispatches webview requests to `GitService`.
 
 ### Internationalization
-- Extension strings: `l10n/bundle.l10n.json` (English), `l10n/bundle.l10n.ko.json` (Korean), using VS Code's `vscode.l10n.t()`.
-- Webview strings: `webview-ui/src/lib/i18n/`.
+- Extension strings: `l10n/bundle.l10n.json` (English), `l10n/bundle.l10n.ko.json` (Korean), `l10n/bundle.l10n.zh-cn.json` (Chinese Simplified), using VS Code's `vscode.l10n.t()`.
+- Webview strings: `webview-ui/src/lib/i18n/` — `en.ts`, `ko.ts`, `zh.ts`.
 - Git terms (commit, merge, rebase, push, pull, fetch) are intentionally left untranslated.
 
 ## Key Conventions

@@ -260,15 +260,16 @@
 
         <!-- Refs, SHA, Parents -->
         <div class="meta-rows">
-          {#if commit.refs.length > 0}
+          {#if commit.refs.some(r => r.type !== 'stash' && !(r.type === 'remote-branch' && r.name === 'HEAD'))}
             <div class="meta-row">
               <span class="meta-label">REFS</span>
               <span class="meta-value">
                 {#each [...commit.refs].filter(r => {
                   if (r.type === 'remote-branch' && r.name === 'HEAD') return false;
+                  if (r.type === 'stash') return false;
                   return true;
                 }).sort((a, b) => {
-                  const order: Record<string, number> = { head: 0, branch: 1, 'remote-branch': 2, tag: 3, stash: 4 };
+                  const order: Record<string, number> = { head: 0, branch: 1, 'remote-branch': 2, tag: 3 };
                   const typeOrder = (order[a.type] ?? 4) - (order[b.type] ?? 4);
                   if (typeOrder !== 0) return typeOrder;
                   const aName = a.type === 'remote-branch' ? `${a.remote}/${a.name}` : a.name;

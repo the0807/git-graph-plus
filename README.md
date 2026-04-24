@@ -56,7 +56,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 | **Interactive Rebase**   | Visual UI with action dropdown (pick, reword, edit, squash, fixup, drop) and drop warnings |
 | **Cherry-pick & Revert** | Apply or undo specific commits, with `--no-commit` option                                  |
 | **Reset**                | Reset to any commit with soft, mixed, or hard mode                                         |
-| **Tags**                 | Create lightweight or annotated tags; push, delete locally, or delete from remote          |
+| **Tags**                 | Create lightweight or annotated tags; view tag details, push to remote, delete locally or from remote |
 | **Upstream Tracking**    | Automatic local/remote branch matching based on upstream configuration                     |
 
 ### Remote Operations
@@ -65,7 +65,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 | ----------------------- | ------------------------------------------------------------------------------ |
 | **Fetch / Pull / Push** | With remote selection dialog and progress notification                         |
 | **Remote Management**   | Add and remove remotes                                                         |
-| **Force Push**          | Uses `--force-with-lease` for safety, with visual warning indicator            |
+| **Force Push**          | `--force-with-lease` (safe) or `--force` (override) modes, with visual warning |
 | **Auto Fetch**          | Configurable periodic fetch interval (1–60 minutes)                            |
 | **Remote Checkout**     | Checkout remote branches with local tracking branch creation dialog            |
 | **Pull Prompt**         | Automatic pull suggestion when checking out a branch that is behind its remote |
@@ -97,7 +97,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 
 | Feature            | Description                                                                    |
 | ------------------ | ------------------------------------------------------------------------------ |
-| **Stash**          | Save, apply, pop, and drop — with untracked files and keep-index options       |
+| **Stash**          | Save, apply, pop, drop, and rename — with untracked files and keep-index options |
 | **Stash in Graph** | Stash entries appear as badges in the commit graph with dedicated context menu |
 | **Worktree**       | List, add, remove, and prune worktrees with linked branch cleanup              |
 
@@ -130,7 +130,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 
 ### Internationalization
 
-- English (default) and Korean
+- English (default), Korean, and Chinese Simplified
 - Configurable via `gitGraphPlus.locale` setting
 - Git terms (commit, merge, rebase, push, pull, fetch, etc.) remain untranslated
 
@@ -149,13 +149,13 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 
 ## Settings
 
-| Setting                          | Default | Description                         |
-| -------------------------------- | ------- | ----------------------------------- |
-| `gitGraphPlus.maxCommits`        | `1000`  | Maximum commits to load initially   |
-| `gitGraphPlus.autoRefresh`       | `true`  | Auto-refresh on repository changes  |
-| `gitGraphPlus.autoFetch`         | `true`  | Periodically fetch from remotes     |
-| `gitGraphPlus.autoFetchInterval` | `10`    | Auto-fetch interval (minutes, 1–60) |
-| `gitGraphPlus.locale`            | `auto`  | UI language (`auto`, `en`, `ko`)    |
+| Setting                          | Default        | Description                                                              |
+| -------------------------------- | -------------- | ------------------------------------------------------------------------ |
+| `gitGraphPlus.autoRefresh`       | `true`         | Auto-refresh on repository changes                                       |
+| `gitGraphPlus.autoFetch`         | `true`         | Periodically fetch from remotes                                          |
+| `gitGraphPlus.autoFetchInterval` | `10`           | Auto-fetch interval (minutes, 1–60)                                      |
+| `gitGraphPlus.graphSortOrder`    | `topological`  | Commit sort order (`topological`, `date`, `author-date`)                 |
+| `gitGraphPlus.locale`            | `auto`         | UI language (`auto`, `en`, `ko`, `zh-cn`)                                |
 
 ---
 

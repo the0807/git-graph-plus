@@ -67,4 +67,5 @@
   "pruneWorktreesFailed": "Worktree 정리 실패: {0}",
   "noChangesToStash": "Stash할 변경 사항이 없습니다",
   "stashPopAfterPullFailed": "Pull은 성공했지만 stash 복원에 실패했습니다. 'git stash pop'을 직접 실행해주세요.",
+  "stashPopAfterCheckoutFailed": "Checkout은 성공했지만 stash 복원에 실패했습니다. 'git stash pop'을 직접 실행해주세요."
 }
