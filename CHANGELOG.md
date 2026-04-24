@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.7 (2026-04-25)
+
+### New Features
+- **Stash rename**: Stash entries can now be renamed via context menu
+- **Tag details modal**: Click "Show details" on a tag to view its name and annotation message
+- **Push tag modal**: Push individual tags to a remote directly from the tag context menu
+- **Force push modes**: Push modal now offers `--force-with-lease` (safe, default) and `--force` (override) as distinct options
+- **Git flag badges**: Modal option labels show the underlying git flag (e.g. `--no-ff`, `--squash`) for transparency
+
+### Improvements
+- **Live settings refresh**: `graphSortOrder` and `maxCommits` changes apply immediately without reloading the panel
+- **VS Code notifications**: Operation success/failure toasts now use native VS Code notifications instead of in-webview banners
+- **Stash ref hidden in commit details**: REFS row is no longer shown for stash commits in the bottom panel (redundant with graph badge)
+
+### Bug Fixes
+- **Checkout stash restore**: If checkout or create-branch fails after auto-stash, the stash is now always popped back (previously changes could be left stuck in stash)
+- **Flow action validation**: Invalid `flowType` or `action` values now surface as errors instead of silently reporting success
+- **Conflict operation type**: `refreshConflicts` no longer defaults to `merge` when no operation is active, preventing a stale conflict banner
+- **Interactive rebase dropdown opacity**: Fixed visual regression where action dropdowns appeared faded
+- **Load more scroll position**: Scroll position is now preserved when loading additional commits
+- **Status bar visibility**: Status bar item is now correctly shown/hidden based on panel state
+
 ## 0.2.6 (2026-04-23)
 
 ### New Features
