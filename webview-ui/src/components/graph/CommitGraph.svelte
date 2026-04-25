@@ -844,7 +844,7 @@
             class:search-match={isSearchActive && searchMatchedHashes?.has(commit.hash)}
             class:search-dim={isSearchActive && !searchMatchedHashes?.has(commit.hash)}
             class:search-current={searchNavigateHash === commit.hash}
-            class:other-branch={!isSearchActive && !currentBranchCommits.has(commit.hash) && !currentBranchRemoteAhead.has(commit.hash)}
+            class:other-branch={!isSearchActive && !currentBranchCommits.has(commit.hash)}
             class:compare-mode={compareBase !== null && compareBase !== commit.hash}
             class:compare-base={compareBase === commit.hash}
             class:compare-active={uiStore.comparing && (uiStore.compareRef1 === commit.hash || uiStore.compareRef2 === commit.hash)}
