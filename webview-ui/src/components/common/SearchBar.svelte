@@ -5,14 +5,20 @@
   interface Props {
     onResults: (matchedHashes: Set<string> | null) => void;
     onNavigate: (hash: string) => void;
+    remotes?: string[];
+    remoteFilter?: string[];
+    onFilterChange?: (filter: string[]) => void;
   }
 
-  let { onResults, onNavigate }: Props = $props();
+  let { onResults, onNavigate, remotes = [], remoteFilter = [], onFilterChange = () => {} }: Props = $props();
 
   let query = $state('');
   let matchedHashes = $state<string[]>([]);
   let currentIndex = $state(-1);
   let inputEl: HTMLInputElement | undefined = $state();
+  let filterOpen = $state(false);
+
+  const filterActive = $derived(remoteFilter.length > 0);
 
   function doSearch() {
     const q = query.trim().toLowerCase();
@@ -69,8 +75,12 @@
       }
     }
     if (e.key === 'Escape') {
-      clear();
-      inputEl?.blur();
+      if (filterOpen) {
+        filterOpen = false;
+      } else {
+        clear();
+        inputEl?.blur();
+      }
     }
   }
 
@@ -91,9 +101,22 @@
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => doSearch(), 150);
   }
+
+  function toggleFilter(value: string) {
+    const next = remoteFilter.includes(value)
+      ? remoteFilter.filter(v => v !== value)
+      : [...remoteFilter, value];
+    onFilterChange(next);
+  }
+
+  function clearFilter() {
+    filterOpen = false;
+    onFilterChange([]);
+  }
 </script>
 
-<div class="search-bar">
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<div class="search-bar" role="group" onkeydown={handleKeydown}>
   <div class="search-row" class:has-results={query && matchedHashes.length > 0} class:no-results={query && matchedHashes.length === 0}>
     <i class="codicon codicon-search search-icon"></i>
     <input
@@ -125,6 +148,48 @@
       </button>
     {/if}
   </div>
+
+  <div class="filter-wrap">
+    <button
+      class="filter-btn"
+      class:active={filterActive}
+      onclick={() => { filterOpen = !filterOpen; }}
+      title="Filter branches"
+    >
+      <i class="codicon codicon-list-filter"></i>
+      Source
+      {#if filterActive}
+        <span class="filter-count">{remoteFilter.length}</span>
+      {/if}
+      <i class="codicon {filterOpen ? 'codicon-chevron-up' : 'codicon-chevron-down'} chevron"></i>
+    </button>
+
+    {#if filterOpen}
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div class="backdrop" onclick={() => { filterOpen = false; }}></div>
+      <div class="dropdown">
+        <button class="dd-item" class:active={!filterActive} onclick={clearFilter}>
+          <input type="checkbox" checked={!filterActive} readonly />
+          All
+        </button>
+        <div class="dd-sep"></div>
+        <button class="dd-item" class:active={remoteFilter.includes('local')} onclick={() => toggleFilter('local')}>
+          <input type="checkbox" checked={remoteFilter.includes('local')} readonly />
+          Local
+        </button>
+        {#if remotes.length > 0}
+          <div class="dd-sep"></div>
+          {#each remotes as remote}
+            <button class="dd-item" class:active={remoteFilter.includes(remote)} onclick={() => toggleFilter(remote)}>
+              <input type="checkbox" checked={remoteFilter.includes(remote)} readonly />
+              <span class="remote-name"><i class="codicon codicon-cloud remote-icon"></i>{remote}</span>
+            </button>
+          {/each}
+        {/if}
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -133,9 +198,14 @@
     border-bottom: 1px solid var(--border-color);
     background: var(--bg-secondary);
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
   }
 
   .search-row {
+    flex: 1;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -244,5 +314,145 @@
   .close-btn:hover:not(:disabled) {
     background: rgba(244, 67, 54, 0.15);
     color: #f44336;
+  }
+
+  /* ── Filter ── */
+
+  .filter-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 30px;
+    padding: 0 10px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.1s, border-color 0.1s;
+  }
+
+  .filter-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--vscode-focusBorder, #007fd4);
+  }
+
+  .filter-btn.active {
+    color: var(--vscode-focusBorder, #007fd4);
+    border-color: var(--vscode-focusBorder, #007fd4);
+  }
+
+  .chevron {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+
+  .filter-count {
+    background: var(--vscode-focusBorder, #007fd4);
+    color: #fff;
+    border-radius: 8px;
+    padding: 0 5px;
+    font-size: 10px;
+    line-height: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+  }
+
+  .dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: var(--vscode-menu-background, #252526);
+    border: 1px solid var(--vscode-menu-border, #454545);
+    border-radius: 6px;
+    padding: 4px 0;
+    min-width: 160px;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .dd-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 5px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .dd-item:hover {
+    background: var(--vscode-menu-selectionBackground, rgba(255,255,255,0.1));
+    color: var(--text-primary);
+  }
+
+  .dd-item.active {
+    color: var(--text-primary);
+  }
+
+  input[type="checkbox"] {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--text-secondary);
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+
+  input[type="checkbox"]:checked {
+    background: var(--vscode-button-background, #0078d4);
+    border-color: var(--vscode-button-background, #0078d4);
+  }
+
+  input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .dd-sep {
+    height: 1px;
+    background: var(--border-color);
+    margin: 3px 0;
+  }
+
+  .remote-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .remote-icon {
+    font-size: 13px;
   }
 </style>

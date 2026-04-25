@@ -2,7 +2,7 @@ import type { CommitGraphData, BranchData, DiffData, Commit, WorktreeInfo } from
 
 // Messages from Webview → Extension
 export type WebviewMessage =
-  | { type: 'getLog'; payload: { branch?: string; limit?: number } }
+  | { type: 'getLog'; payload: { branch?: string; limit?: number; skip?: number; remoteFilter?: string[] } }
   | { type: 'getBranches' }
   | { type: 'getRepoList' }
   | { type: 'checkDirty' }

@@ -19,6 +19,7 @@ export class MainPanel {
   private disposables: vscode.Disposable[] = [];
   private allConflictFiles: string[] = [];
   private currentLimit = 1000;
+  private currentRemoteFilter: string[] | undefined = undefined;
   public static onSidebarRefresh: (() => void) | null = null;
 
   private constructor(
@@ -141,6 +142,7 @@ export class MainPanel {
           const sortOrder = cfg.get<'author-date' | 'date' | 'topological'>('graphSortOrder', 'topological');
           const requestedLimit = message.payload.limit ?? 1000;
           this.currentLimit = requestedLimit;
+          this.currentRemoteFilter = message.payload.remoteFilter;
           const logPayload = { ...message.payload, limit: requestedLimit + 1, sortOrder };
           const [allFetched, logBranches] = await Promise.all([
             this.gitService.log(logPayload),
@@ -1021,7 +1023,7 @@ export class MainPanel {
       const sortOrder = vscode.workspace.getConfiguration('gitGraphPlus').get<'author-date' | 'date' | 'topological'>('graphSortOrder', 'topological');
       const refreshLimit = this.currentLimit || 1000;
       const [allFetched, branches, tags, remotes, stashes, worktrees] = await Promise.all([
-        this.gitService.log({ limit: refreshLimit + 1, sortOrder }),
+        this.gitService.log({ limit: refreshLimit + 1, sortOrder, remoteFilter: this.currentRemoteFilter }),
         this.gitService.branches(),
         this.gitService.tags(),
         this.gitService.remotes(),

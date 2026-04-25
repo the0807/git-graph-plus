@@ -120,8 +120,18 @@ export class GitService {
       '--format=%x01%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
     ];
 
-    if (options?.all !== false) {
+    if (!options?.remoteFilter || options.remoteFilter.length === 0) {
       args.push('--glob=refs/heads', '--glob=refs/remotes', '--glob=refs/tags');
+    } else {
+      for (const source of options.remoteFilter) {
+        if (source === 'local') {
+          args.push('--glob=refs/heads');
+        } else {
+          args.push(`--glob=refs/remotes/${source}`);
+        }
+      }
+      // Omit --glob=refs/tags when filtering: tags on reachable commits still appear via %D,
+      // but tag-only commits outside the selected scope are correctly excluded.
     }
 
     args.push(
@@ -170,11 +180,11 @@ export class GitService {
             sc.refs = [{ type: 'stash' as const, name: `stash@{${stash?.index ?? i}}` }];
             // Use stash message as subject
             if (stash?.message) sc.subject = stash.message;
-            // Insert after the parent commit
+            // Insert after the parent commit; skip if parent is outside the filtered scope
             const parentIdx = commits.findIndex(c => c.hash === sc.parents[0]);
             if (parentIdx >= 0) {
               commits.splice(parentIdx, 0, sc);
-            } else {
+            } else if (!options?.remoteFilter || options.remoteFilter.length === 0) {
               commits.unshift(sc);
             }
           }

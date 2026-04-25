@@ -34,6 +34,7 @@
   let bisectMessage = $state<string | null>(null);
   let searchMatchedHashes = $state<Set<string> | null>(null);
   let searchNavigateHash = $state<string | null>(null);
+  let remoteFilter = $state<string[]>([]);
   let resizing = $state(false);
   let conflict = $state<{ operation: string; files: Array<{ path: string; resolved: boolean }> } | null>(null);
   let showAbortConfirmModal = $state(false);
@@ -67,6 +68,7 @@
           branchStore.setData(msg.payload);
           break;
         case 'fullRefresh':
+          remoteFilter = [];
           branchStore.setData(msg.payload.branchData);
           commitStore.setData(msg.payload.logData);
           break;
@@ -191,7 +193,10 @@
 
     if (ctrl && e.key === 'r') {
       e.preventDefault();
-      vscode.postMessage({ type: 'getLog', payload: { limit: commitStore.currentLimit || undefined } });
+      vscode.postMessage({ type: 'getLog', payload: {
+        limit: commitStore.currentLimit || undefined,
+        remoteFilter: remoteFilter.length > 0 ? remoteFilter : undefined,
+      }});
       vscode.postMessage({ type: 'getBranches' });
     }
 
@@ -210,6 +215,17 @@
 
   function handleSearchNavigate(hash: string) {
     searchNavigateHash = hash;
+  }
+
+  function handleFilterChange(filter: string[]) {
+    remoteFilter = filter;
+    vscode.postMessage({
+      type: 'getLog',
+      payload: {
+        limit: commitStore.currentLimit || undefined,
+        remoteFilter: filter.length > 0 ? filter : undefined,
+      },
+    });
   }
 
   // Draggable resize handle - track active listeners for cleanup
@@ -312,7 +328,13 @@
   <div class="content-area">
     {#if uiStore.viewMode === 'graph'}
       {#if !bisectMessage && !conflict}
-        <SearchBar onResults={handleSearchResults} onNavigate={handleSearchNavigate} />
+        <SearchBar
+          onResults={handleSearchResults}
+          onNavigate={handleSearchNavigate}
+          remotes={branchStore.remotes.map(r => r.name)}
+          {remoteFilter}
+          onFilterChange={handleFilterChange}
+        />
       {/if}
       {#if bisectMessage}
         <BisectBanner
@@ -323,7 +345,7 @@
         />
       {/if}
       <div class="graph-area">
-        <CommitGraph {searchMatchedHashes} {searchNavigateHash} bisectActive={bisectMessage !== null} bisectCulpritHash={bisectMessage?.includes('is the first bad commit') ? bisectMessage.match(/^([a-f0-9]{7,40})/)?.[1] ?? null : null} />
+        <CommitGraph {searchMatchedHashes} {searchNavigateHash} bisectActive={bisectMessage !== null} bisectCulpritHash={bisectMessage?.includes('is the first bad commit') ? bisectMessage.match(/^([a-f0-9]{7,40})/)?.[1] ?? null : null} {remoteFilter} />
       </div>
       {#if uiStore.showBottomPanel && (uiStore.selectedCommitHash || uiStore.comparing)}
         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->

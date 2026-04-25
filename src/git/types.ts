@@ -143,4 +143,5 @@ export interface LogOptions {
   all?: boolean;
   skip?: number;
   sortOrder?: 'author-date' | 'date' | 'topological';
+  remoteFilter?: string[]; // undefined = all; ['local'] = local only; ['origin'] = origin only; etc.
 }

@@ -114,6 +114,51 @@ describe('GitService', () => {
     });
   });
 
+  describe('log remoteFilter', () => {
+    let calls: string[][];
+
+    beforeEach(() => {
+      calls = [];
+      (service as any).cachedRemoteNames = [];
+      (service as any).remoteNamesCacheTime = Date.now();
+      mockExec(service, async (args) => { calls.push(args); return ''; });
+    });
+
+    it('uses all globs by default', async () => {
+      await service.log({}).catch(() => {});
+      const logCall = calls.find(c => c[0] === 'log' && !c.includes('--no-walk'));
+      expect(logCall).toContain('--glob=refs/heads');
+      expect(logCall).toContain('--glob=refs/remotes');
+      expect(logCall).toContain('--glob=refs/tags');
+    });
+
+    it('omits remotes and tags when remoteFilter is ["local"]', async () => {
+      await service.log({ remoteFilter: ['local'] }).catch(() => {});
+      const logCall = calls.find(c => c[0] === 'log' && !c.includes('--no-walk'));
+      expect(logCall).toContain('--glob=refs/heads');
+      expect(logCall).not.toContain('--glob=refs/remotes');
+      expect(logCall).not.toContain('--glob=refs/tags');
+    });
+
+    it('scopes to specific remote and omits tags when remoteFilter is ["origin"]', async () => {
+      await service.log({ remoteFilter: ['origin'] }).catch(() => {});
+      const logCall = calls.find(c => c[0] === 'log' && !c.includes('--no-walk'));
+      expect(logCall).not.toContain('--glob=refs/heads');
+      expect(logCall).toContain('--glob=refs/remotes/origin');
+      expect(logCall).not.toContain('--glob=refs/remotes'); // bare --glob=refs/remotes means "all remotes"
+      expect(logCall).not.toContain('--glob=refs/tags');
+    });
+
+    it('combines local and specific remote and omits tags when remoteFilter is ["local", "origin"]', async () => {
+      await service.log({ remoteFilter: ['local', 'origin'] }).catch(() => {});
+      const logCall = calls.find(c => c[0] === 'log' && !c.includes('--no-walk'));
+      expect(logCall).toContain('--glob=refs/heads');
+      expect(logCall).toContain('--glob=refs/remotes/origin');
+      expect(logCall).not.toContain('--glob=refs/remotes'); // bare --glob=refs/remotes means "all remotes"
+      expect(logCall).not.toContain('--glob=refs/tags');
+    });
+  });
+
   describe('ref safety validation', () => {
     it('checkout rejects ref starting with -', async () => {
       await expect(service.checkout('-foo')).rejects.toThrow("must not start with '-'");
