@@ -1090,11 +1090,9 @@
   <Modal title={t('reset.modalTitle')} onClose={() => { showResetModal = false; contextMenuHash = null; }}>
     <p class="modal-desc">{t('reset.desc')}</p>
     <div class="modal-context-card">
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{branchStore.currentBranch?.name ?? 'current branch'}</span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <i class="codicon codicon-git-commit"></i>
-      <span class="modal-pill modal-pill--target">{resetTarget.substring(0, 7)}</span>
+      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-commit"></i>{resetTarget.substring(0, 7)}</span>
     </div>
       <div class="modal-form-group">
         <div class="modal-field-label">{t('reset.resetType')}</div>
@@ -1132,11 +1130,9 @@
   <Modal title={t('cherryPick.title')} onClose={() => { showCherryPickModal = false; contextMenuHash = null; }}>
     <p class="modal-desc">{t('cherryPick.desc')}</p>
     <div class="modal-context-card">
-      <i class="codicon codicon-git-commit"></i>
-      <span class="modal-pill modal-pill--target">{cherryPickTarget.substring(0, 7)}</span>
+      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-commit"></i>{cherryPickTarget.substring(0, 7)}</span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
     <div class="modal-form-group">
       <label class="modal-checkbox">
@@ -1155,11 +1151,9 @@
   <Modal title={t('revert.title')} onClose={() => { showRevertModal = false; contextMenuHash = null; }}>
     <p class="modal-desc">{t('revert.desc')}</p>
     <div class="modal-context-card">
-      <i class="codicon codicon-git-commit"></i>
-      <span class="modal-pill modal-pill--danger">{revertTarget.substring(0, 7)}</span>
+      <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-commit"></i>{revertTarget.substring(0, 7)}</span>
       <span class="modal-arrow">↺</span>
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
     <div class="modal-form-group">
       <label class="modal-checkbox">
@@ -1183,26 +1177,22 @@
     {#if isBranchName}
       <p class="modal-desc">{t('checkoutCommit.branchDesc')}</p>
       <div class="modal-context-card">
-        <i class="codicon codicon-git-branch"></i>
-        <span class="modal-pill modal-pill--source">{checkoutCommitHash}</span>
+        <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{checkoutCommitHash}</span>
       </div>
     {:else}
       <div class="modal-context-card">
-        <i class="codicon codicon-git-commit"></i>
-        <span class="modal-pill modal-pill--target">{checkoutCommitHash.substring(0, 7)}</span>
+        <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-commit"></i>{checkoutCommitHash.substring(0, 7)}</span>
       </div>
       {#if linkedBranches.length > 0}
         <div class="modal-context-card">
-          <i class="codicon codicon-git-branch"></i>
           {#each linkedBranches as branch}
-            <span class="modal-pill modal-pill--source">{branch}</span>
+            <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{branch}</span>
           {/each}
         </div>
       {:else if linkedRemoteBranches.length > 0}
         <div class="modal-context-card">
-          <i class="codicon codicon-cloud"></i>
           {#each linkedRemoteBranches as rb}
-            <span class="modal-pill modal-pill--target">{rb.remote}/{rb.name}</span>
+            <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i>{rb.remote}/{rb.name}</span>
           {/each}
         </div>
       {:else}
@@ -1261,13 +1251,11 @@
     <p class="modal-desc">{t('fastForward.desc')}</p>
     <div class="modal-context-card">
       <span class="modal-label">{t('fastForward.switchTo')}</span>
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--source">{fastForwardLocalBranch}</span>
+      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{fastForwardLocalBranch}</span>
     </div>
     <div class="modal-context-card">
       <span class="modal-label">{t('fastForward.fastForwardTo')}</span>
-      <i class="codicon codicon-cloud"></i>
-      <span class="modal-pill modal-pill--target">{fastForwardRemote}</span>
+      <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i>{fastForwardRemote}</span>
     </div>
     <div class="form-actions">
       <button onclick={() => { showFastForwardModal = false; }}>{t('common.cancel')}</button>
@@ -1300,8 +1288,7 @@
   <Modal title={t('checkout.worktreeBlockedTitle')} onClose={() => { showWorktreeBlockedModal = false; }}>
     <p class="modal-desc">{t('checkout.worktreeBlockedDesc')}</p>
     <div class="modal-context-card">
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--target">{worktreeBlockedRef}</span>
+      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{worktreeBlockedRef}</span>
     </div>
     <div class="modal-context-card">
       <i class="codicon codicon-worktree" style="color: var(--text-secondary);"></i>

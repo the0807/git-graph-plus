@@ -39,11 +39,9 @@
 <Modal title={t('rebaseBranch.title')} {onClose}>
   <p class="modal-desc">{t('rebaseBranch.desc')}</p>
   <div class="modal-context-card">
-    <i class="codicon {isHash(branch) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>
-    <span class="modal-pill modal-pill--target">{shortRef(branch)}</span>
+    <span class="modal-pill modal-pill--target"><i class="codicon {isHash(branch) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>{shortRef(branch)}</span>
     <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-    <i class="codicon {isHash(onto) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>
-    <span class="modal-pill modal-pill--source">{shortRef(onto)}</span>
+    <span class="modal-pill modal-pill--source"><i class="codicon {isHash(onto) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>{shortRef(onto)}</span>
   </div>
   {#if conflictPrediction?.hasConflict}
     <div class="modal-warning">

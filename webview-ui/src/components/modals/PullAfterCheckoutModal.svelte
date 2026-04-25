@@ -20,8 +20,7 @@
 <Modal title={t('checkoutBranch.title')} {onClose}>
   <p class="modal-desc">{t('checkoutBranch.desc', { count: behind })}</p>
   <div class="modal-context-card">
-    <i class="codicon codicon-git-branch"></i>
-    <span class="modal-pill modal-pill--target">{branchName}</span>
+    <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{branchName}</span>
     <span style="font-size: 11px; color: var(--text-secondary);"><i class="codicon codicon-arrow-down"></i> {t('checkoutBranch.behind', { count: behind })}</span>
   </div>
   <div class="form-actions">

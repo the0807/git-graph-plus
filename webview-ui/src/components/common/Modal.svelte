@@ -161,11 +161,13 @@
   :global(.modal-pill--target) { background: rgba(99, 176, 244, 0.15); color: #fff; }
   :global(.modal-pill--danger) { background: rgba(244, 67, 54, 0.15); color: #fff; }
   :global(.modal-pill--tag) { background: rgba(240, 192, 64, 0.25); color: #fff; }
+  :global(.modal-pill--stash) { background: rgba(136, 136, 136, 0.2); color: #fff; }
 
   :global(body.vscode-light .modal-pill--source) { background: rgba(80, 160, 40, 0.12); color: #000; }
   :global(body.vscode-light .modal-pill--target) { background: rgba(60, 130, 200, 0.12); color: #000; }
   :global(body.vscode-light .modal-pill--danger) { background: rgba(220, 50, 40, 0.12); color: #000; }
   :global(body.vscode-light .modal-pill--tag) { background: rgba(190, 130, 20, 0.15); color: #8a6000; }
+  :global(body.vscode-light .modal-pill--stash) { background: rgba(100, 100, 100, 0.12); color: #000; }
 
   :global(.modal-label) {
     font-size: 11px;

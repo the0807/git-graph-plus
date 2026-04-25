@@ -312,23 +312,23 @@ export const ko: Record<string, string> = {
 
   // Delete branch confirmation
   'deleteBranch.title': '브랜치 삭제',
-  'deleteBranch.confirm': '브랜치 <span class="modal-pill modal-pill--danger">{name}</span>을(를) 삭제하시겠습니까?',
+  'deleteBranch.confirm': '브랜치 <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span>을(를) 삭제하시겠습니까?',
   'deleteBranch.force': 'Merge되지 않은 브랜치도 강제 삭제 (-D)',
   'deleteBranch.deleteRemote': '리모트 브랜치도 함께 삭제',
   'deleteBranch.worktreeWarning': '연결된 worktree "{name}"도 함께 삭제됩니다.',
 
   // Delete tag confirmation
   'deleteTag.title': '태그 삭제',
-  'deleteTag.confirm': '태그 <span class="modal-pill modal-pill--tag">{name}</span>을(를) 삭제하시겠습니까?',
+  'deleteTag.confirm': '태그 <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{name}</span>을(를) 삭제하시겠습니까?',
   'deleteTag.deleteRemote': '리모트에서도 삭제',
 
   // Delete remote tag confirmation
   'deleteRemoteTag.title': '리모트 태그 삭제',
-  'deleteRemoteTag.confirm': '리모트에서 태그 <span class="modal-pill modal-pill--danger">{name}</span>을(를) 삭제하시겠습니까? 이 작업은 <span class="modal-emph modal-emph--danger">되돌릴 수 없습니다</span>.',
+  'deleteRemoteTag.confirm': '리모트에서 태그 <span class="modal-pill modal-pill--danger"><i class="codicon codicon-tag"></i>{name}</span>을(를) 삭제하시겠습니까? 이 작업은 <span class="modal-emph modal-emph--danger">되돌릴 수 없습니다</span>.',
 
   // Delete remote branch
   'deleteRemoteBranch.title': '리모트 브랜치 삭제',
-  'deleteRemoteBranch.confirm': '리모트에서 브랜치 <span class="modal-pill modal-pill--danger">{name}</span>을(를) 삭제하시겠습니까? 이 작업은 <span class="modal-emph modal-emph--danger">되돌릴 수 없습니다</span>.',
+  'deleteRemoteBranch.confirm': '리모트에서 브랜치 <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span>을(를) 삭제하시겠습니까? 이 작업은 <span class="modal-emph modal-emph--danger">되돌릴 수 없습니다</span>.',
 
   // Stash drop confirmation
   'stashDrop.title': 'Stash 삭제',
@@ -408,18 +408,18 @@ export const ko: Record<string, string> = {
   'flow.finish.feature.title': 'Feature 완료',
   'flow.finish.release.title': 'Release 완료',
   'flow.finish.hotfix.title': 'Hotfix 완료',
-  'flow.finish.confirm': '{name}을 완료합니다. 다음 작업이 수행됩니다:',
-  'flow.finish.feature.step1': '{name} → {developBranch}에 merge',
-  'flow.finish.feature.step2': '{name} 브랜치 삭제',
-  'flow.finish.feature.step3': '{developBranch}로 checkout',
-  'flow.finish.release.step1': '{name} → {productionBranch}에 merge',
-  'flow.finish.release.step2': '{tag} 태그 생성',
-  'flow.finish.release.step3': '{productionBranch} → {developBranch}에 merge (동기화)',
-  'flow.finish.release.step4': '{name} 브랜치 삭제',
-  'flow.finish.hotfix.step1': '{name} → {productionBranch}에 merge',
-  'flow.finish.hotfix.step2': '{tag} 태그 생성',
-  'flow.finish.hotfix.step3': '{productionBranch} → {developBranch}에 merge (동기화)',
-  'flow.finish.hotfix.step4': '{name} 브랜치 삭제',
+  'flow.finish.confirm': '다음 작업이 수행됩니다:',
+  'flow.finish.feature.step1': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> → <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span>에 merge',
+  'flow.finish.feature.step2': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> 브랜치 삭제',
+  'flow.finish.feature.step3': '<span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span>로 checkout',
+  'flow.finish.release.step1': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> → <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span>에 merge',
+  'flow.finish.release.step2': '<span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{tag}</span> 태그 생성',
+  'flow.finish.release.step3': '<span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span> → <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span>에 merge (동기화)',
+  'flow.finish.release.step4': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> 브랜치 삭제',
+  'flow.finish.hotfix.step1': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> → <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span>에 merge',
+  'flow.finish.hotfix.step2': '<span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{tag}</span> 태그 생성',
+  'flow.finish.hotfix.step3': '<span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span> → <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span>에 merge (동기화)',
+  'flow.finish.hotfix.step4': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> 브랜치 삭제',
   'flow.finish.submit': '완료',
 
   // Bisect

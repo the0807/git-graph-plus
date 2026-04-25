@@ -6,7 +6,7 @@
 
 [한국어](README.ko.md)
 
-A modern, full-featured Git GUI for VS Code. Visualize your commit history, manage branches, and perform advanced git operations — all without leaving your editor.
+A modern, full-featured Git GUI for VS Code. Visualize your commit history, manage branches, and perform advanced git operations - all without leaving your editor.
 
 > Staging, committing, and inline blame use VS Code's built-in Source Control. Git Graph+ focuses on everything else.
 
@@ -16,12 +16,12 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 
 ## Highlights
 
-- **Interactive Commit Graph** — Color-coded branch rails and merge lines for clear history at a glance
-- **Full Git Workflow** — Branch, merge, rebase, cherry-pick, reset, stash, worktree, tags, and remote operations
-- **Interactive Rebase** — Drag-to-reorder commits with per-commit action control (pick, squash, fixup, drop, etc.)
-- **Built-in Diff Viewer** — Shiki-powered syntax highlighting with image diff (side-by-side, swipe, onion-skin)
-- **Conflict Resolution** — Auto-detects conflicts with inline banner and VS Code 3-way merge editor integration
-- **Advanced Tools** — Git Flow, Bisect, LFS with file locks, Submodules, Statistics, and Activity Log
+- **Interactive Commit Graph** - Color-coded branch rails and merge lines for clear history at a glance
+- **Full Git Workflow** - Branch, merge, rebase, cherry-pick, reset, stash, worktree, tags, and remote operations
+- **Interactive Rebase** - Drag-to-reorder commits with per-commit action control (pick, squash, fixup, drop, etc.)
+- **Built-in Diff Viewer** - Shiki-powered syntax highlighting with image diff (side-by-side, swipe, onion-skin)
+- **Conflict Resolution** - Auto-detects conflicts with inline banner and VS Code 3-way merge editor integration
+- **Advanced Tools** - Git Flow, Bisect, LFS with file locks, Submodules, Statistics, and Activity Log
 
 ---
 
@@ -35,8 +35,8 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 | **Commit Ordering**     | Topological ordering like Fork for clear branch history                                                               |
 | **Three Views**         | **Graph** for visual history, **Log** for compact list, **Statistics** for analytics                                  |
 | **Commit Details**      | Click any commit to view metadata, changed files, and full diffs in a resizable bottom panel                          |
-| **Commit Comparison**   | Select a base commit, then click another to compare — or compare any commit to your working tree                      |
-| **Search**              | Find commits by message, author, date range, hash, or changed file — with result highlighting and keyboard navigation |
+| **Commit Comparison**   | Select a base commit, then click another to compare - or compare any commit to your working tree                      |
+| **Search**              | Find commits by message, author, date range, hash, or changed file - with result highlighting and keyboard navigation |
 | **Push Status**         | Blue dot for local-only commits (not pushed), gray dot for remote-only commits (remote ahead)                         |
 | **Avatars**             | Gravatar avatars displayed next to author names                                                                       |
 | **Themes**              | Full support for light, dark, and high-contrast VS Code themes                                                        |
@@ -89,7 +89,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 | Feature                 | Description                                                                              |
 | ----------------------- | ---------------------------------------------------------------------------------------- |
 | **File Tree**           | Hierarchical file browser with status badges (Added, Modified, Deleted, Renamed, Copied) |
-| **Syntax Highlighting** | Powered by Shiki — accurate, editor-quality syntax colors                                |
+| **Syntax Highlighting** | Powered by Shiki - accurate, editor-quality syntax colors                                |
 | **Image Diff**          | Side-by-side visual preview with swipe comparison for image changes                      |
 | **Patch Export**        | Save any commit as a `.patch` file                                                       |
 
@@ -97,7 +97,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 
 | Feature            | Description                                                                    |
 | ------------------ | ------------------------------------------------------------------------------ |
-| **Stash**          | Save, apply, pop, drop, and rename — with untracked files and keep-index options |
+| **Stash**          | Save, apply, pop, drop, and rename - with untracked files and keep-index options |
 | **Stash in Graph** | Stash entries appear as badges in the commit graph with dedicated context menu |
 | **Worktree**       | List, add, remove, and prune worktrees with linked branch cleanup              |
 
@@ -111,7 +111,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 | Feature          | Description                                                          |
 | ---------------- | -------------------------------------------------------------------- |
 | **Git Flow**     | Initialize and manage feature, release, and hotfix branches          |
-| **Git Bisect**   | Visual bisect UI — start, mark good/bad, and reset                   |
+| **Git Bisect**   | Visual bisect UI - start, mark good/bad, and reset                   |
 | **Git LFS**      | View LFS-tracked files and manage file locks                         |
 | **Submodules**   | View status, update submodules, and switch graph to submodule repos  |
 | **Statistics**   | Commits by author (with Gravatar), activity heatmap                  |
@@ -141,9 +141,9 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 1. Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=the0807.git-graph-plus)
 2. Open a folder containing a Git repository
 3. Open Git Graph+ using any of:
-   - **Command Palette** — `Git Graph+: Open`
-   - **Activity Bar** — Click the Git Graph+ icon
-   - **SCM title bar** or **Status bar** — Click the git-merge icon
+   - **Command Palette** - `Git Graph+: Open`
+   - **Activity Bar** - Click the Git Graph+ icon
+   - **SCM title bar** or **Status bar** - Click the git-merge icon
 
 ---
 

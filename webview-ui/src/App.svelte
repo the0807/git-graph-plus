@@ -382,11 +382,9 @@
   <Modal title={modalStore.stashApply.drop ? t('stashPop.title') : t('stashApply.title')} onClose={() => { modalStore.closeStashApply(); }}>
     <p class="modal-desc">{@html modalStore.stashApply.drop ? t('stashPop.desc') : t('stashApply.desc')}</p>
     <div class="modal-context-card">
-      <i class="codicon codicon-archive" style="color: var(--text-secondary);"></i>
-      <span class="modal-pill modal-pill--source">{modalStore.stashApply.message || `stash@{${modalStore.stashApply.index}}`}</span>
+      <span class="modal-pill modal-pill--stash"><i class="codicon codicon-archive"></i>{modalStore.stashApply.message || `stash@{${modalStore.stashApply.index}}`}</span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
     <div class="form-actions">
       <button onclick={() => { modalStore.closeStashApply(); }}>{t('common.cancel')}</button>
@@ -398,8 +396,7 @@
 {#if modalStore.renameBranch.show}
   <Modal title={t('renameBranch.title')} onClose={() => { modalStore.closeRenameBranch(); }}>
     <div class="modal-context-card">
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--source">{modalStore.renameBranch.oldName}</span>
+      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{modalStore.renameBranch.oldName}</span>
     </div>
     <div class="modal-form-group">
       <label class="modal-field-label" for="rename-branch-input">{t('renameBranch.newName')}</label>
@@ -417,8 +414,7 @@
 {#if modalStore.stashRename.show}
   <Modal title={t('stashRename.title')} onClose={() => { modalStore.closeStashRename(); }}>
     <div class="modal-context-card">
-      <i class="codicon codicon-archive"></i>
-      <span class="modal-pill modal-pill--source">{'stash@{' + modalStore.stashRename.index + '}'}</span>
+      <span class="modal-pill modal-pill--stash"><i class="codicon codicon-archive"></i>{'stash@{' + modalStore.stashRename.index + '}'}</span>
     </div>
     <div class="modal-form-group">
       <label class="modal-field-label" for="stash-rename-input">{t('stashRename.newMessage')}</label>
@@ -523,11 +519,10 @@
   <Modal title={t('pushTag.title')} onClose={() => { modalStore.closePushTag(); }}>
     <p class="modal-desc">{t('pushTag.desc')}</p>
     <div class="modal-context-card">
-      <i class="codicon codicon-tag"></i>
-      <span class="modal-pill modal-pill--tag">{modalStore.pushTag.tagName}</span>
+      <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{modalStore.pushTag.tagName}</span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
       {#if branchStore.remotes.length > 1}
+        <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
         <ColorSelect
           options={branchStore.remotes.map(r => ({ value: r.name, label: r.name, color: '' }))}
           value={modalStore.pushTag.remote}
@@ -535,7 +530,7 @@
           showDot={false}
         />
       {:else}
-        <span class="modal-pill modal-pill--target">{modalStore.pushTag.remote}</span>
+        <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i>{modalStore.pushTag.remote}</span>
       {/if}
     </div>
     <div class="form-actions">
@@ -676,11 +671,9 @@
   <Modal title={t('pull.title')} onClose={() => { modalStore.closePull(); }}>
     <p class="modal-desc">{t('pull.desc')}</p>
     <div class="modal-context-card">
-      <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
-      <span class="modal-pill modal-pill--source">{branchStore.currentBranch?.upstream ?? 'origin'}</span>
+      <span class="modal-pill modal-pill--source"><i class="codicon codicon-cloud"></i>{branchStore.currentBranch?.upstream ?? 'origin'}</span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--target">{branchStore.currentBranch?.name ?? 'current branch'}</span>
+      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{branchStore.currentBranch?.name ?? 'current branch'}</span>
     </div>
     <div class="modal-form-group">
       <label class="modal-checkbox">
@@ -715,13 +708,12 @@
   <Modal title={t('push.title')} onClose={() => { modalStore.closePush(); }}>
     <p class="modal-desc">{t('push.desc')}</p>
     <div class="modal-context-card">
-      <i class="codicon codicon-git-branch"></i>
-      <span class="modal-pill modal-pill--source">{pushBranchName}</span>
+      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{pushBranchName}</span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
       {#if hasUpstream}
-        <span class="modal-pill modal-pill--target">{pushTarget}</span>
+        <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i>{pushTarget}</span>
       {:else if branchStore.remotes.length > 1}
+        <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
         <ColorSelect
           options={branchStore.remotes.map(r => ({ value: r.name, label: `new (${r.name}/${pushBranchName})`, color: '' }))}
           value={modalStore.push.remote}
@@ -729,7 +721,7 @@
           showDot={false}
         />
       {:else}
-        <span class="modal-pill modal-pill--target">{t('push.new', { target: pushTarget })}</span>
+        <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i>{t('push.new', { target: pushTarget })}</span>
       {/if}
     </div>
     {#if !hasUpstream}

@@ -312,23 +312,23 @@ export const en: Record<string, string> = {
 
   // Delete branch confirmation
   'deleteBranch.title': 'Delete Branch',
-  'deleteBranch.confirm': 'Are you sure you want to delete branch <span class="modal-pill modal-pill--danger">{name}</span>?',
+  'deleteBranch.confirm': 'Are you sure you want to delete branch <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span>?',
   'deleteBranch.force': 'Force delete even if not fully merged (-D)',
   'deleteBranch.deleteRemote': 'Also delete remote branch',
   'deleteBranch.worktreeWarning': 'Linked worktree "{name}" will also be removed.',
 
   // Delete tag confirmation
   'deleteTag.title': 'Delete Tag',
-  'deleteTag.confirm': 'Are you sure you want to delete tag <span class="modal-pill modal-pill--tag">{name}</span>?',
+  'deleteTag.confirm': 'Are you sure you want to delete tag <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{name}</span>?',
   'deleteTag.deleteRemote': 'Also delete from remote',
 
   // Delete remote tag confirmation
   'deleteRemoteTag.title': 'Delete Remote Tag',
-  'deleteRemoteTag.confirm': 'Are you sure you want to delete tag <span class="modal-pill modal-pill--danger">{name}</span> from the remote? This <span class="modal-emph modal-emph--danger">cannot be undone</span>.',
+  'deleteRemoteTag.confirm': 'Are you sure you want to delete tag <span class="modal-pill modal-pill--danger"><i class="codicon codicon-tag"></i>{name}</span> from the remote? This <span class="modal-emph modal-emph--danger">cannot be undone</span>.',
 
   // Delete remote branch
   'deleteRemoteBranch.title': 'Delete Remote Branch',
-  'deleteRemoteBranch.confirm': 'Are you sure you want to delete branch <span class="modal-pill modal-pill--danger">{name}</span> from the remote? This <span class="modal-emph modal-emph--danger">cannot be undone</span>.',
+  'deleteRemoteBranch.confirm': 'Are you sure you want to delete branch <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> from the remote? This <span class="modal-emph modal-emph--danger">cannot be undone</span>.',
 
   // Stash drop confirmation
   'stashDrop.title': 'Drop Stash',
@@ -408,18 +408,18 @@ export const en: Record<string, string> = {
   'flow.finish.feature.title': 'Finish Feature',
   'flow.finish.release.title': 'Finish Release',
   'flow.finish.hotfix.title': 'Finish Hotfix',
-  'flow.finish.confirm': 'Finish {name}. The following actions will be performed:',
-  'flow.finish.feature.step1': '{name} → merge into {developBranch}',
-  'flow.finish.feature.step2': 'Delete {name} branch',
-  'flow.finish.feature.step3': 'Checkout {developBranch}',
-  'flow.finish.release.step1': '{name} → merge into {productionBranch}',
-  'flow.finish.release.step2': 'Create {tag} tag',
-  'flow.finish.release.step3': '{productionBranch} → merge into {developBranch} (sync)',
-  'flow.finish.release.step4': 'Delete {name} branch',
-  'flow.finish.hotfix.step1': '{name} → merge into {productionBranch}',
-  'flow.finish.hotfix.step2': 'Create {tag} tag',
-  'flow.finish.hotfix.step3': '{productionBranch} → merge into {developBranch} (sync)',
-  'flow.finish.hotfix.step4': 'Delete {name} branch',
+  'flow.finish.confirm': 'The following actions will be performed:',
+  'flow.finish.feature.step1': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> → merge into <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span>',
+  'flow.finish.feature.step2': 'Delete <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> branch',
+  'flow.finish.feature.step3': 'Checkout <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span>',
+  'flow.finish.release.step1': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> → merge into <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span>',
+  'flow.finish.release.step2': 'Create <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{tag}</span> tag',
+  'flow.finish.release.step3': '<span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span> → merge into <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span> (sync)',
+  'flow.finish.release.step4': 'Delete <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> branch',
+  'flow.finish.hotfix.step1': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> → merge into <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span>',
+  'flow.finish.hotfix.step2': 'Create <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{tag}</span> tag',
+  'flow.finish.hotfix.step3': '<span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span> → merge into <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span> (sync)',
+  'flow.finish.hotfix.step4': 'Delete <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> branch',
   'flow.finish.submit': 'Finish',
 
   // Bisect

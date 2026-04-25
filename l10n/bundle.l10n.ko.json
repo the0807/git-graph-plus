@@ -25,7 +25,7 @@
   "createTagFailed": "태그 생성 실패: {0}",
   "clickToOpen": "클릭하여 열기",
   "clickToFetch": "클릭하여 fetch",
-  "upToDate": "최신 상태 — 클릭하여 fetch",
+  "upToDate": "최신 상태 - 클릭하여 fetch",
   "noRepo": "리포지토리 없음",
   "yes": "예",
   "no": "아니오",

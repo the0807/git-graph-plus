@@ -312,23 +312,23 @@ export const zh: Record<string, string> = {
 
   // Delete branch confirmation
   'deleteBranch.title': '删除分支',
-  'deleteBranch.confirm': '确定要删除分支 <span class="modal-pill modal-pill--danger">{name}</span> 吗？',
+  'deleteBranch.confirm': '确定要删除分支 <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> 吗？',
   'deleteBranch.force': '即使未完全合并也强制删除（-D）',
   'deleteBranch.deleteRemote': '同时删除远程分支',
   'deleteBranch.worktreeWarning': '关联的工作树“{name}”也将被移除。',
 
   // Delete tag confirmation
   'deleteTag.title': '删除标签',
-  'deleteTag.confirm': '确定要删除标签 <span class="modal-pill modal-pill--tag">{name}</span> 吗？',
+  'deleteTag.confirm': '确定要删除标签 <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{name}</span> 吗？',
   'deleteTag.deleteRemote': '同时从远程仓库删除',
 
   // Delete remote tag confirmation
   'deleteRemoteTag.title': '删除远程标签',
-  'deleteRemoteTag.confirm': '确定要从远程仓库删除标签 <span class="modal-pill modal-pill--danger">{name}</span> 吗？此操作<span class="modal-emph modal-emph--danger">无法撤销</span>。',
+  'deleteRemoteTag.confirm': '确定要从远程仓库删除标签 <span class="modal-pill modal-pill--danger"><i class="codicon codicon-tag"></i>{name}</span> 吗？此操作<span class="modal-emph modal-emph--danger">无法撤销</span>。',
 
   // Delete remote branch
   'deleteRemoteBranch.title': '删除远程分支',
-  'deleteRemoteBranch.confirm': '确定要从远程仓库删除分支 <span class="modal-pill modal-pill--danger">{name}</span> 吗？此操作<span class="modal-emph modal-emph--danger">无法撤销</span>。',
+  'deleteRemoteBranch.confirm': '确定要从远程仓库删除分支 <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> 吗？此操作<span class="modal-emph modal-emph--danger">无法撤销</span>。',
 
   // Stash drop confirmation
   'stashDrop.title': '删除储藏',
@@ -408,18 +408,18 @@ export const zh: Record<string, string> = {
   'flow.finish.feature.title': '完成功能',
   'flow.finish.release.title': '完成发布',
   'flow.finish.hotfix.title': '完成热修复',
-  'flow.finish.confirm': '完成 {name}。将执行以下操作：',
-  'flow.finish.feature.step1': '{name} → 合并到 {developBranch}',
-  'flow.finish.feature.step2': '删除 {name} 分支',
-  'flow.finish.feature.step3': '检出 {developBranch}',
-  'flow.finish.release.step1': '{name} → 合并到 {productionBranch}',
-  'flow.finish.release.step2': '创建 {tag} 标签',
-  'flow.finish.release.step3': '{productionBranch} → 合并到 {developBranch}（同步）',
-  'flow.finish.release.step4': '删除 {name} 分支',
-  'flow.finish.hotfix.step1': '{name} → 合并到 {productionBranch}',
-  'flow.finish.hotfix.step2': '创建 {tag} 标签',
-  'flow.finish.hotfix.step3': '{productionBranch} → 合并到 {developBranch}（同步）',
-  'flow.finish.hotfix.step4': '删除 {name} 分支',
+  'flow.finish.confirm': '将执行以下操作：',
+  'flow.finish.feature.step1': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> → 合并到 <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span>',
+  'flow.finish.feature.step2': '删除 <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> 分支',
+  'flow.finish.feature.step3': '检出 <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span>',
+  'flow.finish.release.step1': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> → 合并到 <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span>',
+  'flow.finish.release.step2': '创建 <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{tag}</span> 标签',
+  'flow.finish.release.step3': '<span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span> → 合并到 <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span>（同步）',
+  'flow.finish.release.step4': '删除 <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> 分支',
+  'flow.finish.hotfix.step1': '<span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> → 合并到 <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span>',
+  'flow.finish.hotfix.step2': '创建 <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{tag}</span> 标签',
+  'flow.finish.hotfix.step3': '<span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{productionBranch}</span> → 合并到 <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{developBranch}</span>（同步）',
+  'flow.finish.hotfix.step4': '删除 <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{name}</span> 分支',
   'flow.finish.submit': '完成',
 
   // Bisect

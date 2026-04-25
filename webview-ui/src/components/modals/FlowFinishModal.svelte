@@ -57,18 +57,17 @@
 
 <Modal title={t(titleKey)} {onClose}>
   <div class="modal-context-card">
-    <i class="codicon codicon-git-branch"></i>
-    <span class="modal-pill modal-pill--danger">{branchName}</span>
+    <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i>{branchName}</span>
   </div>
 
-  <p class="modal-desc">{t('flow.finish.confirm', { name: branchName })}</p>
+  <p class="modal-desc">{t('flow.finish.confirm')}</p>
 
   <div class="flow-steps">
     {#each steps as step, i}
       <div class="flow-step">
         <span class="flow-step-num">{i + 1}</span>
         <i class="codicon {step.icon}"></i>
-        <span>{step.text}</span>
+        <span>{@html step.text}</span>
       </div>
     {/each}
   </div>

@@ -65,11 +65,11 @@
 - **Checkout keep-changes uses 3-way merge**: "Keep changes and checkout" option now runs `git checkout --merge` so dirty working tree is carried across branch switches via 3-way merge instead of being refused by git
 
 ### Improvements
-- **Checkout dirty options simplified**: 4 radio options reduced to 3 — "Keep changes and checkout" (merge), "Stash and checkout" (always `-u`), "Discard all changes". Removed the separate tracked-only stash variant to reduce decision fatigue
+- **Checkout dirty options simplified**: 4 radio options reduced to 3 - "Keep changes and checkout" (merge), "Stash and checkout" (always `-u`), "Discard all changes". Removed the separate tracked-only stash variant to reduce decision fatigue
 - **SCM sidebar polish**: Branches view opens expanded by default; pull/push title actions added next to fetch using webview-matching arrow icons; all 5 views (branches, remotes, tags, stashes, worktrees) now declare icons so they render correctly when moved between containers
 
 ### Bug Fixes
-- **Side-by-side diff syntax highlighting**: Both panes now run through Shiki highlighting (previously only inline mode was highlighted — side-by-side rendered raw text)
+- **Side-by-side diff syntax highlighting**: Both panes now run through Shiki highlighting (previously only inline mode was highlighted - side-by-side rendered raw text)
 - **Hunk headers removed**: Raw unified-diff headers (`@@ -0,0 +1,37 @@`) removed from diff view; replaced with a thin dashed separator between hunks. Line number columns provide position without the visual noise
 
 ### Tests
@@ -349,12 +349,12 @@
 - English and Korean localization
 
 ### Settings
-- `gitGraphPlus.autoFetch` — toggle periodic auto-fetch
-- `gitGraphPlus.autoFetchInterval` — auto-fetch interval (1–60 minutes)
-- `gitGraphPlus.locale` — UI language (auto, en, ko)
-- `gitGraphPlus.maxCommits` — maximum commits to load
-- `gitGraphPlus.graphRowHeight` — commit graph row height
-- `gitGraphPlus.defaultView` — default view (graph or log)
-- `gitGraphPlus.autoRefresh` — auto-refresh on repository changes
-- `gitGraphPlus.showRemoteBranches` — show remote branches in sidebar
-- `gitGraphPlus.confirmForcePush` — confirm before force push
+- `gitGraphPlus.autoFetch` - toggle periodic auto-fetch
+- `gitGraphPlus.autoFetchInterval` - auto-fetch interval (1–60 minutes)
+- `gitGraphPlus.locale` - UI language (auto, en, ko)
+- `gitGraphPlus.maxCommits` - maximum commits to load
+- `gitGraphPlus.graphRowHeight` - commit graph row height
+- `gitGraphPlus.defaultView` - default view (graph or log)
+- `gitGraphPlus.autoRefresh` - auto-refresh on repository changes
+- `gitGraphPlus.showRemoteBranches` - show remote branches in sidebar
+- `gitGraphPlus.confirmForcePush` - confirm before force push

@@ -32,11 +32,9 @@
 <Modal title={t('createTag.title')} {onClose}>
   <p class="modal-desc">{t('createTag.desc')}</p>
   <div class="modal-context-card">
-    <i class="codicon {isStartPointHash ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>
-    <span class="modal-pill modal-pill--source">{isStartPointHash ? startPoint.substring(0, 7) : startPoint}</span>
+    <span class="modal-pill modal-pill--source"><i class="codicon {isStartPointHash ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>{isStartPointHash ? startPoint.substring(0, 7) : startPoint}</span>
     <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-    <i class="codicon codicon-tag"></i>
-    <span class="modal-pill modal-pill--target">{name.trim() || '...'}</span>
+    <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{name.trim() || '...'}</span>
   </div>
   {#if editableStartPoint}
     <div class="modal-form-group">
