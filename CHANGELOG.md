@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.8 (2026-04-25)
+
+### Improvements
+- **Modal pill icons**: Type icons (branch, commit, tag, cloud, stash) moved inside pill badges across all modals for consistent styling
+- **Stash pill color**: Stash pills now use gray to match the graph badge color
+- **Flow finish modal**: Branch and tag names in step descriptions are now shown as pill badges
+
 ## 0.2.7 (2026-04-25)
 
 ### New Features
