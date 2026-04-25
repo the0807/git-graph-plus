@@ -72,8 +72,14 @@ jobs:
       - name: Publish to Open VSX
         run: npx ovsx publish *.vsix -p ${{ secrets.OVSX_PAT }}
 
+      - name: Extract changelog
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk "/^## $VERSION/{p=1; next} /^## [0-9]/{if(p) exit} p" CHANGELOG.md > release_notes.txt
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: '*.vsix'
-          generate_release_notes: true
+          body_path: release_notes.txt
+          token: ${{ secrets.RELEASE_TOKEN }}
