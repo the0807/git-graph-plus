@@ -66,9 +66,9 @@ class ModalStore {
   closeStashSave() { this.stashSave = { show: false }; }
 
   // ── Set Upstream ──
-  setUpstream = $state({ show: false, branchName: '' });
-  openSetUpstream(branchName: string) { this.setUpstream = { show: true, branchName }; }
-  closeSetUpstream() { this.setUpstream = { show: false, branchName: '' }; }
+  setUpstream = $state({ show: false, branchName: '', currentUpstream: '' });
+  openSetUpstream(branchName: string, currentUpstream?: string) { this.setUpstream = { show: true, branchName, currentUpstream: currentUpstream ?? '' }; }
+  closeSetUpstream() { this.setUpstream = { show: false, branchName: '', currentUpstream: '' }; }
 
   // ── Fetch ──
   fetch = $state({ show: false, allRemotes: false, remote: 'origin' });

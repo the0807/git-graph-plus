@@ -532,8 +532,9 @@
 {#if modalStore.setUpstream.show}
   <SetUpstreamModal
     branchName={modalStore.setUpstream.branchName}
+    currentUpstream={modalStore.setUpstream.currentUpstream}
     onClose={() => { modalStore.closeSetUpstream(); }}
-    onSet={(remote, remoteBranch) => { const branch = modalStore.setUpstream.branchName; modalStore.closeSetUpstream(); vscode.postMessage({ type: 'setUpstream', payload: { branch, remote, remoteBranch } }); }}
+    onSet={(remote, remoteBranch, createRemote) => { const branch = modalStore.setUpstream.branchName; modalStore.closeSetUpstream(); vscode.postMessage({ type: 'setUpstream', payload: { branch, remote, remoteBranch, createRemote } }); }}
   />
 {/if}
 

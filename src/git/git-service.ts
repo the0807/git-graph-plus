@@ -503,11 +503,15 @@ export class GitService {
     await this.exec(['remote', 'remove', name]);
   }
 
-  async setUpstream(localBranch: string, remote: string, remoteBranch: string): Promise<void> {
-    this.assertSafeRef(localBranch, 'branch --set-upstream-to');
-    this.assertSafeRef(remote, 'branch --set-upstream-to');
-    this.assertSafeRef(remoteBranch, 'branch --set-upstream-to');
-    await this.exec(['branch', '--set-upstream-to', `${remote}/${remoteBranch}`, localBranch]);
+  async setUpstream(localBranch: string, remote: string, remoteBranch: string, options?: { createRemote?: boolean }): Promise<void> {
+    this.assertSafeRef(localBranch, 'setUpstream');
+    this.assertSafeRef(remote, 'setUpstream');
+    this.assertSafeRef(remoteBranch, 'setUpstream');
+    if (options?.createRemote) {
+      await this.exec(['push', '-u', remote, `${localBranch}:${remoteBranch}`]);
+    } else {
+      await this.exec(['branch', '--set-upstream-to', `${remote}/${remoteBranch}`, localBranch]);
+    }
   }
 
   async rebase(onto: string, options?: { autostash?: boolean }): Promise<void> {

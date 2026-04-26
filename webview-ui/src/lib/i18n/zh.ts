@@ -459,4 +459,7 @@ export const zh: Record<string, string> = {
   'setUpstream.remote': '远程仓库',
   'setUpstream.remoteBranch': '远程分支',
   'setUpstream.set': '设置上游',
+  'setUpstream.willCreate': '远程分支尚不存在，将执行 git push -u 进行创建。',
+  'setUpstream.typeManually': '手动输入',
+  'setUpstream.selectFromList': '从列表选择',
 };

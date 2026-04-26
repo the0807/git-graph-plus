@@ -459,4 +459,7 @@ export const en: Record<string, string> = {
   'setUpstream.remote': 'Remote',
   'setUpstream.remoteBranch': 'Remote branch',
   'setUpstream.set': 'Set Upstream',
+  'setUpstream.willCreate': 'Remote branch does not exist yet. Running git push -u will create it.',
+  'setUpstream.typeManually': 'Type manually',
+  'setUpstream.selectFromList': 'Select from list',
 };

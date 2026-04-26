@@ -499,7 +499,8 @@
               {
                 label: t('graph.setUpstream'),
                 action: () => {
-                  modalStore.openSetUpstream(branchName);
+                  const branchInfo = branchStore.branches.find(b => !b.remote && b.name === branchName);
+                  modalStore.openSetUpstream(branchName, branchInfo?.upstream);
                 },
               },
               { separator: true, label: '', action: () => {} },

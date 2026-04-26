@@ -74,7 +74,7 @@ export type WebviewMessage =
   | { type: 'stageFile'; payload: { file: string } }
   | { type: 'abortOperation' }
   | { type: 'openConflictFile'; payload: { file: string } }
-  | { type: 'setUpstream'; payload: { branch: string; remote: string; remoteBranch: string } }
+  | { type: 'setUpstream'; payload: { branch: string; remote: string; remoteBranch: string; createRemote?: boolean } }
   | { type: 'openWorktreeInNewWindow'; payload: { path: string } }
   | { type: 'showNotification'; payload: { message: string } }
   | { type: 'showTagDetails'; payload: { name: string } };

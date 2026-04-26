@@ -308,7 +308,7 @@ export class MainPanel {
           break;
         }
         case 'setUpstream': {
-          await this.gitService.setUpstream(message.payload.branch, message.payload.remote, message.payload.remoteBranch);
+          await this.gitService.setUpstream(message.payload.branch, message.payload.remote, message.payload.remoteBranch, { createRemote: message.payload.createRemote });
           this.panel.webview.postMessage({ type: 'operationComplete', payload: { operation: 'setUpstream', success: true } });
           await this.refreshAll();
           break;
