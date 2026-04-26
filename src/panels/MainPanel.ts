@@ -43,8 +43,13 @@ export class MainPanel {
         if (e.affectsConfiguration('gitGraphPlus.autoRefresh')) {
           this.fileWatcher.enabled = vscode.workspace.getConfiguration('gitGraphPlus').get<boolean>('autoRefresh', true);
         }
-        if (e.affectsConfiguration('gitGraphPlus.graphSortOrder') || e.affectsConfiguration('gitGraphPlus.maxCommits')) {
+        if (e.affectsConfiguration('gitGraphPlus.graphSortOrder')) {
           this.refreshAll();
+        }
+        if (e.affectsConfiguration('gitGraphPlus.locale')) {
+          const localeSetting = vscode.workspace.getConfiguration('gitGraphPlus').get<string>('locale', 'auto');
+          const locale = localeSetting === 'auto' ? (vscode.env.language || 'en') : localeSetting;
+          this.panel.webview.postMessage({ type: 'setLocale', payload: { locale } });
         }
       })
     );

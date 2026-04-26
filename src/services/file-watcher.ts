@@ -28,6 +28,12 @@ export class FileWatcher implements vscode.Disposable {
     this.addWatcher(new vscode.RelativePattern(gitDir, 'REBASE_HEAD'));
     // stash ref
     this.addWatcher(new vscode.RelativePattern(gitDir, 'refs/stash'));
+    // packed-refs - updated by fetch/push when refs are packed
+    this.addWatcher(new vscode.RelativePattern(gitDir, 'packed-refs'));
+    // config - updated by git remote add/remove/rename
+    this.addWatcher(new vscode.RelativePattern(gitDir, 'config'));
+    // worktrees - updated by git worktree add/remove
+    this.addWatcher(new vscode.RelativePattern(gitDir, 'worktrees/**'));
 
     // Watch working tree for file changes (exclude heavy dirs via specific patterns)
     // Using {src,lib,app,...}/** would be too restrictive, so we watch ** but filter
@@ -67,7 +73,7 @@ export class FileWatcher implements vscode.Disposable {
     const gitDir = path.join(this.repoPath, '.git');
     const relativePath = path.relative(gitDir, uri.fsPath);
 
-    if (relativePath === 'HEAD' || relativePath.startsWith('refs')) {
+    if (relativePath === 'HEAD' || relativePath.startsWith('refs') || relativePath === 'packed-refs' || relativePath.startsWith('worktrees')) {
       return 'refs';
     }
     if (relativePath === 'index') {
@@ -75,6 +81,9 @@ export class FileWatcher implements vscode.Disposable {
     }
     if (relativePath === 'MERGE_HEAD' || relativePath === 'REBASE_HEAD') {
       return 'operation';
+    }
+    if (relativePath === 'config') {
+      return 'refs';
     }
     return 'unknown';
   }
