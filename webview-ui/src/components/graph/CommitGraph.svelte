@@ -109,96 +109,90 @@
   let contextMenuHash = $state<string | null>(null);
   const worktreeBranches = $derived(new Set(branchStore.worktrees.filter(w => !w.isMain).map(w => w.branch)));
 
-  // Set of all commit hashes reachable from HEAD (includes merged-in commits)
-  const currentBranchCommits = $derived.by(() => {
-    const set = new Set<string>();
-    const commits = commitStore.commits;
-    if (commits.length === 0) return set;
-    const hashIndex = new Map<string, number>();
-    for (let i = 0; i < commits.length; i++) hashIndex.set(commits[i].hash, i);
-    // Find HEAD commit
-    const headCommit = commits.find(c => c.refs.some(r => r.type === 'head'));
-    if (!headCommit) return set;
-    // BFS: walk ALL parents from HEAD (includes merged-in commits)
-    const queue = [headCommit.hash];
-    while (queue.length > 0) {
-      const hash = queue.shift()!;
-      if (set.has(hash)) continue;
-      set.add(hash);
-      const idx = hashIndex.get(hash);
-      if (idx === undefined) continue;
-      for (const parent of commits[idx].parents) {
-        if (!set.has(parent)) queue.push(parent);
-      }
-    }
-    return set;
-  });
+  // Maps for O(1) local branch lookup (replaces repeated branches.find())
+  const localBranchMap = $derived(new Map(branchStore.branches.filter(b => !b.remote).map(b => [b.name, b])));
+  const upstreamBranchMap = $derived(new Map(branchStore.branches.filter(b => !b.remote && b.upstream).map(b => [b.upstream!, b])));
 
-  // Set of commit hashes that are local-only (ahead of upstream) for current branch
-  const currentBranchLocalOnly = $derived.by(() => {
-    const set = new Set<string>();
-    const current = branchStore.currentBranch;
-    if (!current?.upstream || current.ahead === 0) return set;
+  // Single pass: build hashIndex once, run all BFS traversals together
+  const branchSets = $derived.by(() => {
     const commits = commitStore.commits;
-    if (commits.length === 0) return set;
+    const empty = { currentBranchCommits: new Set<string>(), currentBranchLocalOnly: new Set<string>(), currentBranchRemoteAhead: new Set<string>() };
+    if (commits.length === 0) return empty;
+
     const hashIndex = new Map<string, number>();
     for (let i = 0; i < commits.length; i++) hashIndex.set(commits[i].hash, i);
-    // Find the upstream remote tip commit
-    const [remote, ...rest] = current.upstream.split('/');
-    const remoteBranchName = rest.join('/');
-    const remoteTipCommit = commits.find(c => c.refs.some(r => r.type === 'remote-branch' && r.remote === remote && r.name === remoteBranchName));
-    // Collect commits reachable from upstream tip
-    const upstreamReachable = new Set<string>();
-    if (remoteTipCommit) {
-      const queue = [remoteTipCommit.hash];
+
+    // BFS 1: all commits reachable from HEAD
+    const currentBranchCommits = new Set<string>();
+    const headCommit = commits.find(c => c.refs.some(r => r.type === 'head'));
+    if (headCommit) {
+      const queue = [headCommit.hash];
       while (queue.length > 0) {
         const hash = queue.shift()!;
-        if (upstreamReachable.has(hash)) continue;
-        upstreamReachable.add(hash);
+        if (currentBranchCommits.has(hash)) continue;
+        currentBranchCommits.add(hash);
         const idx = hashIndex.get(hash);
         if (idx === undefined) continue;
         for (const parent of commits[idx].parents) {
-          if (!upstreamReachable.has(parent)) queue.push(parent);
+          if (!currentBranchCommits.has(parent)) queue.push(parent);
         }
       }
     }
-    // Local-only = on current branch but not reachable from upstream
-    for (const hash of currentBranchCommits) {
-      if (!upstreamReachable.has(hash)) set.add(hash);
+
+    const current = branchStore.currentBranch;
+    const currentBranchLocalOnly = new Set<string>();
+    const currentBranchRemoteAhead = new Set<string>();
+
+    if (current?.upstream) {
+      const [remote, ...rest] = current.upstream.split('/');
+      const remoteBranchName = rest.join('/');
+      const remoteTipCommit = commits.find(c => c.refs.some(r => r.type === 'remote-branch' && r.remote === remote && r.name === remoteBranchName));
+
+      if (remoteTipCommit) {
+        // BFS 2: commits reachable from upstream tip
+        const upstreamReachable = new Set<string>();
+        if (current.ahead > 0) {
+          const queue = [remoteTipCommit.hash];
+          while (queue.length > 0) {
+            const hash = queue.shift()!;
+            if (upstreamReachable.has(hash)) continue;
+            upstreamReachable.add(hash);
+            const idx = hashIndex.get(hash);
+            if (idx === undefined) continue;
+            for (const parent of commits[idx].parents) {
+              if (!upstreamReachable.has(parent)) queue.push(parent);
+            }
+          }
+          for (const hash of currentBranchCommits) {
+            if (!upstreamReachable.has(hash)) currentBranchLocalOnly.add(hash);
+          }
+        }
+
+        // BFS 3: commits reachable from upstream tip but not on current branch
+        if (current.behind > 0) {
+          const queue: string[] = [remoteTipCommit.hash];
+          while (queue.length > 0) {
+            const hash = queue.shift()!;
+            if (currentBranchRemoteAhead.has(hash) || currentBranchCommits.has(hash)) continue;
+            currentBranchRemoteAhead.add(hash);
+            const idx = hashIndex.get(hash);
+            if (idx === undefined) continue;
+            for (const parent of commits[idx].parents) {
+              if (!currentBranchRemoteAhead.has(parent) && !currentBranchCommits.has(parent)) {
+                queue.push(parent);
+              }
+            }
+          }
+        }
+      }
     }
-    return set;
+
+    return { currentBranchCommits, currentBranchLocalOnly, currentBranchRemoteAhead };
   });
 
-  // Set of commit hashes that are remote-ahead for current branch's upstream only
-  const currentBranchRemoteAhead = $derived.by(() => {
-    const set = new Set<string>();
-    const current = branchStore.currentBranch;
-    if (!current?.upstream || current.behind === 0) return set;
-    const commits = commitStore.commits;
-    if (commits.length === 0) return set;
-    const hashIndex = new Map<string, number>();
-    for (let i = 0; i < commits.length; i++) hashIndex.set(commits[i].hash, i);
-    // Find the upstream remote tip commit
-    const [remote, ...rest] = current.upstream.split('/');
-    const remoteBranchName = rest.join('/');
-    const remoteTipCommit = commits.find(c => c.refs.some(r => r.type === 'remote-branch' && r.remote === remote && r.name === remoteBranchName));
-    if (!remoteTipCommit) return set;
-    // BFS from remote tip, follow all parents, stop at current branch commits
-    const queue: string[] = [remoteTipCommit.hash];
-    while (queue.length > 0) {
-      const hash = queue.shift()!;
-      if (set.has(hash) || currentBranchCommits.has(hash)) continue;
-      set.add(hash);
-      const idx = hashIndex.get(hash);
-      if (idx === undefined) continue;
-      for (const parent of commits[idx].parents) {
-        if (!set.has(parent) && !currentBranchCommits.has(parent)) {
-          queue.push(parent);
-        }
-      }
-    }
-    return set;
-  });
+  const currentBranchCommits = $derived(branchSets.currentBranchCommits);
+  const currentBranchLocalOnly = $derived(branchSets.currentBranchLocalOnly);
+  const currentBranchRemoteAhead = $derived(branchSets.currentBranchRemoteAhead);
 
   let compareBase = $state<string | null>(null);
   let bisectBadCommit = $state<string | null>(null);
@@ -281,7 +275,7 @@
     }
     // Check if local branch is behind remote - offer fast-forward
     if (!skipBehindCheck) {
-      const branch = branchStore.branches.find(b => !b.remote && b.name === ref);
+      const branch = localBranchMap.get(ref);
       if (branch?.behind && branch.behind > 0 && branch.upstream) {
         fastForwardLocalBranch = ref;
         fastForwardRemote = branch.upstream;
@@ -313,7 +307,7 @@
 
   function doCheckoutRemote(remoteName: string, branchName: string, dirtyPayload: Record<string, boolean> = {}) {
     // Check if a local branch tracks this remote (upstream), or has the same name
-    const localBranch = branchStore.branches.find(b => !b.remote && (b.upstream === remoteName || b.name === branchName));
+    const localBranch = upstreamBranchMap.get(remoteName) ?? localBranchMap.get(branchName);
     if (localBranch) {
       doCheckout(localBranch.name, false, dirtyPayload);
     } else if (Object.keys(dirtyPayload).length > 0) {
@@ -369,7 +363,8 @@
 
   let graphWidth = $derived.by(() => {
     if (displayLeftMargin.length > 0) {
-      const maxMargin = Math.max(...displayLeftMargin);
+      let maxMargin = 0;
+      for (const m of displayLeftMargin) if (m > maxMargin) maxMargin = m;
       return Math.ceil(maxMargin * X_SCALE) + 4;
     }
     return 30;
@@ -499,7 +494,7 @@
               {
                 label: t('graph.setUpstream'),
                 action: () => {
-                  const branchInfo = branchStore.branches.find(b => !b.remote && b.name === branchName);
+                  const branchInfo = localBranchMap.get(branchName);
                   modalStore.openSetUpstream(branchName, branchInfo?.upstream);
                 },
               },
@@ -912,7 +907,7 @@
                     if (remoteFilter.length === 0 || remoteFilter.includes('local')) {
                       const localRefs = commit.refs.filter(lr => lr.type === 'branch' || lr.type === 'head');
                       for (const lr of localRefs) {
-                        const localInfo = branchStore.branches.find(b => !b.remote && b.name === lr.name);
+                        const localInfo = localBranchMap.get(lr.name);
                         if (localInfo?.upstream === `${r.remote}/${r.name}`) return false;
                       }
                     }
@@ -926,14 +921,11 @@
                   return (order[a.type] ?? 4) - (order[b.type] ?? 4);
                 }) as ref}
                   {@const hasRemote = (ref.type === 'branch' || ref.type === 'head') && (() => {
-                    const localInfo = branchStore.branches.find(b => !b.remote && b.name === ref.name);
+                    const localInfo = localBranchMap.get(ref.name);
                     if (!localInfo?.upstream) return false;
                     return commit.refs.some(r => r.type === 'remote-branch' && `${r.remote}/${r.name}` === localInfo.upstream);
                   })()}
-                  {@const trackedUpstream = (ref.type === 'branch' || ref.type === 'head') ? (() => {
-                    const localInfo = branchStore.branches.find(b => !b.remote && b.name === ref.name);
-                    return localInfo?.upstream ?? null;
-                  })() : null}
+                  {@const trackedUpstream = (ref.type === 'branch' || ref.type === 'head') ? (localBranchMap.get(ref.name)?.upstream ?? null) : null}
                   {@const isWtBranch = (ref.type === 'branch' || ref.type === 'head') && worktreeBranches.has(ref.name)}
                   {@const badgeColor = ref.type === 'tag' ? '#f0c040' : ref.type === 'stash' ? 'var(--text-secondary, #888)' : isWtBranch ? '#4caf50' : nodeColor}
                   {#if hasRemote && trackedUpstream && (remoteFilter.length === 0 || (remoteFilter.includes('local') && remoteFilter.includes(trackedUpstream.split('/')[0])))}
@@ -965,7 +957,7 @@
                     ondblclick={(e) => {
                       e.stopPropagation();
                       if (ref.type === 'remote-branch') {
-                        const trackingLocal = branchStore.branches.find(b => !b.remote && b.upstream === `${ref.remote}/${ref.name}`);
+                        const trackingLocal = upstreamBranchMap.get(`${ref.remote}/${ref.name}`);
                         if (trackingLocal) {
                           fastForwardLocalBranch = trackingLocal.name;
                           fastForwardRemote = `${ref.remote}/${ref.name}`;
@@ -984,7 +976,7 @@
                     onkeydown={(e) => {
                       if (e.key === 'Enter') {
                         if (ref.type === 'remote-branch') {
-                          const trackingLocal = branchStore.branches.find(b => !b.remote && b.upstream === `${ref.remote}/${ref.name}`);
+                          const trackingLocal = upstreamBranchMap.get(`${ref.remote}/${ref.name}`);
                           if (trackingLocal) {
                             fastForwardLocalBranch = trackingLocal.name;
                             fastForwardRemote = `${ref.remote}/${ref.name}`;

@@ -42,6 +42,7 @@ export interface FullGraphData {
 // ── Color picker (queue-based like SourceGit) ──
 class ColorPicker {
   private queue: number[] = [];
+  private recycled: Set<number> = new Set();
   private count: number;
 
   constructor(count: number) {
@@ -51,12 +52,18 @@ class ColorPicker {
   next(): number {
     if (this.queue.length === 0) {
       for (let i = 0; i < this.count; i++) this.queue.push(i);
+      this.recycled.clear();
     }
-    return this.queue.shift()!;
+    const idx = this.queue.shift()!;
+    this.recycled.delete(idx);
+    return idx;
   }
 
   recycle(idx: number) {
-    if (!this.queue.includes(idx)) this.queue.push(idx);
+    if (!this.recycled.has(idx)) {
+      this.recycled.add(idx);
+      this.queue.push(idx);
+    }
   }
 }
 
@@ -320,13 +327,17 @@ export function buildFullGraph(commits: Commit[], branches: BranchInfo[] = []): 
       }
     }
 
-    // Remove ended paths
-    for (const e of ended) {
-      colorPicker.recycle(e.path.color);
-      const idx = unsolved.indexOf(e);
-      if (idx !== -1) unsolved.splice(idx, 1);
+    // Remove ended paths in a single O(n) pass
+    if (ended.length > 0) {
+      const toRemove = new Set(ended);
+      for (const e of ended) colorPicker.recycle(e.path.color);
+      let w = 0;
+      for (let r = 0; r < unsolved.length; r++) {
+        if (!toRemove.has(unsolved[r])) unsolved[w++] = unsolved[r];
+      }
+      unsolved.length = w;
+      ended.length = 0;
     }
-    ended.length = 0;
 
     // New branch head
     if (major === null) {
@@ -388,29 +399,28 @@ export function buildFullGraph(commits: Commit[], branches: BranchInfo[] = []): 
 
 // ── Legacy adapter: convert FullGraphData to GraphNode[] for existing rendering ──
 
-export function buildGraph(commits: Commit[], branches: BranchInfo[] = []): GraphNode[] {
-  const full = buildFullGraph(commits, branches);
+export function buildGraphFromFullData(commits: Commit[], full: FullGraphData): GraphNode[] {
   const nodes: GraphNode[] = [];
-
+  const hashIndex = new Map<string, number>();
+  for (let i = 0; i < commits.length; i++) {
+    hashIndex.set(commits[i].hash, i);
+  }
   for (let i = 0; i < commits.length; i++) {
     const dot = full.dots[i];
     const commit = commits[i];
     const color = COLOR_PALETTE[dot.color % COLOR_PALETTE.length];
-
     const parentConns: ParentConnection[] = [];
     for (let pi = 0; pi < commit.parents.length; pi++) {
-      const parentIdx = commits.findIndex(c => c.hash === commit.parents[pi]);
+      const parentIdx = hashIndex.get(commit.parents[pi]) ?? -1;
       if (parentIdx === -1) continue;
       const parentDot = full.dots[parentIdx];
       const pColor = COLOR_PALETTE[parentDot.color % COLOR_PALETTE.length];
-
       parentConns.push({
         hash: commit.parents[pi],
         column: parentDot.center.x,
         color: pi === 0 ? color : pColor,
       });
     }
-
     nodes.push({
       commit: commit.hash,
       column: dot.center.x,
@@ -418,8 +428,11 @@ export function buildGraph(commits: Commit[], branches: BranchInfo[] = []): Grap
       parents: parentConns,
     });
   }
-
   return nodes;
+}
+
+export function buildGraph(commits: Commit[], branches: BranchInfo[] = []): GraphNode[] {
+  return buildGraphFromFullData(commits, buildFullGraph(commits, branches));
 }
 
 export const buildGraphFromGitOutput = (

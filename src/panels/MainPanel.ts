@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { readFile } from 'fs/promises';
 import { GitService, GitError } from '../git/git-service';
-import { buildGraph, buildGraphFromGitOutput, buildFullGraph } from '../git/git-graph-builder';
+import { buildGraph, buildGraphFromGitOutput, buildFullGraph, buildGraphFromFullData } from '../git/git-graph-builder';
 import { FileWatcher } from '../services/file-watcher';
 import { RepoDiscoveryService } from '../services/repo-discovery';
 import type { WebviewMessage } from '../utils/message-bus';
@@ -155,8 +155,8 @@ export class MainPanel {
           ]);
           const hasMore = allFetched.length > requestedLimit;
           const commits = hasMore ? allFetched.slice(0, requestedLimit) : allFetched;
-          const graph = commits.length > 0 ? buildGraph(commits, logBranches) : [];
           const fullGraph = commits.length > 0 ? buildFullGraph(commits, logBranches) : { paths: [], links: [], dots: [], commitLeftMargin: [] };
+          const graph = commits.length > 0 ? buildGraphFromFullData(commits, fullGraph) : [];
           this.panel.webview.postMessage({
             type: 'logData',
             payload: {
@@ -834,9 +834,11 @@ export class MainPanel {
           await this.gitService.stageFile(message.payload.file);
           // Refresh conflict status after staging
           if (this.allConflictFiles.length > 0) {
-            const stillConflicting = await this.gitService.getConflictFiles();
+            const [stillConflicting, opState] = await Promise.all([
+              this.gitService.getConflictFiles(),
+              this.gitService.getOperationState(),
+            ]);
             const conflictSet = new Set(stillConflicting);
-            const opState = await this.gitService.getOperationState();
             if (opState.type) {
               this.panel.webview.postMessage({
                 type: 'conflictData',
@@ -851,9 +853,11 @@ export class MainPanel {
         }
         case 'refreshConflicts': {
           if (this.allConflictFiles.length > 0) {
-            const stillConflicting = await this.gitService.getConflictFiles();
+            const [stillConflicting, opState] = await Promise.all([
+              this.gitService.getConflictFiles(),
+              this.gitService.getOperationState(),
+            ]);
             const conflictSet = new Set(stillConflicting);
-            const opState = await this.gitService.getOperationState();
             if (opState.type) {
               this.panel.webview.postMessage({
                 type: 'conflictData',

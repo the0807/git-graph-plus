@@ -171,9 +171,14 @@ export class GitService {
             ...stashHashes,
           ]);
           const stashCommits = parseLog(stashRaw, remoteNames);
+          const stashMap = new Map(stashes.map(s => [s.hash, s]));
+          const commitHashIndex = new Map<string, number>();
+          for (let i = 0; i < commits.length; i++) commitHashIndex.set(commits[i].hash, i);
+
+          const insertions: Array<{ idx: number; commit: Commit }> = [];
           for (let i = 0; i < stashCommits.length; i++) {
             const sc = stashCommits[i];
-            const stash = stashes.find(s => s.hash === sc.hash);
+            const stash = stashMap.get(sc.hash);
             // Keep only first parent (base commit), drop index/untracked parents
             sc.parents = sc.parents.length > 0 ? [sc.parents[0]] : [];
             // Replace refs with stash badge
@@ -181,12 +186,18 @@ export class GitService {
             // Use stash message as subject
             if (stash?.message) sc.subject = stash.message;
             // Insert after the parent commit; skip if parent is outside the filtered scope
-            const parentIdx = commits.findIndex(c => c.hash === sc.parents[0]);
-            if (parentIdx >= 0) {
-              commits.splice(parentIdx, 0, sc);
+            const parentIdx = commitHashIndex.get(sc.parents[0]);
+            if (parentIdx !== undefined) {
+              insertions.push({ idx: parentIdx, commit: sc });
             } else if (!options?.remoteFilter || options.remoteFilter.length === 0) {
-              commits.unshift(sc);
+              insertions.push({ idx: -1, commit: sc });
             }
+          }
+          // Sort descending so earlier splices don't shift later indices
+          insertions.sort((a, b) => b.idx - a.idx);
+          for (const { idx, commit } of insertions) {
+            if (idx < 0) commits.unshift(commit);
+            else commits.splice(idx, 0, commit);
           }
         } catch (err) { console.warn('Git Graph+: stash log error:', err instanceof Error ? err.message : err); }
       }
@@ -634,22 +645,16 @@ export class GitService {
   }
 
   async getOperationState(): Promise<{ type: 'merge' | 'rebase' | 'cherry-pick' | 'revert' | null }> {
-    try {
-      await this.exec(['rev-parse', '--verify', 'MERGE_HEAD']);
-      return { type: 'merge' };
-    } catch { /* not merging */ }
-    try {
-      await this.exec(['rev-parse', '--verify', 'REBASE_HEAD']);
-      return { type: 'rebase' };
-    } catch { /* not rebasing */ }
-    try {
-      await this.exec(['rev-parse', '--verify', 'CHERRY_PICK_HEAD']);
-      return { type: 'cherry-pick' };
-    } catch { /* not cherry-picking */ }
-    try {
-      await this.exec(['rev-parse', '--verify', 'REVERT_HEAD']);
-      return { type: 'revert' };
-    } catch { /* not reverting */ }
+    const [merge, rebase, cherryPick, revert] = await Promise.allSettled([
+      this.exec(['rev-parse', '--verify', 'MERGE_HEAD']),
+      this.exec(['rev-parse', '--verify', 'REBASE_HEAD']),
+      this.exec(['rev-parse', '--verify', 'CHERRY_PICK_HEAD']),
+      this.exec(['rev-parse', '--verify', 'REVERT_HEAD']),
+    ]);
+    if (merge.status === 'fulfilled') return { type: 'merge' };
+    if (rebase.status === 'fulfilled') return { type: 'rebase' };
+    if (cherryPick.status === 'fulfilled') return { type: 'cherry-pick' };
+    if (revert.status === 'fulfilled') return { type: 'revert' };
     return { type: null };
   }
 

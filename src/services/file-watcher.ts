@@ -40,12 +40,12 @@ export class FileWatcher implements vscode.Disposable {
     this.addWatcher(new vscode.RelativePattern(repoPath, '**'), true);
   }
 
-  // Directories to ignore for working tree changes
-  private static readonly IGNORE_DIRS = [
+  // Directories to ignore for working tree changes (Set for O(1) lookup)
+  private static readonly IGNORE_DIRS = new Set([
     'node_modules', '.git', 'dist', 'build', 'out', '.next',
     '.nuxt', '__pycache__', '.venv', 'vendor', 'target',
     '.gradle', '.idea', '.vs', 'coverage', '.nyc_output',
-  ];
+  ]);
 
   private addWatcher(pattern: vscode.RelativePattern, workingTree = false): void {
     const watcher = vscode.workspace.createFileSystemWatcher(pattern);
@@ -54,10 +54,8 @@ export class FileWatcher implements vscode.Disposable {
       if (workingTree) {
         // Skip .git and common heavy directories
         const normalizedPath = uri.fsPath.split(path.sep);
-        for (const dir of FileWatcher.IGNORE_DIRS) {
-          if (normalizedPath.includes(dir)) {
-            return;
-          }
+        if (normalizedPath.some(seg => FileWatcher.IGNORE_DIRS.has(seg))) {
+          return;
         }
       }
       this.scheduleRefresh(workingTree ? 'status' : this.classifyChange(uri));
