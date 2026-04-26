@@ -264,12 +264,18 @@ export const en: Record<string, string> = {
   'cherryPick.title': 'Cherry-pick Commit',
   'cherryPick.desc': 'Apply the selected commit onto the current branch.',
   'cherryPick.noCommit': 'Apply changes without committing',
+  'cherryPick.checkingConflicts': 'Checking for cherry-pick conflicts',
+  'cherryPick.conflictWarning': 'Cherry-pick conflict in {count} file(s)',
+  'cherryPick.noConflict': 'No cherry-pick conflicts',
   'cherryPick.cherryPick': 'Cherry-pick',
 
   // Revert modal
   'revert.title': 'Revert Commit',
   'revert.desc': 'Create a new commit that undoes the changes of the selected commit.',
   'revert.noCommit': 'Apply changes without committing',
+  'revert.checkingConflicts': 'Checking for revert conflicts',
+  'revert.conflictWarning': 'Revert conflict in {count} file(s)',
+  'revert.noConflict': 'No revert conflicts',
   'revert.revert': 'Revert',
 
   // Merge modal

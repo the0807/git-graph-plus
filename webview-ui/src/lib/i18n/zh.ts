@@ -264,12 +264,18 @@ export const zh: Record<string, string> = {
   'cherryPick.title': '遴选提交',
   'cherryPick.desc': '将选定的提交应用到当前分支。',
   'cherryPick.noCommit': '应用更改但不提交',
+  'cherryPick.checkingConflicts': '正在检查 cherry-pick 冲突',
+  'cherryPick.conflictWarning': 'Cherry-pick 冲突 {count} 个文件',
+  'cherryPick.noConflict': '无 cherry-pick 冲突',
   'cherryPick.cherryPick': '遴选',
 
   // Revert modal
   'revert.title': '还原提交',
   'revert.desc': '创建一个新提交，用于撤销选定提交的更改。',
   'revert.noCommit': '应用更改但不提交',
+  'revert.checkingConflicts': '正在检查 revert 冲突',
+  'revert.conflictWarning': 'Revert 冲突 {count} 个文件',
+  'revert.noConflict': '无 revert 冲突',
   'revert.revert': '还原',
 
   // Merge modal

@@ -12,6 +12,8 @@
   import ColorSelect from '../common/ColorSelect.svelte';
   import PullAfterCheckoutModal from '../modals/PullAfterCheckoutModal.svelte';
   import RebaseBranchModal from '../modals/RebaseBranchModal.svelte';
+  import CherryPickModal from '../modals/CherryPickModal.svelte';
+  import RevertModal from '../modals/RevertModal.svelte';
   import { modalStore } from '../../lib/stores/modals.svelte';
   import type { Commit, CommitGraphData } from '../../lib/types';
 
@@ -220,11 +222,9 @@
 
   let showCherryPickModal = $state(false);
   let cherryPickTarget = $state('');
-  let cherryPickNoCommit = $state(false);
 
   let showRevertModal = $state(false);
   let revertTarget = $state('');
-  let revertNoCommit = $state(false);
 
   let showCheckoutCommitModal = $state(false);
   let checkoutCommitHash = $state('');
@@ -662,8 +662,8 @@
             }
           },
         },
-        { label: t('graph.cherryPickCommit'), action: () => { cherryPickTarget = commit.hash; cherryPickNoCommit = false; showCherryPickModal = true; } },
-        { label: t('graph.revertCommit'),     action: () => { revertTarget = commit.hash; revertNoCommit = false; showRevertModal = true; } },
+        { label: t('graph.cherryPickCommit'), action: () => { cherryPickTarget = commit.hash; showCherryPickModal = true; } },
+        { label: t('graph.revertCommit'),     action: () => { revertTarget = commit.hash; showRevertModal = true; } },
         { label: t('graph.savePatch'),        action: () => vscode.postMessage({ type: 'saveCommitPatch', payload: { hash: commit.hash } }) },
       ]);
 
@@ -1128,45 +1128,21 @@
 {/if}
 
 {#if showCherryPickModal}
-  <Modal title={t('cherryPick.title')} onClose={() => { showCherryPickModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">{t('cherryPick.desc')}</p>
-    <div class="modal-context-card">
-      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-commit"></i>{cherryPickTarget.substring(0, 7)}</span>
-      <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{branchStore.currentBranch?.name ?? 'current branch'}</span>
-    </div>
-    <div class="modal-form-group">
-      <label class="modal-checkbox">
-        <input type="checkbox" bind:checked={cherryPickNoCommit} />
-        <span>{t('cherryPick.noCommit')}</span>
-      </label>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showCherryPickModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showCherryPickModal = false; contextMenuHash = null; vscode.postMessage({ type: 'cherryPick', payload: { commit: cherryPickTarget, noCommit: cherryPickNoCommit } }); }}>{t('cherryPick.cherryPick')}</button>
-    </div>
-  </Modal>
+  <CherryPickModal
+    commit={cherryPickTarget}
+    branch={branchStore.currentBranch?.name ?? 'current branch'}
+    onClose={() => { showCherryPickModal = false; contextMenuHash = null; }}
+    onCherryPick={(noCommit) => { showCherryPickModal = false; contextMenuHash = null; vscode.postMessage({ type: 'cherryPick', payload: { commit: cherryPickTarget, noCommit } }); }}
+  />
 {/if}
 
 {#if showRevertModal}
-  <Modal title={t('revert.title')} onClose={() => { showRevertModal = false; contextMenuHash = null; }}>
-    <p class="modal-desc">{t('revert.desc')}</p>
-    <div class="modal-context-card">
-      <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-commit"></i>{revertTarget.substring(0, 7)}</span>
-      <span class="modal-arrow">↺</span>
-      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{branchStore.currentBranch?.name ?? 'current branch'}</span>
-    </div>
-    <div class="modal-form-group">
-      <label class="modal-checkbox">
-        <input type="checkbox" bind:checked={revertNoCommit} />
-        <span>{t('revert.noCommit')}</span>
-      </label>
-    </div>
-    <div class="form-actions">
-      <button onclick={() => { showRevertModal = false; contextMenuHash = null; }}>{t('common.cancel')}</button>
-      <button class="primary" onclick={() => { showRevertModal = false; contextMenuHash = null; vscode.postMessage({ type: 'revert', payload: { commit: revertTarget, noCommit: revertNoCommit } }); }}>{t('revert.revert')}</button>
-    </div>
-  </Modal>
+  <RevertModal
+    commit={revertTarget}
+    branch={branchStore.currentBranch?.name ?? 'current branch'}
+    onClose={() => { showRevertModal = false; contextMenuHash = null; }}
+    onRevert={(noCommit) => { showRevertModal = false; contextMenuHash = null; vscode.postMessage({ type: 'revert', payload: { commit: revertTarget, noCommit } }); }}
+  />
 {/if}
 
 {#if showCheckoutCommitModal}

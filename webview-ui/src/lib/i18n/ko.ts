@@ -264,12 +264,18 @@ export const ko: Record<string, string> = {
   'cherryPick.title': 'Commit Cherry-pick',
   'cherryPick.desc': '선택한 commit을 현재 브랜치에 적용합니다.',
   'cherryPick.noCommit': 'Commit 없이 변경 사항만 적용',
+  'cherryPick.checkingConflicts': 'cherry-pick 충돌 확인 중',
+  'cherryPick.conflictWarning': 'cherry-pick 시 충돌 발생({count}개)',
+  'cherryPick.noConflict': 'cherry-pick 시 충돌 없음',
   'cherryPick.cherryPick': 'Cherry-pick',
 
   // Revert modal
   'revert.title': 'Commit Revert',
   'revert.desc': '선택한 commit의 변경 사항을 되돌리는 새 commit을 생성합니다.',
   'revert.noCommit': 'Commit 없이 변경 사항만 적용',
+  'revert.checkingConflicts': 'revert 충돌 확인 중',
+  'revert.conflictWarning': 'revert 시 충돌 발생({count}개)',
+  'revert.noConflict': 'revert 시 충돌 없음',
   'revert.revert': 'Revert',
 
   // Merge modal
