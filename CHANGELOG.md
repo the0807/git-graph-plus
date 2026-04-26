@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.2.9 (2026-04-26)
+
+### New Features
+- **Remote source filter**: Filter the commit graph by remote source (closes #5)
+- **Conflict prediction for cherry-pick and revert**: Modals now check for conflicts before executing, matching the existing merge/rebase behavior
+- **Tag duplicate warning**: Creating a tag with an already-existing name now shows a warning and disables the create button
+
+### Improvements
+- **Set upstream modal UX**: Improved layout and interaction flow for the set upstream modal
+- **Conflict status labels**: Merge, rebase, cherry-pick, and revert conflict status messages now include the operation name for clarity
+- **Conflict status font size**: Conflict status text in action modals aligned to 12px to match button text
+- **Remote-ahead commits**: Commits that exist only on the remote are now visually dimmed to distinguish them from local commits
+
+### Performance
+- Replace `Array.includes()` with `Set.has()` in graph color recycling (O(n) → O(1))
+- Replace `indexOf`+`splice` with single-pass in-place filter in graph builder (O(n²) → O(n))
+- Parallelize `getOperationState()` git calls with `Promise.allSettled()` (4 sequential → 1 batch)
+- Avoid calling `buildFullGraph()` twice on log refresh
+
+### Bug Fixes
+- Set upstream now creates the remote branch when it does not exist yet (closes #3)
+- Settings and external git changes are now applied immediately without requiring a restart
+
 ## 0.2.8 (2026-04-25)
 
 ### Improvements
