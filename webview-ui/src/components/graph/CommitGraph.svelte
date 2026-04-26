@@ -1220,7 +1220,7 @@
         </label>
       </div>
       {#if checkoutCommitOption === 'discard'}
-        <p class="modal-warning" role="alert">{@html t('checkout.discardWarning')}</p>
+        <p class="modal-warning" role="alert"><i class="codicon codicon-warning"></i><span>{@html t('checkout.discardWarning')}</span></p>
       {/if}
     {/if}
     {@const dirtyPayload: Record<string, boolean> = checkoutCommitDirty ? (checkoutCommitOption === 'keep' ? { merge: true } : checkoutCommitOption === 'stash' ? { stash: true, stashUntracked: true } : checkoutCommitOption === 'discard' ? { force: true, clean: true } : {}) : {}}

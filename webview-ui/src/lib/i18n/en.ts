@@ -97,6 +97,7 @@ export const en: Record<string, string> = {
   'createTag.messagePlaceholder': 'optional',
   'createTag.target': 'Target (optional, defaults to HEAD)',
   'createTag.pushToRemotes': 'Push to all remotes',
+  'createTag.tagExists': 'A tag named \'{name}\' already exists.',
   'createTag.create': 'Create',
   'createTag.createAndPush': 'Create and Push',
 
@@ -280,11 +281,15 @@ export const en: Record<string, string> = {
   'merge.ffOnly': 'Fast-forward Only - Fail if not possible',
   'merge.squash': 'Squash - Combine all commits into one',
   'merge.squashWarning': 'Original commits will <span class="modal-emph modal-emph--danger">not be preserved</span> in the history.',
-  'merge.conflictWarning': '<span class="modal-emph modal-emph--danger">Conflict</span> detected in {count} file(s)',
-  'merge.noConflict': 'No conflicts detected',
-  'merge.moreFiles': 'more file(s)',
-  'merge.collapse': 'Show less',
+  'merge.checkingConflicts': 'Checking for merge conflicts',
+  'merge.conflictWarning': 'Merge conflict in {count} file(s)',
+  'merge.noConflict': 'No merge conflicts',
+
   'merge.merge': 'Merge',
+
+  'rebase.checkingConflicts': 'Checking for rebase conflicts',
+  'rebase.conflictWarning': 'Rebase conflict in {count} file(s)',
+  'rebase.noConflict': 'No rebase conflicts',
 
   // Rebase modal
   'rebaseBranch.title': 'Rebase Branch',

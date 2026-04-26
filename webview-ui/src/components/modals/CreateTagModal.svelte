@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Modal from '../common/Modal.svelte';
   import { t } from '../../lib/i18n/index.svelte';
+  import { branchStore } from '../../lib/stores/branches.svelte';
 
   interface Props {
     startPoint: string;
@@ -19,6 +20,7 @@
   let push = $state(true);
   let nameInput: HTMLInputElement | undefined = $state();
   const isStartPointHash = $derived(/^[0-9a-f]{7,40}$/i.test(startPoint));
+  const tagExists = $derived(name.trim() !== '' && branchStore.tags.some(tag => tag.name === name.trim()));
 
   onMount(() => { nameInput?.focus(); });
 
@@ -76,8 +78,11 @@
       <span>{t('createTag.pushToRemotes')}</span>
     </label>
   </div>
+  {#if tagExists}
+    <p class="modal-warning" role="alert"><i class="codicon codicon-warning"></i>{t('createTag.tagExists', { name: name.trim() })}</p>
+  {/if}
   <div class="form-actions">
     <button onclick={onClose}>{t('common.cancel')}</button>
-    <button class="primary" onclick={handleSubmit} disabled={!name.trim()}>{push ? t('createTag.createAndPush') : t('createTag.create')}</button>
+    <button class="primary" onclick={handleSubmit} disabled={!name.trim() || tagExists}>{push ? t('createTag.createAndPush') : t('createTag.create')}</button>
   </div>
 </Modal>

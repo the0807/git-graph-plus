@@ -19,8 +19,6 @@
   let mergeBtn: HTMLButtonElement | undefined = $state();
 
   let conflictPrediction = $state<{ hasConflict: boolean; files: string[] } | null>(null);
-  let showAllConflictFiles = $state(false);
-  const MAX_VISIBLE_FILES = 3;
 
   onMount(() => {
     mergeBtn?.focus();
@@ -44,33 +42,6 @@
     <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
     <span class="modal-pill modal-pill--target"><i class="codicon {isHash(target) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>{shortRef(target)}</span>
   </div>
-  {#if conflictPrediction?.hasConflict}
-    <div class="modal-warning">
-      <i class="codicon codicon-warning"></i>
-      <div>
-        <span>{@html t('merge.conflictWarning', { count: String(conflictPrediction.files.length) })}</span>
-        {#if conflictPrediction.files.length > 0}
-          <ul class="conflict-file-list">
-            {#each (showAllConflictFiles ? conflictPrediction.files : conflictPrediction.files.slice(0, MAX_VISIBLE_FILES)) as file}
-              <li>{file}</li>
-            {/each}
-          </ul>
-          {#if conflictPrediction.files.length > MAX_VISIBLE_FILES}
-            {#if showAllConflictFiles}
-              <button class="show-more-btn" onclick={() => { showAllConflictFiles = false; }}>{t('merge.collapse')}</button>
-            {:else}
-              <button class="show-more-btn" onclick={() => { showAllConflictFiles = true; }}>+{conflictPrediction.files.length - MAX_VISIBLE_FILES} {t('merge.moreFiles')}</button>
-            {/if}
-          {/if}
-        {/if}
-      </div>
-    </div>
-  {:else if conflictPrediction && !conflictPrediction.hasConflict}
-    <div class="modal-success">
-      <i class="codicon codicon-check"></i>
-      <span>{t('merge.noConflict')}</span>
-    </div>
-  {/if}
   <div class="modal-form-group">
     <span class="modal-field-label">{t('merge.mergeType')}</span>
     <ColorSelect
@@ -85,49 +56,33 @@
     />
   </div>
   <div class="form-actions">
+    <div class="conflict-status" class:is-warning={conflictPrediction?.hasConflict} class:is-success={conflictPrediction !== null && !conflictPrediction?.hasConflict}>
+      {#if conflictPrediction === null}
+        <span class="spinner"></span>
+        <span>{t('merge.checkingConflicts')}</span>
+      {:else if conflictPrediction.hasConflict}
+        <i class="codicon codicon-warning"></i>
+        <span>{@html t('merge.conflictWarning', { count: String(conflictPrediction.files.length) })}</span>
+      {:else}
+        <i class="codicon codicon-check"></i>
+        <span>{t('merge.noConflict')}</span>
+      {/if}
+    </div>
     <button onclick={onClose}>{t('common.cancel')}</button>
     <button class="primary" bind:this={mergeBtn} onclick={() => onMerge({ noFf: mergeMode === 'no-ff', ffOnly: mergeMode === 'ff-only', squash: mergeMode === 'squash' })}>{t('merge.merge')}</button>
   </div>
 </Modal>
 
 <style>
-  .conflict-file-list {
-    margin: 4px 0 0;
-    padding-left: 16px;
-    font-size: 11px;
-    font-family: var(--vscode-editor-font-family, monospace);
-    opacity: 0.9;
-  }
-
-  .conflict-file-list li {
-    padding: 1px 0;
-  }
-
-  .show-more-btn {
-    background: none;
-    border: none;
-    color: var(--text-secondary, #888);
-    font-size: 11px;
-    cursor: pointer;
-    padding: 2px 0;
-    margin-top: 2px;
-  }
-
-  .show-more-btn:hover {
-    text-decoration: underline;
-    background: none;
-  }
-
-  .modal-success {
+  .conflict-status {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: rgba(76, 175, 80, 0.08);
-    border: 1px solid rgba(76, 175, 80, 0.25);
-    border-radius: 5px;
-    color: #4caf50;
-    font-size: 11px;
-    margin: 0 0 6px;
+    gap: 5px;
+    font-size: 12px;
+    margin-right: auto;
+    color: var(--text-secondary);
   }
+
+  .conflict-status.is-warning { color: #f0a020; }
+  .conflict-status.is-success { color: #4caf50; }
 </style>

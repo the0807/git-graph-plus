@@ -59,7 +59,7 @@
       </label>
     </div>
     {#if dirtyOption === 'discard'}
-      <p class="modal-warning" role="alert">{@html t('checkout.discardWarning')}</p>
+      <p class="modal-warning" role="alert"><i class="codicon codicon-warning"></i><span>{@html t('checkout.discardWarning')}</span></p>
     {/if}
   {/if}
   <div class="form-actions">

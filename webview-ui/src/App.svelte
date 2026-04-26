@@ -780,9 +780,9 @@
       </label>
     </div>
     {#if modalStore.push.forceMode === 'with-lease'}
-      <p class="modal-warning" role="alert"><span>{@html t('push.forceWithLeaseWarning')}</span></p>
+      <p class="modal-warning" role="alert"><i class="codicon codicon-warning"></i><span>{@html t('push.forceWithLeaseWarning')}</span></p>
     {:else if modalStore.push.forceMode === 'force'}
-      <p class="modal-warning" role="alert"><span>{@html t('push.forceWarning')}</span></p>
+      <p class="modal-warning" role="alert"><i class="codicon codicon-warning"></i><span>{@html t('push.forceWarning')}</span></p>
     {/if}
     <div class="form-actions">
       <button onclick={() => { modalStore.closePush(); }}>{t('common.cancel')}</button>

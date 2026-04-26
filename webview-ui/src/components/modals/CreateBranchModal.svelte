@@ -63,17 +63,17 @@
       onkeydown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
     />
   </div>
-  {#if branchExists}
-    <p class="modal-warning" role="alert">{t('createBranch.branchExists', { name: name.trim() })}</p>
-  {:else if tagConflict}
-    <p class="modal-warning" role="alert">{t('createBranch.tagConflict', { name: name.trim() })}</p>
-  {/if}
   <div class="modal-form-group">
     <label class="modal-checkbox">
       <input type="checkbox" bind:checked={checkout} />
       <span>{t('createBranch.checkout')}</span>
     </label>
   </div>
+  {#if branchExists}
+    <p class="modal-warning" role="alert"><i class="codicon codicon-warning"></i>{t('createBranch.branchExists', { name: name.trim() })}</p>
+  {:else if tagConflict}
+    <p class="modal-warning" role="alert"><i class="codicon codicon-warning"></i>{t('createBranch.tagConflict', { name: name.trim() })}</p>
+  {/if}
   <div class="form-actions">
     <button onclick={onClose}>{t('common.cancel')}</button>
     <button class="primary" onclick={handleSubmit} disabled={!name.trim() || branchExists || tagConflict}>{checkout ? t('createBranch.createAndCheckout') : t('createBranch.create')}</button>

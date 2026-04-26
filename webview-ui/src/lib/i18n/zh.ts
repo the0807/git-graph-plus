@@ -97,6 +97,7 @@ export const zh: Record<string, string> = {
   'createTag.messagePlaceholder': '可选',
   'createTag.target': '目标（可选，默认为 HEAD）',
   'createTag.pushToRemotes': '推送到所有远程仓库',
+  'createTag.tagExists': '名为 \'{name}\' 的标签已存在。',
   'createTag.create': '创建',
   'createTag.createAndPush': '创建并推送',
 
@@ -280,11 +281,15 @@ export const zh: Record<string, string> = {
   'merge.ffOnly': '仅快进 - 无法快进时失败',
   'merge.squash': '压缩 - 将所有提交合并为一个',
   'merge.squashWarning': '原始提交在历史中<span class="modal-emph modal-emph--danger">将不会被保留</span>。',
-  'merge.conflictWarning': '在 {count} 个文件中检测到<span class="modal-emph modal-emph--danger">冲突</span>',
-  'merge.noConflict': '未检测到冲突',
-  'merge.moreFiles': '还有 {count} 个文件',
-  'merge.collapse': '收起',
+  'merge.checkingConflicts': '正在检查 merge 冲突',
+  'merge.conflictWarning': 'Merge 冲突 {count} 个文件',
+  'merge.noConflict': '无 merge 冲突',
+
   'merge.merge': '合并',
+
+  'rebase.checkingConflicts': '正在检查 rebase 冲突',
+  'rebase.conflictWarning': 'Rebase 冲突 {count} 个文件',
+  'rebase.noConflict': '无 rebase 冲突',
 
   // Rebase modal
   'rebaseBranch.title': '变基分支',

@@ -361,6 +361,10 @@
     margin-top: 12px;
   }
 
+  :global(.modal-warning + .form-actions) {
+    margin-top: 6px;
+  }
+
   :global(.modal-form-group:last-of-type) {
     margin-bottom: 0;
   }

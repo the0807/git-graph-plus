@@ -42,7 +42,7 @@
   // svelte-ignore state_referenced_locally
   let dropdownBranch = $state(parsed.branch || branchName);
   // svelte-ignore state_referenced_locally
-  let textBranch = $state(currentUpstream ? '' : branchName);
+  let textBranch = $state(parsed.branch || branchName);
   // upstream이 없으면 새로 만드는 케이스 → 텍스트 입력으로 시작
   // svelte-ignore state_referenced_locally
   let manualInput = $state(!currentUpstream);

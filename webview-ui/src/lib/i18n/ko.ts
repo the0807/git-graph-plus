@@ -97,6 +97,7 @@ export const ko: Record<string, string> = {
   'createTag.messagePlaceholder': '선택 사항',
   'createTag.target': '대상 (선택 사항, 기본값 HEAD)',
   'createTag.pushToRemotes': '모든 remote에 push',
+  'createTag.tagExists': '\'{name}\' 이름의 태그가 이미 존재합니다.',
   'createTag.create': '생성',
   'createTag.createAndPush': '생성 및 Push',
 
@@ -280,11 +281,15 @@ export const ko: Record<string, string> = {
   'merge.ffOnly': 'Fast-forward Only - 불가능하면 실패',
   'merge.squash': 'Squash - 모든 commit을 하나로 합침',
   'merge.squashWarning': '원본 commit이 히스토리에 <span class="modal-emph modal-emph--danger">보존되지 않습니다</span>.',
-  'merge.conflictWarning': '{count}개 파일에서 <span class="modal-emph modal-emph--danger">충돌</span>이 감지되었습니다',
-  'merge.noConflict': '충돌이 감지되지 않았습니다',
-  'merge.moreFiles': '개 파일 더 보기',
-  'merge.collapse': '접기',
+  'merge.checkingConflicts': 'merge 충돌 확인 중',
+  'merge.conflictWarning': 'merge 시 충돌 발생({count}개)',
+  'merge.noConflict': 'merge 시 충돌 없음',
+
   'merge.merge': 'Merge',
+
+  'rebase.checkingConflicts': 'rebase 충돌 확인 중',
+  'rebase.conflictWarning': 'rebase 시 충돌 발생({count}개)',
+  'rebase.noConflict': 'rebase 시 충돌 없음',
 
   // Rebase modal
   'rebaseBranch.title': 'Rebase Branch',
