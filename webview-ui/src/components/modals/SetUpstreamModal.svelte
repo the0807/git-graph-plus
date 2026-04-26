@@ -108,7 +108,10 @@
   </div>
 
   {#if activeBranch.trim() && !remoteBranchExists}
-    <p class="notice"><i class="codicon codicon-info"></i>{t('setUpstream.willCreate')}</p>
+    <p class="notice">
+      <i class="codicon codicon-info"></i>
+      {t('setUpstream.willCreate.pre')}<code class="cmd">git push -u</code>{t('setUpstream.willCreate.post')}
+    </p>
   {/if}
 
   <div class="form-actions">
@@ -161,5 +164,13 @@
     font-size: 12px;
     color: var(--text-secondary);
     margin: 0;
+  }
+
+  .cmd {
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 11px;
+    background: var(--vscode-textCodeBlock-background, rgba(128,128,128,0.15));
+    border-radius: 3px;
+    padding: 1px 4px;
   }
 </style>

@@ -459,7 +459,8 @@ export const ko: Record<string, string> = {
   'setUpstream.remote': '리모트',
   'setUpstream.remoteBranch': '리모트 브랜치',
   'setUpstream.set': '업스트림 설정',
-  'setUpstream.willCreate': '리모트 브랜치가 존재하지 않습니다. git push -u를 실행하여 새로 생성합니다.',
+  'setUpstream.willCreate.pre': '리모트 브랜치가 존재하지 않습니다. ',
+  'setUpstream.willCreate.post': '를 실행하여 새로 생성합니다.',
   'setUpstream.typeManually': '직접 입력',
   'setUpstream.selectFromList': '목록에서 선택',
 };
