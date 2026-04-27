@@ -266,7 +266,7 @@
         <div class="conflict-info">
           <i class="codicon codicon-warning conflict-icon"></i>
           <span class="conflict-title">
-            <strong>{conflict.operation}</strong> conflict
+            <strong>{{ merge: 'Merge', rebase: 'Rebase', revert: 'Revert', cherryPick: 'Cherry-Pick' }[conflict.operation] ?? conflict.operation} Conflict</strong>
           </span>
           <span class="conflict-count">{conflict.files.filter(f => f.resolved).length}/{conflict.files.length} resolved</span>
         </div>
@@ -300,7 +300,7 @@
                   <i class="codicon codicon-check"></i>
                 </span>
               {/if}
-              <i class="codicon codicon-go-to-file conflict-open-icon"></i>
+              <i class="codicon codicon-go-to-file conflict-open-icon" title="Open file"></i>
             </button>
           </div>
         {/each}
@@ -404,9 +404,9 @@
   <Modal title={modalStore.stashApply.drop ? t('stashPop.title') : t('stashApply.title')} onClose={() => { modalStore.closeStashApply(); }}>
     <p class="modal-desc">{@html modalStore.stashApply.drop ? t('stashPop.desc') : t('stashApply.desc')}</p>
     <div class="modal-context-card">
-      <span class="modal-pill modal-pill--stash"><i class="codicon codicon-archive"></i>{modalStore.stashApply.message || `stash@{${modalStore.stashApply.index}}`}</span>
+      <span class="modal-pill modal-pill--stash"><i class="codicon codicon-archive"></i><span class="modal-pill-text">{modalStore.stashApply.message || `stash@{${modalStore.stashApply.index}}`}</span></span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{branchStore.currentBranch?.name ?? 'current branch'}</span>
+      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branchStore.currentBranch?.name ?? 'current branch'}</span></span>
     </div>
     <div class="form-actions">
       <button onclick={() => { modalStore.closeStashApply(); }}>{t('common.cancel')}</button>
@@ -418,7 +418,7 @@
 {#if modalStore.renameBranch.show}
   <Modal title={t('renameBranch.title')} onClose={() => { modalStore.closeRenameBranch(); }}>
     <div class="modal-context-card">
-      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{modalStore.renameBranch.oldName}</span>
+      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{modalStore.renameBranch.oldName}</span></span>
     </div>
     <div class="modal-form-group">
       <label class="modal-field-label" for="rename-branch-input">{t('renameBranch.newName')}</label>
@@ -436,7 +436,7 @@
 {#if modalStore.stashRename.show}
   <Modal title={t('stashRename.title')} onClose={() => { modalStore.closeStashRename(); }}>
     <div class="modal-context-card">
-      <span class="modal-pill modal-pill--stash"><i class="codicon codicon-archive"></i>{'stash@{' + modalStore.stashRename.index + '}'}</span>
+      <span class="modal-pill modal-pill--stash"><i class="codicon codicon-archive"></i><span class="modal-pill-text">{'stash@{' + modalStore.stashRename.index + '}'}</span></span>
     </div>
     <div class="modal-form-group">
       <label class="modal-field-label" for="stash-rename-input">{t('stashRename.newMessage')}</label>
@@ -542,7 +542,7 @@
   <Modal title={t('pushTag.title')} onClose={() => { modalStore.closePushTag(); }}>
     <p class="modal-desc">{t('pushTag.desc')}</p>
     <div class="modal-context-card">
-      <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i>{modalStore.pushTag.tagName}</span>
+      <span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i><span class="modal-pill-text">{modalStore.pushTag.tagName}</span></span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
       {#if branchStore.remotes.length > 1}
         <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
@@ -553,7 +553,7 @@
           showDot={false}
         />
       {:else}
-        <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i>{modalStore.pushTag.remote}</span>
+        <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i><span class="modal-pill-text">{modalStore.pushTag.remote}</span></span>
       {/if}
     </div>
     <div class="form-actions">
@@ -571,7 +571,7 @@
     <div class="tag-details">
       <div class="tag-details-row">
         <span class="tag-details-label">{t('graph.tagLabel')}:</span>
-        <span class="tag-details-value"><span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i> {tagDetailsModal.name}</span></span>
+        <span class="tag-details-value"><span class="modal-pill modal-pill--tag"><i class="codicon codicon-tag"></i><span class="modal-pill-text"> {tagDetailsModal.name}</span></span></span>
       </div>
       {#if tagDetailsModal.message}
         <div class="tag-details-row tag-details-message-row">
@@ -694,9 +694,9 @@
   <Modal title={t('pull.title')} onClose={() => { modalStore.closePull(); }}>
     <p class="modal-desc">{t('pull.desc')}</p>
     <div class="modal-context-card">
-      <span class="modal-pill modal-pill--source"><i class="codicon codicon-cloud"></i>{branchStore.currentBranch?.upstream ?? 'origin'}</span>
+      <span class="modal-pill modal-pill--source"><i class="codicon codicon-cloud"></i><span class="modal-pill-text">{branchStore.currentBranch?.upstream ?? 'origin'}</span></span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{branchStore.currentBranch?.name ?? 'current branch'}</span>
+      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branchStore.currentBranch?.name ?? 'current branch'}</span></span>
     </div>
     <div class="modal-form-group">
       <label class="modal-checkbox">
@@ -731,10 +731,10 @@
   <Modal title={t('push.title')} onClose={() => { modalStore.closePush(); }}>
     <p class="modal-desc">{t('push.desc')}</p>
     <div class="modal-context-card">
-      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i>{pushBranchName}</span>
+      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{pushBranchName}</span></span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
       {#if hasUpstream}
-        <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i>{pushTarget}</span>
+        <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i><span class="modal-pill-text">{pushTarget}</span></span>
       {:else if branchStore.remotes.length > 1}
         <i class="codicon codicon-cloud" style="color: var(--text-secondary);"></i>
         <ColorSelect
@@ -744,7 +744,7 @@
           showDot={false}
         />
       {:else}
-        <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i>{t('push.new', { target: pushTarget })}</span>
+        <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i><span class="modal-pill-text">{t('push.new', { target: pushTarget })}</span></span>
       {/if}
     </div>
     {#if !hasUpstream}
@@ -926,7 +926,7 @@
 
   .conflict-title {
     color: var(--text-primary);
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .conflict-title strong {
@@ -935,7 +935,7 @@
 
   .conflict-count {
     color: var(--text-secondary);
-    font-size: 11px;
+    font-size: 12px;
     background: rgba(240, 160, 32, 0.15);
     padding: 1px 6px;
     border-radius: 8px;
@@ -985,7 +985,7 @@
     flex-direction: column;
     padding: 0 14px 8px;
     gap: 1px;
-    max-height: 150px;
+    max-height: 220px;
     overflow-y: auto;
   }
 
@@ -998,7 +998,7 @@
     border: none;
     border-radius: 4px;
     color: var(--text-primary);
-    font-size: 12px;
+    font-size: 13px;
     font-family: inherit;
     cursor: pointer;
     flex: 1;
@@ -1035,7 +1035,8 @@
   }
 
   .conflict-stage-hint {
-    display: none;
+    display: inline-flex;
+    opacity: 0;
     padding: 1px 4px;
     border-radius: 3px;
     color: #4caf50;
@@ -1045,7 +1046,7 @@
   }
 
   .conflict-file:hover .conflict-stage-hint {
-    display: inline-flex;
+    opacity: 1;
   }
 
   .conflict-stage-hint:hover {
@@ -1071,7 +1072,7 @@
 
   .conflict-open-icon {
     opacity: 0;
-    font-size: 11px;
+    font-size: 14px;
     color: var(--text-secondary);
     flex-shrink: 0;
   }

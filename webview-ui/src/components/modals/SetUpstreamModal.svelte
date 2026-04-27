@@ -64,9 +64,9 @@
 <Modal title={t('setUpstream.title')} {onClose}>
   <p class="modal-desc">{t('setUpstream.desc', { branch: branchName })}</p>
   <div class="modal-context-card">
-    <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i>{branchName}</span>
+    <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branchName}</span></span>
     <i class="codicon codicon-arrow-both" style="color: var(--text-secondary);"></i>
-    <span class="modal-pill modal-pill--source"><i class="codicon codicon-cloud"></i>{selectedRemote}/{activeBranch || branchName}</span>
+    <span class="modal-pill modal-pill--source"><i class="codicon codicon-cloud"></i><span class="modal-pill-text">{selectedRemote}/{activeBranch || branchName}</span></span>
   </div>
 
   {#if remoteNames.length > 1}

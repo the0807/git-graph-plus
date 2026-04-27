@@ -115,7 +115,7 @@ export const en: Record<string, string> = {
   // Graph context menu
   'graph.checkoutHash': 'Checkout {hash}',
   'graph.createBranchHere': 'Create Branch Here',
-  'graph.cherryPick': 'Cherry-pick',
+  'graph.cherryPick': 'Cherry-Pick',
   'graph.revert': 'Revert',
   'graph.interactiveRebase': 'Interactive Rebase from here',
   'graph.resetToHere': 'Reset current branch to here',
@@ -129,7 +129,7 @@ export const en: Record<string, string> = {
   'graph.interactiveRebaseTo': "Interactively Rebase '{branch}' to Here",
   'graph.resetBranchToHere': "Reset '{branch}' to Here",
   'graph.checkoutCommit': 'Checkout Commit',
-  'graph.cherryPickCommit': 'Cherry-pick Commit',
+  'graph.cherryPickCommit': 'Cherry-Pick Commit',
   'graph.revertCommit': 'Revert Commit',
   'graph.savePatch': 'Save as Patch',
   'graph.compareToLocal': 'Compare to Local Changes',
@@ -260,14 +260,14 @@ export const en: Record<string, string> = {
   'pull.stash': 'Stash and reapply local changes',
   'pull.pull': 'Pull',
 
-  // Cherry-pick modal
-  'cherryPick.title': 'Cherry-pick Commit',
+  // Cherry-Pick modal
+  'cherryPick.title': 'Cherry-Pick Commit',
   'cherryPick.desc': 'Apply the selected commit onto the current branch.',
   'cherryPick.noCommit': 'Apply changes without committing',
   'cherryPick.checkingConflicts': 'Checking for cherry-pick conflicts',
-  'cherryPick.conflictWarning': 'Cherry-pick conflict in {count} file(s)',
+  'cherryPick.conflictWarning': 'Cherry-Pick conflict in {count} file(s)',
   'cherryPick.noConflict': 'No cherry-pick conflicts',
-  'cherryPick.cherryPick': 'Cherry-pick',
+  'cherryPick.cherryPick': 'Cherry-Pick',
 
   // Revert modal
   'revert.title': 'Revert Commit',

@@ -115,7 +115,7 @@ export const ko: Record<string, string> = {
   // Graph context menu
   'graph.checkoutHash': '{hash} checkout',
   'graph.createBranchHere': '여기에 브랜치 생성',
-  'graph.cherryPick': 'Cherry-pick',
+  'graph.cherryPick': 'Cherry-Pick',
   'graph.revert': 'Revert',
   'graph.interactiveRebase': '여기서부터 Interactive Rebase',
   'graph.resetToHere': '현재 브랜치를 여기로 reset',
@@ -129,7 +129,7 @@ export const ko: Record<string, string> = {
   'graph.interactiveRebaseTo': "'{branch}'을(를) 여기로 Interactive Rebase",
   'graph.resetBranchToHere': "'{branch}'을(를) 여기로 reset",
   'graph.checkoutCommit': 'Commit Checkout',
-  'graph.cherryPickCommit': 'Commit Cherry-pick',
+  'graph.cherryPickCommit': 'Commit Cherry-Pick',
   'graph.revertCommit': 'Commit Revert',
   'graph.savePatch': '패치로 저장',
   'graph.compareToLocal': '로컬 변경사항과 비교',
@@ -260,14 +260,14 @@ export const ko: Record<string, string> = {
   'pull.stash': '로컬 변경 사항을 stash 후 재적용',
   'pull.pull': 'Pull',
 
-  // Cherry-pick modal
-  'cherryPick.title': 'Commit Cherry-pick',
+  // Cherry-Pick modal
+  'cherryPick.title': 'Commit Cherry-Pick',
   'cherryPick.desc': '선택한 commit을 현재 브랜치에 적용합니다.',
   'cherryPick.noCommit': 'Commit 없이 변경 사항만 적용',
   'cherryPick.checkingConflicts': 'cherry-pick 충돌 확인 중',
   'cherryPick.conflictWarning': 'cherry-pick 시 충돌 발생({count}개)',
   'cherryPick.noConflict': 'cherry-pick 시 충돌 없음',
-  'cherryPick.cherryPick': 'Cherry-pick',
+  'cherryPick.cherryPick': 'Cherry-Pick',
 
   // Revert modal
   'revert.title': 'Commit Revert',

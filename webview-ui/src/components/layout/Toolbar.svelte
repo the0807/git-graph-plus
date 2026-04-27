@@ -84,6 +84,7 @@
         class="repo-pill"
         class:clickable={uiStore.repos.length > 1}
         onclick={() => { if (uiStore.repos.length > 1) showRepoDropdown = !showRepoDropdown; }}
+        title={activeRepoInfo?.name}
       >
         <i class="codicon {activeRepoInfo?.type === 'submodule' ? 'codicon-package' : 'codicon-repo'} repo-icon"></i>
         <span class="repo-name">
@@ -112,9 +113,11 @@
       {/if}
     </div>
     {#if branchStore.currentBranch}
-      <span class="current-branch">
+      <span class="current-branch" title={branchStore.currentBranch.name}>
         <i class="codicon codicon-git-branch branch-icon"></i>
-        {branchStore.currentBranch.name.startsWith('(HEAD detached') ? t('toolbar.detachedHead') : branchStore.currentBranch.name}
+        <span class="branch-name">
+          {branchStore.currentBranch.name.startsWith('(HEAD detached') ? t('toolbar.detachedHead') : branchStore.currentBranch.name}
+        </span>
       </span>
     {/if}
   </div>
@@ -296,6 +299,7 @@
     gap: 5px;
     padding: 0 10px;
     height: 26px;
+    max-width: 180px;
     background: rgba(128, 128, 128, 0.12);
     border: 1px solid rgba(128, 128, 128, 0.15);
     color: var(--text-primary);
@@ -319,7 +323,12 @@
   }
 
   .repo-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+    direction: rtl;
   }
 
   .repo-chevron {
@@ -381,6 +390,7 @@
     gap: 5px;
     padding: 0 10px;
     height: 26px;
+    max-width: 180px;
     background: var(--button-bg);
     color: var(--button-fg);
     border-radius: 6px;
@@ -390,6 +400,15 @@
 
   .branch-icon {
     font-size: 14px;
+  }
+
+  .branch-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;
   }
 
   .toolbar-center {

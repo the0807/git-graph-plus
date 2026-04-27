@@ -156,12 +156,14 @@
       onclick={() => { filterOpen = !filterOpen; }}
       title="Filter branches"
     >
-      <i class="codicon codicon-list-filter"></i>
-      Source
-      {#if filterActive}
-        <span class="filter-count">{remoteFilter.length}</span>
-      {/if}
-      <i class="codicon {filterOpen ? 'codicon-chevron-up' : 'codicon-chevron-down'} chevron"></i>
+      <span class="filter-side"><i class="codicon codicon-list-filter"></i></span>
+      <span class="filter-label">
+        Source
+        {#if filterActive}<span class="filter-count">{remoteFilter.length}</span>{/if}
+      </span>
+      <span class="filter-side filter-side--right">
+        <i class="codicon {filterOpen ? 'codicon-chevron-up' : 'codicon-chevron-down'} chevron"></i>
+      </span>
     </button>
 
     {#if filterOpen}
@@ -326,9 +328,9 @@
   .filter-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
+    width: 120px;
     height: 30px;
-    padding: 0 10px;
+    padding: 0 8px;
     background: transparent;
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
@@ -338,6 +340,25 @@
     cursor: pointer;
     white-space: nowrap;
     transition: color 0.1s, border-color 0.1s;
+  }
+
+  .filter-side {
+    display: flex;
+    align-items: center;
+    width: 20px;
+    flex-shrink: 0;
+  }
+
+  .filter-side--right {
+    justify-content: flex-end;
+  }
+
+  .filter-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
   }
 
   .filter-btn:hover {
@@ -366,6 +387,7 @@
     display: inline-flex;
     align-items: center;
   }
+
 
   .backdrop {
     position: fixed;

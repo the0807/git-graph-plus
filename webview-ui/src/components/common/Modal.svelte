@@ -152,10 +152,17 @@
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
     max-width: 200px;
     flex-shrink: 1;
     min-width: 0;
+  }
+
+  :global(.modal-pill-text) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    direction: rtl;
   }
   :global(.modal-pill--source) { background: rgba(115, 209, 61, 0.15); color: #fff; }
   :global(.modal-pill--target) { background: rgba(99, 176, 244, 0.15); color: #fff; }
@@ -271,7 +278,7 @@
     content: '';
     position: absolute;
     left: 4px;
-    top: 1px;
+    top: 0;
     width: 4px;
     height: 8px;
     border: solid #fff;

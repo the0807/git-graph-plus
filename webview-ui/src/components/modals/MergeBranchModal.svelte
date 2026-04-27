@@ -38,9 +38,9 @@
 <Modal title={t('merge.title')} {onClose}>
   <p class="modal-desc">{t('merge.desc')}</p>
   <div class="modal-context-card">
-    <span class="modal-pill modal-pill--source"><i class="codicon {isHash(source) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>{shortRef(source)}</span>
+    <span class="modal-pill modal-pill--source"><i class="codicon {isHash(source) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i><span class="modal-pill-text">{shortRef(source)}</span></span>
     <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
-    <span class="modal-pill modal-pill--target"><i class="codicon {isHash(target) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i>{shortRef(target)}</span>
+    <span class="modal-pill modal-pill--target"><i class="codicon {isHash(target) ? 'codicon-git-commit' : 'codicon-git-branch'}"></i><span class="modal-pill-text">{shortRef(target)}</span></span>
   </div>
   <div class="modal-form-group">
     <span class="modal-field-label">{t('merge.mergeType')}</span>
