@@ -2,7 +2,7 @@
   "name": "git-graph-plus",
   "displayName": "Git Graph Plus",
   "description": "A modern, full-featured Git GUI for VS Code",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "publisher": "the0807",
   "repository": {
     "type": "git",

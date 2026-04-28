@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.10 (2026-04-28)
+
+### Bug Fixes
+- Tag body text now displays correctly in the tag details modal
+- Search bar no longer triggers double execution on Enter key press
+- Submenu alignment and chevron positioning corrected
+- Checkbox, filter button, pill truncation, and conflict banner UI polished
+
 ## 0.2.9 (2026-04-26)
 
 ### New Features
