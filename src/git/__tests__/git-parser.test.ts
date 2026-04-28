@@ -149,22 +149,40 @@ describe('parseTags', () => {
   });
 
   it('should parse lightweight tag', () => {
-    const raw = 'v1.0\x00abc1234\x00commit\x00';
+    const raw = 'v1.0\x00abc1234\x00commit\x00\x00\x01';
     const result = parseTags(raw);
 
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('v1.0');
     expect(result[0].isAnnotated).toBe(false);
+    expect(result[0].message).toBeUndefined();
   });
 
-  it('should parse annotated tag', () => {
-    const raw = 'v2.0\x00def5678\x00tag\x00Release 2.0';
+  it('should parse annotated tag with subject only', () => {
+    const raw = 'v2.0\x00def5678\x00tag\x00Release 2.0\x00\x01';
     const result = parseTags(raw);
 
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('v2.0');
     expect(result[0].isAnnotated).toBe(true);
     expect(result[0].message).toBe('Release 2.0');
+  });
+
+  it('should parse annotated tag with subject and body', () => {
+    const raw = 'v3.0\x00aaa1111\x00tag\x00Release 3.0\x00Bug fixes\nPerformance improvements\x01';
+    const result = parseTags(raw);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].message).toBe('Release 3.0\n\nBug fixes\nPerformance improvements');
+  });
+
+  it('should parse multiple tags', () => {
+    const raw = 'v1.0\x00abc1234\x00commit\x00\x00\x01v2.0\x00def5678\x00tag\x00Release 2.0\x00\x01';
+    const result = parseTags(raw);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe('v1.0');
+    expect(result[1].name).toBe('v2.0');
   });
 });
 

@@ -10,4 +10,5 @@ out/
 
 docs
 .superpowers
+.claude/
 test-repo/

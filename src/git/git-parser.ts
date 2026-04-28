@@ -192,12 +192,18 @@ export function parseTags(raw: string): TagInfo[] {
     return [];
   }
 
-  return raw.trim().split('\n').filter(Boolean).map((line) => {
-    const fields = line.split(FIELD_SEP);
+  return raw.split(RECORD_SEP).filter(s => s.trim()).map((record) => {
+    const fields = record.split(FIELD_SEP);
     const name = fields[0]?.trim() ?? '';
     const hash = fields[1]?.trim() ?? '';
     const objectType = fields[2]?.trim() ?? '';
-    const message = fields[3]?.trim() || undefined;
+    const subject = fields[3]?.trim() ?? '';
+    const body = fields[4]?.trim() ?? '';
+
+    let message: string | undefined;
+    if (subject) {
+      message = body ? `${subject}\n\n${body}` : subject;
+    }
 
     return {
       name,

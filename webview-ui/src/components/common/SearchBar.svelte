@@ -124,7 +124,6 @@
       type="text"
       bind:this={inputEl}
       bind:value={query}
-      onkeydown={handleKeydown}
       oninput={onInput}
       placeholder={t('search.placeholder')}
     />

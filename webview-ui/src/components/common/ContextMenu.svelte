@@ -77,7 +77,7 @@
         >
           {#if item.icon}<i class="codicon codicon-{item.icon} menu-icon"></i>{/if}
           <span class="menu-label">{item.label}</span>
-          <span class="submenu-arrow">›</span>
+          <i class="codicon codicon-chevron-right submenu-arrow"></i>
         </button>
         {#if activeSubmenu === idx}
           <div class="submenu" role="menu" tabindex="-1">
@@ -179,8 +179,9 @@
   }
 
   .submenu-arrow {
-    margin-left: 12px;
-    opacity: 0.6;
+    margin-left: auto;
+    font-size: 11px;
+    opacity: 0.5;
   }
 
   .submenu-active {
@@ -195,7 +196,7 @@
   .submenu {
     position: absolute;
     left: 100%;
-    top: 0;
+    top: -5px;
     margin-left: 2px;
     background: var(--vscode-menu-background, var(--bg-secondary));
     border: 1px solid var(--vscode-menu-border, var(--border-color));
