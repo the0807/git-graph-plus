@@ -55,6 +55,7 @@
   let stashSaveKeepIndex = $state(false);
   let deleteWorktreeBranch = $state(false);
   let tagDetailsModal = $state<{ name: string; hash: string; message?: string; isAnnotated: boolean } | null>(null);
+
   onMount(() => {
     uiStore.bottomPanelHeight = Math.round(window.innerHeight * BOTTOM_PANEL_DEFAULT_RATIO);
 
@@ -62,6 +63,7 @@
       const msg = event.data;
       switch (msg.type) {
         case 'logData':
+          if (msg.payload.remoteFilter !== undefined) remoteFilter = msg.payload.remoteFilter;
           commitStore.setData(msg.payload);
           break;
         case 'branchData':

@@ -63,6 +63,7 @@ export interface CommitGraphData {
   commitLeftMargin?: number[];
   hasMore?: boolean;
   currentLimit?: number;
+  remoteFilter?: string[];
 }
 
 export interface BranchInfo {

@@ -10,6 +10,7 @@ import type { WebviewMessage } from '../utils/message-bus';
 export class MainPanel {
   public static currentPanel: MainPanel | undefined;
   private static readonly viewType = 'gitGraphPlus';
+  private static savedRemoteFilter: string[] | undefined = undefined;
 
   private readonly panel: vscode.WebviewPanel;
   private readonly extensionUri: vscode.Uri;
@@ -20,6 +21,7 @@ export class MainPanel {
   private allConflictFiles: string[] = [];
   private currentLimit = 1000;
   private currentRemoteFilter: string[] | undefined = undefined;
+  private isFirstGetLog = true;
   public static onSidebarRefresh: (() => void) | null = null;
 
   private constructor(
@@ -147,8 +149,13 @@ export class MainPanel {
           const sortOrder = cfg.get<'author-date' | 'date' | 'topological'>('graphSortOrder', 'topological');
           const requestedLimit = message.payload.limit ?? 1000;
           this.currentLimit = requestedLimit;
-          this.currentRemoteFilter = message.payload.remoteFilter;
-          const logPayload = { ...message.payload, limit: requestedLimit + 1, sortOrder };
+          // On first load, apply saved filter if the webview didn't specify one.
+          const effectiveFilter = this.isFirstGetLog && message.payload.remoteFilter === undefined
+            ? MainPanel.savedRemoteFilter
+            : message.payload.remoteFilter;
+          this.isFirstGetLog = false;
+          this.currentRemoteFilter = effectiveFilter;
+          const logPayload = { ...message.payload, remoteFilter: effectiveFilter, limit: requestedLimit + 1, sortOrder };
           const [allFetched, logBranches] = await Promise.all([
             this.gitService.log(logPayload),
             this.gitService.branches(),
@@ -168,6 +175,7 @@ export class MainPanel {
               links: fullGraph.links,
               dots: fullGraph.dots,
               commitLeftMargin: fullGraph.commitLeftMargin,
+              remoteFilter: effectiveFilter,
             },
           });
           break;
@@ -1158,6 +1166,7 @@ export class MainPanel {
   }
 
   private dispose(): void {
+    MainPanel.savedRemoteFilter = this.currentRemoteFilter;
     MainPanel.currentPanel = undefined;
     this.panel.dispose();
     while (this.disposables.length) {
