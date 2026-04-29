@@ -31,7 +31,7 @@
   <p class="modal-desc">{t(descKey, { developBranch: baseBranch, productionBranch: baseBranch })}</p>
 
   <div class="modal-context-card">
-    <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{baseBranch}</span></span>
+    <span class="modal-pill modal-pill--source" title={baseBranch}><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{baseBranch}</span></span>
     <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
     <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{prefix}{name || '...'}</span></span>
   </div>

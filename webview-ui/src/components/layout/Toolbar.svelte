@@ -328,7 +328,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    direction: rtl;
   }
 
   .repo-chevron {
@@ -408,7 +407,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    direction: rtl;
   }
 
   .toolbar-center {

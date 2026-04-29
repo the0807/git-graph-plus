@@ -57,7 +57,7 @@
 
 <Modal title={t(titleKey)} {onClose}>
   <div class="modal-context-card">
-    <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branchName}</span></span>
+    <span class="modal-pill modal-pill--danger" title={branchName}><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branchName}</span></span>
   </div>
 
   <p class="modal-desc">{t('flow.finish.confirm')}</p>

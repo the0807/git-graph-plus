@@ -1091,7 +1091,7 @@
   <Modal title={t('reset.modalTitle')} onClose={() => { showResetModal = false; contextMenuHash = null; }}>
     <p class="modal-desc">{t('reset.desc')}</p>
     <div class="modal-context-card">
-      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branchStore.currentBranch?.name ?? 'current branch'}</span></span>
+      <span class="modal-pill modal-pill--source" title={branchStore.currentBranch?.name ?? 'current branch'}><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branchStore.currentBranch?.name ?? 'current branch'}</span></span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
       <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-commit"></i><span class="modal-pill-text">{resetTarget.substring(0, 7)}</span></span>
     </div>
@@ -1154,7 +1154,7 @@
     {#if isBranchName}
       <p class="modal-desc">{t('checkoutCommit.branchDesc')}</p>
       <div class="modal-context-card">
-        <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{checkoutCommitHash}</span></span>
+        <span class="modal-pill modal-pill--source" title={checkoutCommitHash}><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{checkoutCommitHash}</span></span>
       </div>
     {:else}
       <div class="modal-context-card">
@@ -1163,13 +1163,13 @@
       {#if linkedBranches.length > 0}
         <div class="modal-context-card">
           {#each linkedBranches as branch}
-            <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branch}</span></span>
+            <span class="modal-pill modal-pill--source" title={branch}><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branch}</span></span>
           {/each}
         </div>
       {:else if linkedRemoteBranches.length > 0}
         <div class="modal-context-card">
           {#each linkedRemoteBranches as rb}
-            <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i><span class="modal-pill-text">{rb.remote}/{rb.name}</span></span>
+            <span class="modal-pill modal-pill--target" title="{rb.remote}/{rb.name}"><i class="codicon codicon-cloud"></i><span class="modal-pill-text">{rb.remote}/{rb.name}</span></span>
           {/each}
         </div>
       {:else}
@@ -1228,11 +1228,11 @@
     <p class="modal-desc">{t('fastForward.desc')}</p>
     <div class="modal-context-card">
       <span class="modal-label">{t('fastForward.switchTo')}</span>
-      <span class="modal-pill modal-pill--source"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{fastForwardLocalBranch}</span></span>
+      <span class="modal-pill modal-pill--source" title={fastForwardLocalBranch}><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{fastForwardLocalBranch}</span></span>
     </div>
     <div class="modal-context-card">
       <span class="modal-label">{t('fastForward.fastForwardTo')}</span>
-      <span class="modal-pill modal-pill--target"><i class="codicon codicon-cloud"></i><span class="modal-pill-text">{fastForwardRemote}</span></span>
+      <span class="modal-pill modal-pill--target" title={fastForwardRemote}><i class="codicon codicon-cloud"></i><span class="modal-pill-text">{fastForwardRemote}</span></span>
     </div>
     <div class="form-actions">
       <button onclick={() => { showFastForwardModal = false; }}>{t('common.cancel')}</button>
@@ -1265,7 +1265,7 @@
   <Modal title={t('checkout.worktreeBlockedTitle')} onClose={() => { showWorktreeBlockedModal = false; }}>
     <p class="modal-desc">{t('checkout.worktreeBlockedDesc')}</p>
     <div class="modal-context-card">
-      <span class="modal-pill modal-pill--target"><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{worktreeBlockedRef}</span></span>
+      <span class="modal-pill modal-pill--target" title={worktreeBlockedRef}><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{worktreeBlockedRef}</span></span>
     </div>
     <div class="modal-context-card">
       <i class="codicon codicon-worktree" style="color: var(--text-secondary);"></i>
