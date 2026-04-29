@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.2.11 (2026-04-29)
+
+### New Features
+- Copy Commit Info menu item — copies short hash and subject (e.g. `c2e5e67 - fix: some message`)
+- Fullscreen expand and close buttons in the commit details panel
+- Git Flow finish items now grouped into submenus by type (Feature / Release / Hotfix)
+
+### Improvements
+- Commit graph tab renamed from "History" to "Graph"
+- Context menu labels corrected: "Checkout Commit", "Cherry-Pick Commit", "Revert Commit"
+- "Create Branch Here" renamed to "New Branch"
+- Context submenus now flip left automatically when near the right edge of the viewport
+- Tab buttons in commit details panel are now flat (no rounded corners)
+
+### Bug Fixes
+- Pill badges in modals no longer truncate from the wrong side — switched from `direction: rtl` to standard LTR ellipsis
+- Full name tooltip added to all pill badges on hover
+- Toolbar project and branch name labels now truncate correctly
+
 ## 0.2.10 (2026-04-28)
 
 ### Bug Fixes
