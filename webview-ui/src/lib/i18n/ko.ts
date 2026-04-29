@@ -1,6 +1,6 @@
 export const ko: Record<string, string> = {
   // Toolbar
-  'toolbar.history': '히스토리',
+  'toolbar.history': 'Graph',
   'toolbar.log': '로그',
   'toolbar.stats': '통계',
   'toolbar.fetch': 'Fetch',

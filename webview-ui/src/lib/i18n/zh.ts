@@ -1,6 +1,6 @@
 export const zh: Record<string, string> = {
   // Toolbar
-  'toolbar.history': '历史',
+  'toolbar.history': 'Graph',
   'toolbar.log': '日志',
   'toolbar.stats': '统计',
   'toolbar.fetch': '抓取',

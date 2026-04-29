@@ -1,6 +1,6 @@
 export const en: Record<string, string> = {
   // Toolbar
-  'toolbar.history': 'History',
+  'toolbar.history': 'Graph',
   'toolbar.log': 'Log',
   'toolbar.stats': 'Stats',
   'toolbar.fetch': 'Fetch',
