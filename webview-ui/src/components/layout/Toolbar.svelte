@@ -231,21 +231,48 @@
             </button>
             {#if flowBranches.features.length || flowBranches.releases.length || flowBranches.hotfixes.length}
               <div class="flow-dropdown-separator"></div>
-              {#each flowBranches.features as branch}
-                <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowFinish('feature', branch); }}>
-                  {t('flow.finish', { name: branch })}
-                </button>
-              {/each}
-              {#each flowBranches.releases as branch}
-                <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowFinish('release', branch); }}>
-                  {t('flow.finish', { name: branch })}
-                </button>
-              {/each}
-              {#each flowBranches.hotfixes as branch}
-                <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowFinish('hotfix', branch); }}>
-                  {t('flow.finish', { name: branch })}
-                </button>
-              {/each}
+              {#if flowBranches.features.length}
+                <div class="flow-submenu-wrapper">
+                  <button class="flow-dropdown-item flow-submenu-trigger">
+                    {t('flow.finishFeature')}<i class="codicon codicon-chevron-right flow-submenu-arrow"></i>
+                  </button>
+                  <div class="flow-submenu">
+                    {#each flowBranches.features as branch}
+                      <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowFinish('feature', branch); }}>
+                        {branch}
+                      </button>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
+              {#if flowBranches.releases.length}
+                <div class="flow-submenu-wrapper">
+                  <button class="flow-dropdown-item flow-submenu-trigger">
+                    {t('flow.finishRelease')}<i class="codicon codicon-chevron-right flow-submenu-arrow"></i>
+                  </button>
+                  <div class="flow-submenu">
+                    {#each flowBranches.releases as branch}
+                      <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowFinish('release', branch); }}>
+                        {branch}
+                      </button>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
+              {#if flowBranches.hotfixes.length}
+                <div class="flow-submenu-wrapper">
+                  <button class="flow-dropdown-item flow-submenu-trigger">
+                    {t('flow.finishHotfix')}<i class="codicon codicon-chevron-right flow-submenu-arrow"></i>
+                  </button>
+                  <div class="flow-submenu">
+                    {#each flowBranches.hotfixes as branch}
+                      <button class="flow-dropdown-item" onclick={() => { showFlowDropdown = false; modalStore.openFlowFinish('hotfix', branch); }}>
+                        {branch}
+                      </button>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
             {/if}
           {/if}
         </div>
@@ -574,5 +601,39 @@
   .flow-dropdown-separator {
     border-top: 1px solid var(--border-color);
     margin: 4px 0;
+  }
+
+  .flow-submenu-wrapper {
+    position: relative;
+  }
+
+  .flow-submenu-trigger {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .flow-submenu-arrow {
+    font-size: 10px;
+    opacity: 0.6;
+  }
+
+  .flow-submenu {
+    display: none;
+    position: absolute;
+    top: -4px;
+    right: 100%;
+    margin-right: 2px;
+    min-width: 180px;
+    background: var(--vscode-menu-background, var(--bg-secondary));
+    border: 1px solid var(--vscode-menu-border, var(--border-color));
+    border-radius: 4px;
+    padding: 4px 0;
+    z-index: 101;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .flow-submenu-wrapper:hover .flow-submenu {
+    display: block;
   }
 </style>
