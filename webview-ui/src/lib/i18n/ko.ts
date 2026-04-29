@@ -114,7 +114,7 @@ export const ko: Record<string, string> = {
 
   // Graph context menu
   'graph.checkoutHash': '{hash} checkout',
-  'graph.createBranchHere': '여기에 브랜치 생성',
+  'graph.createBranchHere': '새 브랜치',
   'graph.cherryPick': 'Cherry-Pick',
   'graph.revert': 'Revert',
   'graph.interactiveRebase': '여기서부터 Interactive Rebase',

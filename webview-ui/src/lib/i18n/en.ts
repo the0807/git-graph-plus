@@ -114,7 +114,7 @@ export const en: Record<string, string> = {
 
   // Graph context menu
   'graph.checkoutHash': 'Checkout {hash}',
-  'graph.createBranchHere': 'Create Branch Here',
+  'graph.createBranchHere': 'New Branch',
   'graph.cherryPick': 'Cherry-Pick',
   'graph.revert': 'Revert',
   'graph.interactiveRebase': 'Interactive Rebase from here',

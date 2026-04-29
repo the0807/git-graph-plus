@@ -114,7 +114,7 @@ export const zh: Record<string, string> = {
 
   // Graph context menu
   'graph.checkoutHash': '检出 {hash}',
-  'graph.createBranchHere': '在此处创建分支',
+  'graph.createBranchHere': '新建分支',
   'graph.cherryPick': '遴选',
   'graph.revert': '还原',
   'graph.interactiveRebase': '从此处交互式变基',
