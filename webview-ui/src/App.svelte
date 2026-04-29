@@ -346,19 +346,23 @@
           }}
         />
       {/if}
-      <div class="graph-area">
-        <CommitGraph {searchMatchedHashes} {searchNavigateHash} bisectActive={bisectMessage !== null} bisectCulpritHash={bisectMessage?.includes('is the first bad commit') ? bisectMessage.match(/^([a-f0-9]{7,40})/)?.[1] ?? null : null} {remoteFilter} />
-      </div>
-      {#if uiStore.showBottomPanel && (uiStore.selectedCommitHash || uiStore.comparing)}
-        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-        <div
-          class="resize-handle-h"
-          role="separator"
-          onmousedown={startResize}
-        >
-          <div class="resize-handle-line"></div>
+      {#if !uiStore.commitDetailFullscreen}
+        <div class="graph-area">
+          <CommitGraph {searchMatchedHashes} {searchNavigateHash} bisectActive={bisectMessage !== null} bisectCulpritHash={bisectMessage?.includes('is the first bad commit') ? bisectMessage.match(/^([a-f0-9]{7,40})/)?.[1] ?? null : null} {remoteFilter} />
         </div>
-        <div class="bottom-area" style="height: {uiStore.bottomPanelHeight}px;">
+      {/if}
+      {#if uiStore.showBottomPanel && (uiStore.selectedCommitHash || uiStore.comparing)}
+        {#if !uiStore.commitDetailFullscreen}
+          <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+          <div
+            class="resize-handle-h"
+            role="separator"
+            onmousedown={startResize}
+          >
+            <div class="resize-handle-line"></div>
+          </div>
+        {/if}
+        <div class="bottom-area" class:fullscreen={uiStore.commitDetailFullscreen} style={uiStore.commitDetailFullscreen ? '' : `height: ${uiStore.bottomPanelHeight}px;`}>
           <BottomPanel />
         </div>
       {/if}
@@ -1163,5 +1167,10 @@
     overflow: hidden;
     flex-shrink: 0;
     border-top: 1px solid var(--border-color);
+  }
+
+  .bottom-area.fullscreen {
+    flex: 1;
+    border-top: none;
   }
 </style>

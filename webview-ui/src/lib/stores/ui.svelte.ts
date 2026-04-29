@@ -4,6 +4,7 @@ export const BOTTOM_PANEL_MAX_RATIO = 0.7;
 
 class UiStore {
   selectedCommitHash = $state<string | null>(null);
+  commitDetailFullscreen = $state(false);
   comparing = $state(false);
   compareRef1 = $state<string | null>(null);
   compareRef2 = $state<string | null>(null);

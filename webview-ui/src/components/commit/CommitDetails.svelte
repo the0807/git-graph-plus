@@ -227,6 +227,14 @@
     <button class="top-tab" class:active={activeTab === 'changes'} onclick={() => { activeTab = 'changes'; }}>
       {t('details.changes')} <span class="tab-count">{files.length}</span>
     </button>
+    <div class="tabs-actions">
+      <button class="tab-action-btn" title={uiStore.commitDetailFullscreen ? t('details.restore') : t('details.fullscreen')} onclick={() => { uiStore.commitDetailFullscreen = !uiStore.commitDetailFullscreen; }}>
+        <i class="codicon {uiStore.commitDetailFullscreen ? 'codicon-chevron-down' : 'codicon-chevron-up'}"></i>
+      </button>
+      <button class="tab-action-btn" title={t('common.close')} onclick={() => { uiStore.selectedCommitHash = null; uiStore.showBottomPanel = false; uiStore.commitDetailFullscreen = false; uiStore.comparing = false; }}>
+        <i class="codicon codicon-close"></i>
+      </button>
+    </div>
   </div>
 
   <!-- Commit tab -->
@@ -530,6 +538,32 @@
     flex-shrink: 0;
   }
 
+  .tabs-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .tab-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 14px;
+  }
+
+  .tab-action-btn:hover {
+    background: rgba(128, 128, 128, 0.2);
+    color: var(--text-primary);
+  }
+
   .top-tab {
     display: flex;
     align-items: center;
@@ -541,6 +575,7 @@
     color: var(--text-secondary);
     border: none;
     border-bottom: 2px solid transparent;
+    border-radius: 0;
     cursor: pointer;
   }
 
@@ -676,7 +711,7 @@
     align-items: center;
     gap: 3px;
     padding: 2px 8px;
-    border-radius: 3px;
+    border-radius: 0;
     font-size: 12px;
     font-weight: 600;
     margin-right: 6px;

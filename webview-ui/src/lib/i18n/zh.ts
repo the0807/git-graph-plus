@@ -187,6 +187,8 @@ export const zh: Record<string, string> = {
   'details.sideBySide': '并排',
   'details.binaryFile': '二进制文件',
   'details.selectCommit': '选择一个提交以查看详情',
+  'details.fullscreen': '展开面板',
+  'details.restore': '恢复面板',
 
   // Search bar
   'search.placeholder': '搜索提交（消息、作者、哈希）',

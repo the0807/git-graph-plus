@@ -187,6 +187,8 @@ export const en: Record<string, string> = {
   'details.sideBySide': 'Side by Side',
   'details.binaryFile': 'Binary file',
   'details.selectCommit': 'Select a commit to view details',
+  'details.fullscreen': 'Expand panel',
+  'details.restore': 'Restore panel',
 
   // Search bar
   'search.placeholder': 'Search commits (message, author, hash)',

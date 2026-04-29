@@ -187,6 +187,8 @@ export const ko: Record<string, string> = {
   'details.sideBySide': '나란히 보기',
   'details.binaryFile': '바이너리 파일',
   'details.selectCommit': '커밋을 선택하여 상세 정보 보기',
+  'details.fullscreen': '패널 확장',
+  'details.restore': '패널 복원',
 
   // Search bar
   'search.placeholder': 'Commit 검색 (메시지, 작성자, 해시)',
