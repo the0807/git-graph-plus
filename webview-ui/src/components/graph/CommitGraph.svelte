@@ -716,8 +716,11 @@
       }]);
     }
 
-    // ── Copy SHA ──
-    groups.push([{ label: t('graph.copySHA'), action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: commit.hash } }) }]);
+    // ── Copy ──
+    groups.push([
+      { label: t('graph.copySHA'), action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: commit.hash } }) },
+      { label: t('graph.copyCommitInfo'), action: () => vscode.postMessage({ type: 'copyToClipboard', payload: { text: `${commit.abbreviatedHash} - ${commit.subject}` } }) },
+    ]);
 
     // Flatten groups with separators between them, preceded by a separator if there were refs
     if (refs.length > 0) items.push(sep);

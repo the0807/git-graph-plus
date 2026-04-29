@@ -134,6 +134,7 @@ export const ko: Record<string, string> = {
   'graph.savePatch': '패치로 저장',
   'graph.compareToLocal': '로컬 변경사항과 비교',
   'graph.copySHA': 'Commit SHA 복사',
+  'graph.copyCommitInfo': 'Commit 정보 복사',
   'graph.copyBranchName': '브랜치 이름 복사',
   'graph.copyTagName': '태그 이름 복사',
   'graph.deleteTag': '태그 삭제',

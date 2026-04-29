@@ -134,6 +134,7 @@ export const zh: Record<string, string> = {
   'graph.savePatch': '另存为补丁',
   'graph.compareToLocal': '与本地更改比较',
   'graph.copySHA': '复制提交 SHA',
+  'graph.copyCommitInfo': '复制提交信息',
   'graph.copyBranchName': '复制分支名',
   'graph.copyTagName': '复制标签名',
   'graph.deleteTag': '删除标签',
