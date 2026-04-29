@@ -21,6 +21,7 @@
   let { x, y, items, onClose }: Props = $props();
   let menuEl: HTMLDivElement | undefined = $state();
   let activeSubmenu = $state<number | null>(null);
+  let submenuOnLeft = $state(false);
 
   onMount(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -72,7 +73,14 @@
         <button
           class="menu-item has-children"
           class:submenu-active={activeSubmenu === idx}
-          onmouseenter={() => { activeSubmenu = idx; }}
+          onmouseenter={(e) => {
+            activeSubmenu = idx;
+            const wrapper = (e.currentTarget as HTMLElement).closest('.submenu-wrapper') as HTMLElement;
+            if (wrapper) {
+              const rect = wrapper.getBoundingClientRect();
+              submenuOnLeft = rect.right + 190 > window.innerWidth;
+            }
+          }}
           role="menuitem"
         >
           {#if item.icon}<i class="codicon codicon-{item.icon} menu-icon"></i>{/if}
@@ -80,7 +88,7 @@
           <i class="codicon codicon-chevron-right submenu-arrow"></i>
         </button>
         {#if activeSubmenu === idx}
-          <div class="submenu" role="menu" tabindex="-1">
+          <div class="submenu" class:on-left={submenuOnLeft} role="menu" tabindex="-1">
             {#each item.children as child}
               {#if child.separator}
                 <div class="separator"></div>
@@ -205,6 +213,13 @@
     min-width: 180px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 1001;
+  }
+
+  .submenu.on-left {
+    left: auto;
+    right: 100%;
+    margin-left: 0;
+    margin-right: 2px;
   }
 
   .separator {
