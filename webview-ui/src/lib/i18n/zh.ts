@@ -192,7 +192,7 @@ export const zh: Record<string, string> = {
   'details.restore': '恢复面板',
 
   // Search bar
-  'search.placeholder': '搜索提交（消息、作者、哈希）',
+  'search.placeholder': '搜索提交（消息、作者、哈希、分支、标签）',
   'search.search': '搜索',
   'search.clear': '清除',
   'search.noResults': '无结果',

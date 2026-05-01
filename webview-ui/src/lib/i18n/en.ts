@@ -192,7 +192,7 @@ export const en: Record<string, string> = {
   'details.restore': 'Restore panel',
 
   // Search bar
-  'search.placeholder': 'Search commits (message, author, hash)',
+  'search.placeholder': 'Search commits (message, author, hash, branch, tag)',
   'search.search': 'Search',
   'search.clear': 'Clear',
   'search.noResults': 'No results',

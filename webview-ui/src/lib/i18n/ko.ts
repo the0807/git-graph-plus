@@ -192,7 +192,7 @@ export const ko: Record<string, string> = {
   'details.restore': '패널 복원',
 
   // Search bar
-  'search.placeholder': 'Commit 검색 (메시지, 작성자, 해시)',
+  'search.placeholder': 'Commit 검색 (메시지, 작성자, 해시, 브랜치, 태그)',
   'search.search': '검색',
   'search.clear': '지우기',
   'search.noResults': '결과 없음',

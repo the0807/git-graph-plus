@@ -36,6 +36,9 @@
         commit.author.email,
         commit.hash,
         commit.abbreviatedHash,
+        ...commit.refs
+          .filter(r => r.type === 'branch' || r.type === 'remote-branch' || r.type === 'tag')
+          .flatMap(r => r.type === 'remote-branch' && r.remote ? [r.name, `${r.remote}/${r.name}`] : [r.name]),
       ].join(' ').toLowerCase();
 
       if (haystack.includes(q)) {
