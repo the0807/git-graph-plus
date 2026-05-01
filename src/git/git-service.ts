@@ -42,7 +42,7 @@ export class GitService {
     return this.activityLog;
   }
 
-  private exec(args: string[], options?: { stdin?: string; timeout?: number }): Promise<string> {
+  private exec(args: string[], options?: { stdin?: string; timeout?: number; silent?: boolean }): Promise<string> {
     const startTime = Date.now();
     const command = `git ${args.join(' ')}`;
     const timeoutMs = options?.timeout ?? 30000;
@@ -81,17 +81,19 @@ export class GitService {
         const stdout = Buffer.concat(stdoutChunks).toString();
         const stderr = Buffer.concat(stderrChunks).toString();
         const duration = Date.now() - startTime;
-        // Truncate command for activity log to prevent memory bloat
-        const logCommand = command.length > 500 ? command.substring(0, 500) + '…' : command;
-        this.activityLog.unshift({
-          command: logCommand,
-          timestamp: new Date().toISOString(),
-          success: code === 0,
-          duration,
-        });
-        // Keep last 200 entries
-        if (this.activityLog.length > 200) {
-          this.activityLog.length = 200;
+        if (!options?.silent) {
+          // Truncate command for activity log to prevent memory bloat
+          const logCommand = command.length > 500 ? command.substring(0, 500) + '…' : command;
+          this.activityLog.unshift({
+            command: logCommand,
+            timestamp: new Date().toISOString(),
+            success: code === 0,
+            duration,
+          });
+          // Keep last 200 entries
+          if (this.activityLog.length > 200) {
+            this.activityLog.length = 200;
+          }
         }
 
         if (code === 0) {
@@ -103,12 +105,14 @@ export class GitService {
 
       proc.on('error', (err) => {
         clearTimeout(timer);
-        this.activityLog.unshift({
-          command,
-          timestamp: new Date().toISOString(),
-          success: false,
-          duration: Date.now() - startTime,
-        });
+        if (!options?.silent) {
+          this.activityLog.unshift({
+            command,
+            timestamp: new Date().toISOString(),
+            success: false,
+            duration: Date.now() - startTime,
+          });
+        }
         reject(new GitError(err.message, null, args));
       });
     });
@@ -646,10 +650,10 @@ export class GitService {
 
   async getOperationState(): Promise<{ type: 'merge' | 'rebase' | 'cherry-pick' | 'revert' | null }> {
     const [merge, rebase, cherryPick, revert] = await Promise.allSettled([
-      this.exec(['rev-parse', '--verify', 'MERGE_HEAD']),
-      this.exec(['rev-parse', '--verify', 'REBASE_HEAD']),
-      this.exec(['rev-parse', '--verify', 'CHERRY_PICK_HEAD']),
-      this.exec(['rev-parse', '--verify', 'REVERT_HEAD']),
+      this.exec(['rev-parse', '--verify', 'MERGE_HEAD'], { silent: true }),
+      this.exec(['rev-parse', '--verify', 'REBASE_HEAD'], { silent: true }),
+      this.exec(['rev-parse', '--verify', 'CHERRY_PICK_HEAD'], { silent: true }),
+      this.exec(['rev-parse', '--verify', 'REVERT_HEAD'], { silent: true }),
     ]);
     if (merge.status === 'fulfilled') return { type: 'merge' };
     if (rebase.status === 'fulfilled') return { type: 'rebase' };
