@@ -42,6 +42,39 @@ export class GitService {
     return this.activityLog;
   }
 
+  async getReflog(limit = 500): Promise<Array<{
+    hash: string;
+    shortHash: string;
+    selector: string;
+    message: string;
+    date: string;
+  }>> {
+    const SEP = '\x1f';
+    try {
+      const out = await this.exec([
+        'reflog',
+        `--format=%H${SEP}%h${SEP}%gd${SEP}%gs`,
+        `--date=iso`,
+        `-n`, String(limit),
+      ], { silent: true });
+      return out.trim().split('\n').filter(Boolean).map((line, i) => {
+        const parts = line.split(SEP);
+        // %gd with --date=iso gives "HEAD@{2026-05-02 10:00:00 +0900}" — extract the date inside {}
+        const selector = parts[2] ?? '';
+        const dateMatch = selector.match(/\{([^}]+)\}/);
+        return {
+          hash:      parts[0] ?? '',
+          shortHash: parts[1] ?? '',
+          selector:  `{${i}}`,
+          message:   parts[3] ?? '',
+          date:      dateMatch ? dateMatch[1] : '',
+        };
+      });
+    } catch {
+      return [];
+    }
+  }
+
   private exec(args: string[], options?: { stdin?: string; timeout?: number; silent?: boolean }): Promise<string> {
     const startTime = Date.now();
     const command = `git ${args.join(' ')}`;

@@ -9,7 +9,7 @@
   import BottomPanel from './components/layout/BottomPanel.svelte';
   import Toolbar from './components/layout/Toolbar.svelte';
   import SearchBar from './components/common/SearchBar.svelte';
-  import ActivityLog from './components/common/ActivityLog.svelte';
+  import Reflog from './components/common/Reflog.svelte';
   import StatsView from './components/common/StatsView.svelte';
   import DeleteBranchModal from './components/modals/DeleteBranchModal.svelte';
   import DeleteTagModal from './components/modals/DeleteTagModal.svelte';
@@ -390,7 +390,7 @@
       {/if}
     {:else if uiStore.viewMode === 'log'}
       <div class="log-container">
-        <ActivityLog />
+        <Reflog active={uiStore.viewMode === 'log'} />
       </div>
     {:else if uiStore.viewMode === 'stats'}
       <div class="stats-container">

@@ -1,7 +1,7 @@
 export const ko: Record<string, string> = {
   // Toolbar
   'toolbar.history': 'Graph',
-  'toolbar.log': '로그',
+  'toolbar.log': 'Reflog',
   'toolbar.stats': '통계',
   'toolbar.fetch': 'Fetch',
   'toolbar.pull': 'Pull',
@@ -114,7 +114,7 @@ export const ko: Record<string, string> = {
 
   // Graph context menu
   'graph.checkoutHash': '{hash} checkout',
-  'graph.createBranchHere': '새 브랜치',
+  'graph.createBranchHere': '새 브랜치 생성',
   'graph.cherryPick': 'Cherry-Pick',
   'graph.revert': 'Revert',
   'graph.interactiveRebase': '여기서부터 Interactive Rebase',
@@ -210,6 +210,21 @@ export const ko: Record<string, string> = {
   'activityLog.showAll': '전체',
   'activityLog.refresh': '새로고침',
   'activityLog.empty': '실행된 명령이 없습니다',
+
+  // Reflog
+  'reflog.title': 'Reflog',
+  'reflog.loading': 'Reflog 불러오는 중',
+  'reflog.empty': 'Reflog 항목이 없습니다',
+  'reflog.refresh': '새로고침',
+  'reflog.action': '액션',
+  'reflog.elapsed': '경과',
+  'reflog.resetTo': "HEAD@{selector}(으)로 Reset",
+  'reflog.timeSecond': '{n}초 전',
+  'reflog.timeMinute': '{n}분 전',
+  'reflog.timeHour': '{n}시간 전',
+  'reflog.timeDay': '{n}일 전',
+  'reflog.timeMonth': '{n}개월 전',
+  'reflog.timeYear': '{n}년 전',
 
   // Stats
   'stats.contributors': '기여자 ({count})',

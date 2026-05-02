@@ -1,7 +1,7 @@
 export const zh: Record<string, string> = {
   // Toolbar
   'toolbar.history': 'Graph',
-  'toolbar.log': '日志',
+  'toolbar.log': 'Reflog',
   'toolbar.stats': '统计',
   'toolbar.fetch': '抓取',
   'toolbar.pull': '拉取',
@@ -210,6 +210,21 @@ export const zh: Record<string, string> = {
   'activityLog.showAll': '全部',
   'activityLog.refresh': '刷新',
   'activityLog.empty': '尚未执行任何命令',
+
+  // Reflog
+  'reflog.title': 'Reflog',
+  'reflog.loading': '加载引用日志中',
+  'reflog.empty': '未找到引用日志条目',
+  'reflog.refresh': '刷新',
+  'reflog.action': '操作',
+  'reflog.elapsed': '经过',
+  'reflog.resetTo': "重置到 HEAD@{selector}",
+  'reflog.timeSecond': '{n}秒前',
+  'reflog.timeMinute': '{n}分钟前',
+  'reflog.timeHour': '{n}小时前',
+  'reflog.timeDay': '{n}天前',
+  'reflog.timeMonth': '{n}个月前',
+  'reflog.timeYear': '{n}年前',
 
   // Stats
   'stats.contributors': '贡献者（{count}）',

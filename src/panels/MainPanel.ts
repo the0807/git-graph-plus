@@ -583,6 +583,11 @@ export class MainPanel {
           this.panel.webview.postMessage({ type: 'activityLogData', payload: this.gitService.getActivityLog() });
           break;
         }
+        case 'getReflog': {
+          const entries = await this.gitService.getReflog();
+          this.panel.webview.postMessage({ type: 'reflogData', payload: entries });
+          break;
+        }
         // --- Bisect ---
         case 'bisectStart': {
           const result = await this.gitService.bisectStart(message.payload.bad, message.payload.good);

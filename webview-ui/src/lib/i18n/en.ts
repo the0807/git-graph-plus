@@ -1,7 +1,7 @@
 export const en: Record<string, string> = {
   // Toolbar
   'toolbar.history': 'Graph',
-  'toolbar.log': 'Log',
+  'toolbar.log': 'Reflog',
   'toolbar.stats': 'Stats',
   'toolbar.fetch': 'Fetch',
   'toolbar.pull': 'Pull',
@@ -210,6 +210,21 @@ export const en: Record<string, string> = {
   'activityLog.showAll': 'All',
   'activityLog.refresh': 'Refresh',
   'activityLog.empty': 'No commands executed yet',
+
+  // Reflog
+  'reflog.title': 'Reflog',
+  'reflog.loading': 'Loading reflog',
+  'reflog.empty': 'No reflog entries found',
+  'reflog.refresh': 'Refresh',
+  'reflog.action': 'Action',
+  'reflog.elapsed': 'Elapsed',
+  'reflog.resetTo': "Reset to HEAD@{selector}",
+  'reflog.timeSecond': '{n}s ago',
+  'reflog.timeMinute': '{n}m ago',
+  'reflog.timeHour': '{n}h ago',
+  'reflog.timeDay': '{n}d ago',
+  'reflog.timeMonth': '{n}mo ago',
+  'reflog.timeYear': '{n}y ago',
 
   // Stats
   'stats.contributors': 'Contributors ({count})',

@@ -21,7 +21,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 - **Interactive Rebase** - Drag-to-reorder commits with per-commit action control (pick, squash, fixup, drop, etc.)
 - **Built-in Diff Viewer** - Shiki-powered syntax highlighting with image diff (side-by-side, swipe, onion-skin)
 - **Conflict Resolution** - Auto-detects conflicts with inline banner and VS Code 3-way merge editor integration
-- **Advanced Tools** - Git Flow, Bisect, LFS with file locks, Submodules, Statistics, and Activity Log
+- **Advanced Tools** - Git Flow, Bisect, LFS with file locks, Submodules, Statistics, and Reflog
 
 ---
 
@@ -33,7 +33,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | **Graph Visualization** | Interactive commit graph with color-coded branch rails and merge lines                                                |
 | **Commit Ordering**     | Topological ordering like Fork for clear branch history                                                               |
-| **Three Views**         | **Graph** for visual history, **Log** for compact list, **Statistics** for analytics                                  |
+| **Three Views**         | **Graph** for visual history, **Reflog** for git reference log history, **Statistics** for analytics                  |
 | **Commit Details**      | Click any commit to view metadata, changed files, and full diffs in a resizable bottom panel                          |
 | **Commit Comparison**   | Select a base commit, then click another to compare - or compare any commit to your working tree                      |
 | **Search**              | Find commits by message, author, date range, hash, or changed file - with result highlighting and keyboard navigation |
@@ -111,14 +111,16 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
   <img src="resources/gitflow.png" width="49%" />
 </p>
 
-| Feature          | Description                                                          |
-| ---------------- | -------------------------------------------------------------------- |
-| **Git Flow**     | Initialize and manage feature, release, and hotfix branches          |
-| **Git Bisect**   | Visual bisect UI - start, mark good/bad, and reset                   |
-| **Git LFS**      | View LFS-tracked files and manage file locks                         |
-| **Submodules**   | View status, update submodules, and switch graph to submodule repos  |
-| **Statistics**   | Commits by author (with Gravatar), activity heatmap                  |
-| **Activity Log** | Filterable log of all Git operations performed through the extension |
+![Reflog](resources/reflog.png)
+
+| Feature        | Description                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| **Git Flow**   | Initialize and manage feature, release, and hotfix branches                                        |
+| **Git Bisect** | Visual bisect UI - start, mark good/bad, and reset                                                 |
+| **Git LFS**    | View LFS-tracked files and manage file locks                                                       |
+| **Submodules** | View status, update submodules, and switch graph to submodule repos                                |
+| **Statistics** | Commits by author (with Gravatar), activity heatmap                                                |
+| **Reflog**     | Browse the full git reference log — reset, checkout, or cherry-pick from any past HEAD state       |
 
 ### Multi-Repository & Submodules
 
