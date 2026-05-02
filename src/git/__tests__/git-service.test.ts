@@ -228,7 +228,7 @@ describe('GitService', () => {
     it('interactiveRebase accepts normal base', async () => {
       // Avoid actually running the spawn/rebase; just verify the ref check passes and
       // the action validator catches a bad action before spawn.
-      await expect(service.interactiveRebase('main', [{ action: 'nope', hash: 'abc123' }]))
+      await expect(service.interactiveRebase('main', [{ action: 'nope', hash: 'abc123', subject: 'test' }]))
         .rejects.toThrow('Invalid rebase action');
     });
 

@@ -173,8 +173,11 @@ export const en: Record<string, string> = {
   'rebase.action.reword': 'Edit message',
   'rebase.action.edit': 'Stop to amend',
   'rebase.action.squash': 'Meld into previous',
-  'rebase.action.fixup': 'Meld, discard message',
+  'rebase.action.fixup': 'Meld into previous, discard message',
   'rebase.action.drop': 'Remove commit',
+  'rebase.noChanges': 'No changes — all commits are set to pick',
+  'rebase.inlineDesc.reword': 'New message',
+  'rebase.inlineDesc.squash': 'Final commit message',
 
   // Commit details
   'details.commit': 'Commit',

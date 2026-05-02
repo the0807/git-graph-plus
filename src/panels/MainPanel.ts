@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { readFile } from 'fs/promises';
+import { readFile, access } from 'fs/promises';
 import { GitService, GitError } from '../git/git-service';
 import { buildGraph, buildGraphFromGitOutput, buildFullGraph, buildGraphFromFullData } from '../git/git-graph-builder';
 import { FileWatcher } from '../services/file-watcher';
@@ -1128,6 +1128,15 @@ export class MainPanel {
           files: this.allConflictFiles.map(f => ({ path: f, resolved: !conflictSet.has(f) })),
         },
       });
+    } else if (conflictFiles.length === 0 && opState.type === 'rebase') {
+      const stoppedShaPath = path.join(this.repoPath, '.git', 'rebase-merge', 'stopped-sha');
+      const editPaused = await access(stoppedShaPath).then(() => true).catch(() => false);
+      if (editPaused) {
+        this.panel.webview.postMessage({
+          type: 'operationPaused',
+          payload: { operation: 'rebase' },
+        });
+      }
     } else if (this.allConflictFiles.length > 0 && !opState.type) {
       // Operation was completed or aborted externally - notify webview to dismiss conflict UI
       this.allConflictFiles = [];

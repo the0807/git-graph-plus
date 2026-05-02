@@ -551,13 +551,25 @@ export class GitService {
     await this.exec(['rebase', '--skip']);
   }
 
+  private shellEscapeForExec(s: string): string {
+    return `'${s.replace(/'/g, "'\\''")}'`;
+  }
+
+  private buildMFlags(parts: string[]): string {
+    return parts
+      .map(p => p.trim())
+      .filter(Boolean)
+      .map(p => `-m ${this.shellEscapeForExec(p)}`)
+      .join(' ');
+  }
+
   /**
    * Interactive rebase: takes a list of todo entries and applies them.
    * Each entry: { action: 'pick'|'squash'|'fixup'|'edit'|'reword'|'drop', hash: string }
    */
   async interactiveRebase(
     base: string,
-    todos: Array<{ action: string; hash: string }>
+    todos: Array<{ action: string; hash: string; subject: string; message?: string }>
   ): Promise<void> {
     this.assertSafeRef(base, 'rebase -i');
     // Validate inputs to prevent injection
@@ -571,8 +583,56 @@ export class GitService {
       }
     }
 
+    if (todos.length > 0 && (todos[0].action === 'squash' || todos[0].action === 'fixup')) {
+      throw new GitError(
+        'First rebase entry cannot be squash or fixup',
+        null,
+        ['rebase', '-i']
+      );
+    }
+
     // Write todo list to a temp file (avoids shell injection)
-    const todoContent = todos.map(t => `${t.action} ${t.hash}`).join('\n') + '\n';
+    const isSquashLike = (a: string) => a === 'squash' || a === 'fixup';
+    const lines: string[] = [];
+    let i = 0;
+
+    while (i < todos.length) {
+      const todo = todos[i];
+
+      if (todo.action === 'reword') {
+        const msg = (todo.message ?? todo.subject).trim();
+        lines.push(`pick ${todo.hash}`);
+        if (msg) {
+          lines.push(`exec git commit --amend --no-edit ${this.buildMFlags([msg])}`);
+        }
+        i++;
+        continue;
+      }
+
+      // Detect start of squash group (pick/edit followed by squash/fixup entries)
+      if (!isSquashLike(todo.action) && i + 1 < todos.length && isSquashLike(todos[i + 1].action)) {
+        lines.push(`${todo.action} ${todo.hash}`);
+        const finalMessage = (todo.message ?? todo.subject).trim();
+        let hasSquash = false;
+        i++;
+        while (i < todos.length && isSquashLike(todos[i].action)) {
+          lines.push(`${todos[i].action} ${todos[i].hash}`);
+          if (todos[i].action === 'squash') {
+            hasSquash = true;
+          }
+          i++;
+        }
+        if (hasSquash) {
+          lines.push(`exec git commit --amend --no-edit ${this.buildMFlags([finalMessage])}`);
+        }
+        continue;
+      }
+
+      lines.push(`${todo.action} ${todo.hash}`);
+      i++;
+    }
+
+    const todoContent = lines.join('\n') + '\n';
     const todoFile = join(this.repoPath, '.git', `ghg-rebase-todo-${Date.now()}`);
 
     try {
@@ -591,7 +651,7 @@ export class GitService {
             EDITOR: 'true',
             GIT_SEQUENCE_EDITOR: process.platform === 'win32'
               ? `copy "${todoFile.replace(/"/g, '""')}"`
-              : `cp '${todoFile.replace(/'/g, "'\\''")}'`,
+              : `cp ${this.shellEscapeForExec(todoFile)}`,
           },
         });
 

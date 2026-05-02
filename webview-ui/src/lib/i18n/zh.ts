@@ -173,8 +173,11 @@ export const zh: Record<string, string> = {
   'rebase.action.reword': '编辑消息',
   'rebase.action.edit': '暂停以修改',
   'rebase.action.squash': '合并到上一个提交',
-  'rebase.action.fixup': '合并，丢弃消息',
+  'rebase.action.fixup': '合并到上一个，丢弃消息',
   'rebase.action.drop': '移除提交',
+  'rebase.noChanges': '无变更 — 所有提交均为 pick',
+  'rebase.inlineDesc.reword': '新消息',
+  'rebase.inlineDesc.squash': '最终提交消息',
 
   // Commit details
   'details.commit': '提交',

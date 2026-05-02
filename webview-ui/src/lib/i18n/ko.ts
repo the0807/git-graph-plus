@@ -173,8 +173,11 @@ export const ko: Record<string, string> = {
   'rebase.action.reword': '메시지만 변경',
   'rebase.action.edit': '멈추고 수정',
   'rebase.action.squash': '이전 커밋에 합침',
-  'rebase.action.fixup': '합치고 메시지 제거',
+  'rebase.action.fixup': '이전 커밋에 합치고 메시지 제거',
   'rebase.action.drop': '커밋 제거',
+  'rebase.noChanges': '변경 없음 — 모든 커밋이 pick 상태입니다',
+  'rebase.inlineDesc.reword': '새 메시지',
+  'rebase.inlineDesc.squash': '최종 커밋 메시지',
 
   // Commit details
   'details.commit': 'Commit',

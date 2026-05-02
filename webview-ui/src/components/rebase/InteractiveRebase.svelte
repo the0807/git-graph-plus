@@ -20,6 +20,7 @@
     action: 'pick' | 'squash' | 'fixup' | 'reword' | 'edit' | 'drop';
     hash: string;
     subject: string;
+    newMessage?: string;
   }
 
   let todos = $state<TodoEntry[]>([]);
@@ -38,6 +39,26 @@
   ];
 
   const dropCount = $derived(todos.filter(t => t.action === 'drop').length);
+
+  const hasChanges = $derived(todos.some(t => t.action !== 'pick'));
+
+  const squashGroups = $derived(todos.map((todo, i) => {
+    const isSquashLike = (entry?: TodoEntry) => entry?.action === 'squash' || entry?.action === 'fixup';
+    if (isSquashLike(todo)) return 'squash-member';
+    if (isSquashLike(todos[i + 1])) return 'squash-target';
+    return 'none';
+  }));
+
+  $effect.pre(() => {
+    todos.forEach((todo, i) => {
+      const role = squashGroups[i];
+      if (role === 'squash-target' && todo.newMessage === undefined) {
+        todos[i].newMessage = todo.subject;
+      } else if (role !== 'squash-target' && todo.action !== 'reword' && todo.newMessage !== undefined) {
+        todos[i].newMessage = undefined;
+      }
+    });
+  });
 
   onMount(() => {
     function handleMessage(event: MessageEvent) {
@@ -67,6 +88,11 @@
 
   function setAction(index: number, action: TodoEntry['action']) {
     todos[index].action = action;
+    if (action === 'reword') {
+      todos[index].newMessage = todos[index].subject;
+    } else {
+      todos[index].newMessage = undefined;
+    }
     showActionMenu = null;
   }
 
@@ -75,6 +101,7 @@
     const item = todos.splice(index, 1)[0];
     todos.splice(index - 1, 0, item);
     todos = [...todos];
+    guardFirstItem();
   }
 
   function moveDown(index: number) {
@@ -82,6 +109,7 @@
     const item = todos.splice(index, 1)[0];
     todos.splice(index + 1, 0, item);
     todos = [...todos];
+    guardFirstItem();
   }
 
   function handleDragStart(index: number) {
@@ -95,14 +123,27 @@
     todos.splice(index, 0, item);
     todos = [...todos];
     dragIndex = index;
+    guardFirstItem();
   }
 
   function handleDragEnd() {
     dragIndex = null;
   }
 
+  function guardFirstItem() {
+    const first = todos[0];
+    if (first && (first.action === 'squash' || first.action === 'fixup')) {
+      todos[0] = { ...first, action: 'pick', newMessage: undefined };
+    }
+  }
+
   function execute() {
-    const allTodos = todos.map(t => ({ action: t.action, hash: t.hash }));
+    const allTodos = todos.map(t => ({
+      action: t.action,
+      hash: t.hash,
+      subject: t.subject,
+      message: t.newMessage,
+    }));
     vscode.postMessage({
       type: 'interactiveRebase',
       payload: { base, todos: allTodos },
@@ -133,13 +174,16 @@
       <span class="rebase-hint">{t('rebase.instructions')}</span>
     </div>
 
-    <div class="todo-list" role="list">
+    <div class="todo-list" class:drag-active={dragIndex !== null} role="list">
       {#each todos as todo, index (todo.hash)}
         {@const info = getActionInfo(todo.action)}
+        {@const groupRole = squashGroups[index]}
         <div
           class="todo-item"
           class:dropped={todo.action === 'drop'}
           class:dragging={dragIndex === index}
+          class:squash-target={groupRole === 'squash-target'}
+          class:squash-member={groupRole === 'squash-member'}
           draggable="true"
           ondragstart={() => handleDragStart(index)}
           ondragover={(e) => handleDragOver(e, index)}
@@ -169,8 +213,23 @@
             </button>
           </div>
 
-          <span class="todo-hash">{todo.hash.substring(0, 7)}</span>
-          <span class="todo-subject truncate">{todo.subject}</span>
+          <div class="todo-content">
+            <span class="todo-hash">{todo.hash.substring(0, 7)}</span>
+            {#if todo.action === 'reword' || groupRole === 'squash-target'}
+              <input
+                class="todo-message-input"
+                type="text"
+                placeholder={todo.action === 'reword' ? t('rebase.inlineDesc.reword') : t('rebase.inlineDesc.squash')}
+                title={todo.subject}
+                bind:value={todos[index].newMessage}
+              />
+            {:else}
+              <span class="todo-subject truncate" class:dropped-text={todo.action === 'drop'} title={todo.subject}>{todo.subject}</span>
+              {#if todo.action !== 'pick'}
+                <span class="action-inline-desc">{t(`rebase.action.${todo.action}`)}</span>
+              {/if}
+            {/if}
+          </div>
 
           <div class="move-btns">
             <button class="move-btn" disabled={index === 0} onclick={() => moveUp(index)} title="Move up">
@@ -182,19 +241,24 @@
           </div>
         </div>
       {/each}
+
     </div>
 
     {#if showActionMenu !== null}
       {@const activeAction = todos[showActionMenu]?.action}
+      {@const isFirst = showActionMenu === 0}
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div class="action-dropdown" style="left: {dropdownPos.x}px; top: {dropdownPos.y}px;" onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
         {#each ACTIONS as act}
+          {@const disabled = isFirst && (act.value === 'squash' || act.value === 'fixup')}
           <button
             class="action-option"
             class:active={activeAction === act.value}
-            onclick={() => setAction(showActionMenu!, act.value)}
+            {disabled}
+            title={disabled ? 'Cannot squash/fixup the oldest commit' : undefined}
+            onclick={() => !disabled && setAction(showActionMenu!, act.value)}
           >
-            <i class="codicon codicon-{act.icon}" style="color: {act.color}"></i>
+            <i class="codicon codicon-{act.icon}" style="color: {disabled ? 'var(--text-secondary)' : act.color}"></i>
             <span>{act.label}</span>
             <span class="action-desc">{t(`rebase.action.${act.value}`)}</span>
           </button>
@@ -211,7 +275,12 @@
 
     <div class="form-actions">
       <button onclick={onClose}>{t('common.cancel')}</button>
-      <button class="primary" onclick={execute}>{t('rebase.start')}</button>
+      <button
+        class="primary"
+        disabled={!hasChanges}
+        title={hasChanges ? undefined : t('rebase.noChanges')}
+        onclick={execute}
+      >{t('rebase.start')}</button>
     </div>
   {/if}
 </Modal>
@@ -271,28 +340,34 @@
   }
 
   .todo-item.dropped {
-    opacity: 0.35;
-  }
-
-  .todo-item.dropped .todo-subject {
-    text-decoration: line-through;
+    opacity: 0.5;
   }
 
   .todo-item.dragging {
-    opacity: 0.5;
-    background: var(--bg-selected);
+    opacity: 0.7;
+    background: rgba(0, 127, 212, 0.08);
+    box-shadow: inset 0 0 0 2px var(--vscode-focusBorder, #007fd4);
+    border-radius: 4px;
   }
 
   .drag-handle {
     cursor: grab;
-    opacity: 0.3;
+    opacity: 0.45;
     font-size: 12px;
     user-select: none;
     flex-shrink: 0;
   }
 
   .drag-handle:hover {
-    opacity: 0.7;
+    opacity: 0.8;
+  }
+
+  .todo-list.drag-active {
+    cursor: grabbing;
+  }
+
+  .todo-list.drag-active .drag-handle {
+    cursor: grabbing;
   }
 
   .action-wrapper {
@@ -439,5 +514,66 @@
     justify-content: flex-end;
     gap: 8px;
     margin-top: 12px;
+  }
+
+  .todo-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .todo-message-input {
+    flex: 1;
+    min-width: 0;
+    padding: 1px 6px;
+    background: var(--vscode-input-background, var(--bg-secondary));
+    border: 1px solid var(--vscode-input-border, var(--border-color));
+    border-radius: 3px;
+    color: var(--vscode-input-foreground, var(--text-primary));
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+  }
+
+  .todo-message-input:focus {
+    border-color: var(--vscode-focusBorder, #007fd4);
+  }
+
+  .action-inline-desc {
+    font-size: 10px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+
+  .todo-item.squash-target {
+    border-left: 3px solid #ff9800;
+    background: rgba(255, 152, 0, 0.04);
+  }
+
+  .todo-item.squash-target:hover {
+    background: rgba(255, 152, 0, 0.09);
+  }
+
+  .todo-item.squash-member {
+    border-left: 3px solid #ff9800;
+    padding-left: 14px;
+    background: rgba(255, 152, 0, 0.04);
+  }
+
+  .todo-item.squash-member:hover {
+    background: rgba(255, 152, 0, 0.09);
+  }
+
+  .dropped-text {
+    text-decoration: line-through;
+  }
+
+  .action-option[disabled] {
+    opacity: 0.35;
+    cursor: not-allowed;
   }
 </style>

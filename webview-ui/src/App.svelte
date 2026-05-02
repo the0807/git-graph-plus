@@ -37,6 +37,7 @@
   let remoteFilter = $state<string[]>([]);
   let resizing = $state(false);
   let conflict = $state<{ operation: string; files: Array<{ path: string; resolved: boolean }> } | null>(null);
+  let rebasePaused = $state(false);
   let showAbortConfirmModal = $state(false);
 
   // Non-shared modals (unique to Activity Bar)
@@ -97,6 +98,9 @@
         case 'bisectResult':
           bisectMessage = msg.payload.message;
           break;
+        case 'operationPaused':
+          if (msg.payload.operation === 'rebase') rebasePaused = true;
+          break;
         case 'operationComplete':
           if (msg.payload.operation === 'bisectReset') {
             bisectMessage = null;
@@ -104,6 +108,7 @@
           if (msg.payload.operation === 'copied') {
             vscode.postMessage({ type: 'showNotification', payload: { message: t('copiedToClipboard') } });
           }
+          rebasePaused = false;
           conflict = null;
           break;
         case 'showModal':
@@ -310,6 +315,23 @@
     </div>
   {/if}
 
+  {#if rebasePaused && !conflict}
+    <div class="rebase-pause-banner">
+      <i class="codicon codicon-debug-pause"></i>
+      <span>Rebase paused - edit mode. Make your changes, then continue.</span>
+      <div class="rebase-pause-actions">
+        <button onclick={() => {
+          vscode.postMessage({ type: 'continueOperation' });
+          rebasePaused = false;
+        }}>Continue</button>
+        <button class="danger" onclick={() => {
+          vscode.postMessage({ type: 'abortOperation' });
+          rebasePaused = false;
+        }}>Abort</button>
+      </div>
+    </div>
+  {/if}
+
   {#if showAbortConfirmModal}
     <Modal title={t('conflict.abortTitle')} onClose={() => { showAbortConfirmModal = false; }}>
       <p class="modal-desc">{@html t('conflict.abortConfirm', { operation: conflict?.operation ?? 'merge' })}</p>
@@ -329,7 +351,7 @@
 
   <div class="content-area">
     {#if uiStore.viewMode === 'graph'}
-      {#if !bisectMessage && !conflict}
+      {#if !bisectMessage && !conflict && !rebasePaused}
         <SearchBar
           onResults={handleSearchResults}
           onNavigate={handleSearchNavigate}
@@ -903,6 +925,48 @@
     flex-shrink: 0;
     font-size: 11px;
     padding: 2px 8px;
+  }
+
+  /* ---- Rebase pause banner ---- */
+  .rebase-pause-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(156, 39, 176, 0.08);
+    border-bottom: 1px solid rgba(156, 39, 176, 0.3);
+    color: #9c27b0;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .rebase-pause-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+  }
+
+  .rebase-pause-actions button {
+    padding: 2px 10px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: 1px solid rgba(156, 39, 176, 0.4);
+    background: transparent;
+    color: #9c27b0;
+    cursor: pointer;
+  }
+
+  .rebase-pause-actions button:hover {
+    background: rgba(156, 39, 176, 0.12);
+  }
+
+  .rebase-pause-actions button.danger {
+    border-color: rgba(244, 67, 54, 0.4);
+    color: #f44336;
+  }
+
+  .rebase-pause-actions button.danger:hover {
+    background: rgba(244, 67, 54, 0.08);
   }
 
   /* ---- Conflict banner ---- */

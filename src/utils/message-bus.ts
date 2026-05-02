@@ -19,7 +19,7 @@ export type WebviewMessage =
   | { type: 'abortRebase' }
   | { type: 'continueRebase' }
   | { type: 'skipRebase' }
-  | { type: 'interactiveRebase'; payload: { base: string; todos: Array<{ action: string; hash: string }> } }
+  | { type: 'interactiveRebase'; payload: { base: string; todos: Array<{ action: string; hash: string; subject: string; message?: string }> } }
   | { type: 'getRebaseCommits'; payload: { base: string } }
   | { type: 'reset'; payload: { ref: string; mode: 'soft' | 'mixed' | 'hard' } }
   | { type: 'push'; payload: { remote?: string; branch?: string; force?: 'with-lease' | 'force'; setUpstream?: boolean } }
@@ -91,6 +91,7 @@ export type ExtensionMessage =
   | { type: 'repoChanged'; payload: { what: string } }
   | { type: 'error'; payload: { message: string; command?: string } }
   | { type: 'operationComplete'; payload: { operation: string; success: boolean } }
+  | { type: 'operationPaused'; payload: { operation: 'rebase' } }
   | { type: 'checkoutBlocked'; payload: { ref: string; pullAfter?: boolean } }
   | { type: 'dirtyState'; payload: { dirty: boolean } }
   | { type: 'conflictPrediction'; payload: { hasConflict: boolean; files: string[] } }
