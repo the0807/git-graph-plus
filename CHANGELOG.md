@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.3.0 (2026-05-02)
+
+### New Features
+- **Reflog tab** — Browse the full git reference log with action type (colored dot + label), description, SHA, and elapsed time columns
+- **Reflog context menu** — Reset to `HEAD@{N}`, Checkout Commit, Copy SHA directly from any reflog entry
+- **Shared modals** — Reset and Checkout Commit modals are now shared between the Graph and Reflog tabs
+
+### Improvements
+- Interactive rebase: squash and fixup now prompt for a final commit message inline; edit-pause mode pauses rebase for amending
+- Search now matches branch names and tag names in addition to commit messages, authors, and hashes
+- Column header font sizes unified across Graph and Reflog (header 11px, row 13px)
+
+### Performance
+- CommitGraph: SVG paths, links, and dots now filtered to the visible scroll range — avoids rendering thousands of off-screen elements
+- CommitGraph: timed message handlers now tracked with a type-safe `Map` instead of property injection on function objects
+- MainPanel: `getLog` requests are now sequenced — stale responses from rapid filter changes are discarded
+- git-service: remote name cache is immediately invalidated after `addRemote`/`removeRemote`
+
+### Bug Fixes
+- Modal: guard against duplicate `onClose` calls from rapid Escape keypresses
+- Suppress expected `rev-parse` failures (MERGE_HEAD, REBASE_HEAD probes) from the activity log on clean repos
+
 ## 0.2.11 (2026-04-29)
 
 ### New Features
