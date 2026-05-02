@@ -22,6 +22,7 @@ export class MainPanel {
   private currentLimit = 1000;
   private currentRemoteFilter: string[] | undefined = undefined;
   private isFirstGetLog = true;
+  private logSequence = 0;
   public static onSidebarRefresh: (() => void) | null = null;
 
   private constructor(
@@ -156,10 +157,12 @@ export class MainPanel {
           this.isFirstGetLog = false;
           this.currentRemoteFilter = effectiveFilter;
           const logPayload = { ...message.payload, remoteFilter: effectiveFilter, limit: requestedLimit + 1, sortOrder };
+          const seq = ++this.logSequence;
           const [allFetched, logBranches] = await Promise.all([
             this.gitService.log(logPayload),
             this.gitService.branches(),
           ]);
+          if (seq !== this.logSequence) break;
           const hasMore = allFetched.length > requestedLimit;
           const commits = hasMore ? allFetched.slice(0, requestedLimit) : allFetched;
           const fullGraph = commits.length > 0 ? buildFullGraph(commits, logBranches) : { paths: [], links: [], dots: [], commitLeftMargin: [] };

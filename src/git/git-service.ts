@@ -538,6 +538,7 @@ export class GitService {
     this.assertSafeRef(name, 'remote add');
     this.assertSafeRef(url, 'remote add');
     await this.exec(['remote', 'add', name, url]);
+    this.cachedRemoteNames = null;
   }
 
   async getRemoteUrl(remote: string): Promise<string> {
@@ -549,6 +550,7 @@ export class GitService {
   async removeRemote(name: string): Promise<void> {
     this.assertSafeRef(name, 'remote remove');
     await this.exec(['remote', 'remove', name]);
+    this.cachedRemoteNames = null;
   }
 
   async setUpstream(localBranch: string, remote: string, remoteBranch: string, options?: { createRemote?: boolean }): Promise<void> {

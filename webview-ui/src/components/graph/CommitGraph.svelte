@@ -20,36 +20,29 @@
   import type { Commit, CommitGraphData } from '../../lib/types';
 
   // Track pending message handlers for cleanup on destroy
-  const pendingHandlers = new Set<(event: MessageEvent) => void>();
+  const pendingHandlers = new Map<(event: MessageEvent) => void, ReturnType<typeof setTimeout>>();
   const HANDLER_TIMEOUT_MS = 10_000;
 
   function addTimedMessageHandler(handler: (event: MessageEvent) => void): void {
-    pendingHandlers.add(handler);
     window.addEventListener('message', handler);
     const timer = setTimeout(() => {
-      if (pendingHandlers.has(handler)) {
-        window.removeEventListener('message', handler);
-        pendingHandlers.delete(handler);
-      }
+      window.removeEventListener('message', handler);
+      pendingHandlers.delete(handler);
     }, HANDLER_TIMEOUT_MS);
-    // Store the timer so the wrapper can clear it
-    (handler as any).__timeout = timer;
+    pendingHandlers.set(handler, timer);
   }
 
   function removeTimedMessageHandler(handler: (event: MessageEvent) => void): void {
     window.removeEventListener('message', handler);
+    const timer = pendingHandlers.get(handler);
+    if (timer !== undefined) clearTimeout(timer);
     pendingHandlers.delete(handler);
-    if ((handler as any).__timeout) {
-      clearTimeout((handler as any).__timeout);
-    }
   }
 
   onDestroy(() => {
-    for (const handler of pendingHandlers) {
+    for (const [handler, timer] of pendingHandlers) {
       window.removeEventListener('message', handler);
-      if ((handler as any).__timeout) {
-        clearTimeout((handler as any).__timeout);
-      }
+      clearTimeout(timer);
     }
     pendingHandlers.clear();
   });
@@ -373,6 +366,24 @@
       index: startIndex + i,
     }))
   );
+
+  // Filter SVG elements to visible row range to avoid rendering thousands of off-screen elements
+  let visiblePaths = $derived(displayPaths.filter(path => {
+    let minY = Infinity, maxY = -Infinity;
+    for (const p of path.points) {
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    }
+    return maxY >= startIndex && minY <= endIndex;
+  }));
+  let visibleLinks = $derived(displayLinks.filter(link => {
+    const minY = Math.min(link.start.y, link.end.y);
+    const maxY = Math.max(link.start.y, link.end.y);
+    return maxY >= startIndex && minY <= endIndex;
+  }));
+  let visibleDots = $derived(displayDots.filter(dot =>
+    dot.center.y >= startIndex && dot.center.y < endIndex
+  ));
 
   // Hash → commit lookup map
   let commitMap = $derived.by(() => {
@@ -773,7 +784,7 @@
         style="position: absolute; top: 0; height: {totalHeight}px; overflow: visible;"
       >
         <!-- Paths: continuous branch lines -->
-        {#each displayPaths as path}
+        {#each visiblePaths as path}
           {@const pathColor = COLOR_PALETTE[path.color % COLOR_PALETTE.length]}
           {@const pathD = buildPathD(path.points)}
           {#if pathD}
@@ -783,7 +794,7 @@
         {/each}
 
         <!-- Links: merge connection curves -->
-        {#each displayLinks as link}
+        {#each visibleLinks as link}
           {@const linkColor = COLOR_PALETTE[link.color % COLOR_PALETTE.length]}
           {@const sx = laneX(link.start.x)}
           {@const sy = link.start.y * ROW_HEIGHT}
@@ -802,7 +813,7 @@
         {/each}
 
         <!-- Dots: commit nodes -->
-        {#each displayDots as dot, i}
+        {#each visibleDots as dot, i}
           {@const dotColor = COLOR_PALETTE[dot.color % COLOR_PALETTE.length]}
           {@const dx = laneX(dot.center.x)}
           {@const dy = dot.center.y * ROW_HEIGHT}

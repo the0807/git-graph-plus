@@ -19,8 +19,9 @@
     // Delay enabling overlay click-to-close to prevent the opening click from immediately closing the modal
     requestAnimationFrame(() => { ready = true; });
 
+    let closed = false;
     function handleEscape(e: KeyboardEvent) {
-      if (e.key === 'Escape') { onClose(); }
+      if (e.key === 'Escape' && !closed) { closed = true; onClose(); }
     }
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
