@@ -608,7 +608,7 @@
     align-items: center;
     gap: 8px;
     width: 100%;
-    padding: 4px 12px;
+    padding: 5px 12px;
     background: transparent;
     border: none;
     color: var(--text-secondary);

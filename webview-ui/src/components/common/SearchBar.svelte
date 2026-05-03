@@ -158,14 +158,12 @@
       onclick={() => { filterOpen = !filterOpen; }}
       title="Filter branches"
     >
-      <span class="filter-side"><i class="codicon codicon-list-filter"></i></span>
+      <i class="codicon codicon-list-filter filter-btn-icon"></i>
       <span class="filter-label">
         Source
         {#if filterActive}<span class="filter-count">{remoteFilter.length}</span>{/if}
       </span>
-      <span class="filter-side filter-side--right">
-        <i class="codicon {filterOpen ? 'codicon-chevron-up' : 'codicon-chevron-down'} chevron"></i>
-      </span>
+      <i class="codicon {filterOpen ? 'codicon-chevron-up' : 'codicon-chevron-down'} chevron"></i>
     </button>
 
     {#if filterOpen}
@@ -330,7 +328,7 @@
   .filter-btn {
     display: flex;
     align-items: center;
-    width: 120px;
+    gap: 4px;
     height: 30px;
     padding: 0 8px;
     background: transparent;
@@ -342,24 +340,18 @@
     cursor: pointer;
     white-space: nowrap;
     transition: color 0.1s, border-color 0.1s;
+    max-width: 130px;
   }
 
-  .filter-side {
-    display: flex;
-    align-items: center;
-    width: 20px;
-    flex-shrink: 0;
-  }
-
-  .filter-side--right {
-    justify-content: flex-end;
-  }
+  .filter-btn-icon { font-size: 13px; flex-shrink: 0; }
 
   .filter-label {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 4px;
   }
 
@@ -373,10 +365,7 @@
     border-color: var(--vscode-focusBorder, #007fd4);
   }
 
-  .chevron {
-    font-size: 12px;
-    opacity: 0.7;
-  }
+  .chevron { font-size: 12px; opacity: 0.7; flex-shrink: 0; }
 
   .filter-count {
     background: var(--vscode-focusBorder, #007fd4);
@@ -388,6 +377,7 @@
     height: 16px;
     display: inline-flex;
     align-items: center;
+    flex-shrink: 0;
   }
 
 
