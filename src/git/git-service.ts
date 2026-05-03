@@ -42,34 +42,52 @@ export class GitService {
     return this.activityLog;
   }
 
-  async getReflog(limit = 500): Promise<Array<{
+  async getReflog(limit = 500, ref = 'HEAD'): Promise<Array<{
     hash: string;
     shortHash: string;
     selector: string;
     message: string;
     date: string;
+    dangling: boolean;
   }>> {
     const SEP = '\x1f';
     try {
       const out = await this.exec([
-        'reflog',
+        'reflog', 'show', ref,
         `--format=%H${SEP}%h${SEP}%gd${SEP}%gs`,
         `--date=iso`,
         `-n`, String(limit),
       ], { silent: true });
-      return out.trim().split('\n').filter(Boolean).map((line, i) => {
+
+      const refName = ref === 'HEAD' ? 'HEAD' : ref.replace(/^refs\/(heads|remotes)\//, '');
+      const entries = out.trim().split('\n').filter(Boolean).map((line, i) => {
         const parts = line.split(SEP);
         // %gd with --date=iso gives "HEAD@{2026-05-02 10:00:00 +0900}" — extract the date inside {}
-        const selector = parts[2] ?? '';
-        const dateMatch = selector.match(/\{([^}]+)\}/);
+        const rawSelector = parts[2] ?? '';
+        const dateMatch = rawSelector.match(/\{([^}]+)\}/);
         return {
           hash:      parts[0] ?? '',
           shortHash: parts[1] ?? '',
-          selector:  `{${i}}`,
+          selector:  `${refName}@{${i}}`,
           message:   parts[3] ?? '',
           date:      dateMatch ? dateMatch[1] : '',
+          dangling:  false,
         };
       });
+
+      if (entries.length > 0) {
+        try {
+          const reachable = await this.exec(['log', '--all', '--format=%H', '-n', '5000'], { silent: true });
+          const reachableSet = new Set(reachable.trim().split('\n').filter(Boolean));
+          for (const entry of entries) {
+            entry.dangling = entry.hash.length > 0 && !reachableSet.has(entry.hash);
+          }
+        } catch {
+          // dangling detection failed — leave all as false
+        }
+      }
+
+      return entries;
     } catch {
       return [];
     }

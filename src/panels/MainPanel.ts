@@ -587,7 +587,7 @@ export class MainPanel {
           break;
         }
         case 'getReflog': {
-          const entries = await this.gitService.getReflog();
+          const entries = await this.gitService.getReflog(500, message.payload?.ref ?? 'HEAD');
           this.panel.webview.postMessage({ type: 'reflogData', payload: entries });
           break;
         }

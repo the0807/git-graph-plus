@@ -42,7 +42,7 @@ export type WebviewMessage =
   | { type: 'searchByHash'; payload: { hash: string } }
   | { type: 'searchByFile'; payload: { file: string } }
   | { type: 'getActivityLog' }
-  | { type: 'getReflog' }
+  | { type: 'getReflog'; payload?: { ref?: string } }
   | { type: 'bisectStart'; payload: { bad?: string; good?: string } }
   | { type: 'bisectGood'; payload: { ref?: string } }
   | { type: 'bisectBad'; payload: { ref?: string } }
@@ -89,7 +89,7 @@ export type ExtensionMessage =
   | { type: 'rebaseCommitsData'; payload: { base: string; commits: Commit[] } }
   | { type: 'searchResults'; payload: CommitGraphData }
   | { type: 'activityLogData'; payload: Array<{ command: string; timestamp: string; success: boolean; duration: number }> }
-  | { type: 'reflogData'; payload: Array<{ hash: string; shortHash: string; selector: string; message: string; date: string }> }
+  | { type: 'reflogData'; payload: Array<{ hash: string; shortHash: string; selector: string; message: string; date: string; dangling: boolean }> }
   | { type: 'repoChanged'; payload: { what: string } }
   | { type: 'error'; payload: { message: string; command?: string } }
   | { type: 'operationComplete'; payload: { operation: string; success: boolean } }
