@@ -55,28 +55,19 @@
 
 <Modal title={t('checkoutCommit.title')} {onClose}>
   <div class="modal-context-card">
-    <span class="modal-pill modal-pill--target">
-      <i class="codicon codicon-git-commit"></i>
-      <span class="modal-pill-text">{hash.substring(0, 7)}</span>
-    </span>
+    <span class="modal-pill modal-pill--target" title={hash}><i class="codicon codicon-git-commit"></i><span class="modal-pill-text">{hash.substring(0, 7)}</span></span>
   </div>
 
   {#if linkedBranches.length > 0}
     <div class="modal-context-card">
       {#each linkedBranches as branch}
-        <span class="modal-pill modal-pill--source" title={branch}>
-          <i class="codicon codicon-git-branch"></i>
-          <span class="modal-pill-text">{branch}</span>
-        </span>
+        <span class="modal-pill modal-pill--source" title={branch}><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branch}</span></span>
       {/each}
     </div>
   {:else if linkedRemoteBranches.length > 0}
     <div class="modal-context-card">
       {#each linkedRemoteBranches as rb}
-        <span class="modal-pill modal-pill--target" title="{rb.remote}/{rb.name}">
-          <i class="codicon codicon-cloud"></i>
-          <span class="modal-pill-text">{rb.remote}/{rb.name}</span>
-        </span>
+        <span class="modal-pill modal-pill--target" title="{rb.remote}/{rb.name}"><i class="codicon codicon-cloud"></i><span class="modal-pill-text">{rb.remote}/{rb.name}</span></span>
       {/each}
     </div>
   {:else}

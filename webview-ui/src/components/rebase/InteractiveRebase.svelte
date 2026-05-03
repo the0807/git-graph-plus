@@ -290,7 +290,7 @@
     padding: 24px;
     text-align: center;
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: inherit;
   }
 
   .rebase-header {
@@ -327,7 +327,7 @@
     gap: 6px;
     padding: 5px 8px;
     border-bottom: 1px solid var(--border-color);
-    font-size: 12px;
+    font-size: inherit;
     transition: opacity 0.15s;
   }
 
@@ -353,7 +353,7 @@
   .drag-handle {
     cursor: grab;
     opacity: 0.45;
-    font-size: 12px;
+    font-size: inherit;
     user-select: none;
     flex-shrink: 0;
   }
@@ -532,7 +532,7 @@
     border: 1px solid var(--vscode-input-border, var(--border-color));
     border-radius: 3px;
     color: var(--vscode-input-foreground, var(--text-primary));
-    font-size: 12px;
+    font-size: inherit;
     font-family: inherit;
     outline: none;
   }

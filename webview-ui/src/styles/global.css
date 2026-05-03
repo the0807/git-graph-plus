@@ -13,7 +13,7 @@
   --text-selected: var(--vscode-list-activeSelectionForeground);
 
   /* Borders */
-  --border-color: var(--vscode-panel-border, rgba(128, 128, 128, 0.35));
+  --border-color: var(--vscode-panel-border, rgba(128, 128, 128, 0.5));
 
   /* Inputs */
   --input-bg: var(--vscode-input-background);
@@ -32,7 +32,7 @@
   --scrollbar-hover-bg: var(--vscode-scrollbarSlider-hoverBackground);
 
   /* Extension-specific */
-  --row-height: 28px;
+  --row-height: 30px;
   --lane-width: 14px;
   --bottom-panel-height: 250px;
   --graph-node-radius: 4px;
@@ -94,7 +94,7 @@ button {
   border: none;
   padding: 5px 12px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: inherit;
   font-family: inherit;
   border-radius: 4px;
   transition: background 0.1s, opacity 0.1s;
@@ -167,6 +167,11 @@ input[type="checkbox"]:checked::after {
 input[type="checkbox"]:focus {
   outline: none;
   border-color: var(--vscode-focusBorder, #007fd4);
+}
+
+::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+  opacity: 1;
 }
 
 /* Loading spinner */

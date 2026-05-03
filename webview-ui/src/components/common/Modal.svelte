@@ -69,7 +69,7 @@
   .modal {
     background: var(--vscode-editorWidget-background, var(--bg-secondary));
     border: 1px solid rgba(128, 128, 128, 0.3);
-    border-radius: 12px;
+    border-radius: 8px;
     width: 480px;
     max-height: 80vh;
     display: flex;
@@ -86,7 +86,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 20px;
+    padding: 14px 12px 14px 20px;
     border-bottom: 1px solid rgba(128, 128, 128, 0.2);
     flex-shrink: 0;
   }
@@ -97,9 +97,13 @@
   }
 
   .modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: transparent;
     color: var(--text-secondary);
     font-size: 14px;
+    line-height: 1;
     padding: 4px 8px;
     border-radius: 4px;
   }
@@ -119,7 +123,7 @@
   /* ── Shared modal classes (used by child modal components) ── */
 
   :global(.modal-desc) {
-    font-size: 12px;
+    font-size: inherit;
     color: var(--text-secondary);
     margin-bottom: 14px;
     line-height: 1.6;
@@ -146,35 +150,44 @@
   :global(.modal-pill) {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 10px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 500;
+    vertical-align: middle;
+    gap: 3px;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: normal;
     white-space: nowrap;
-    overflow: hidden;
-    max-width: 200px;
-    flex-shrink: 1;
-    min-width: 0;
+    flex-shrink: 0;
+    /* Dark theme defaults — mirrors graph ref-badge */
+    background: color-mix(in srgb, var(--pill-color) 15%, transparent);
+    color: #fff;
+    border: 1px solid color-mix(in srgb, var(--pill-color) 25%, transparent);
   }
 
-  :global(.modal-pill-text) {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
+  :global(.modal-pill .codicon[class*='codicon-']) {
+    font-size: 12px;
+    line-height: 1;
+    flex-shrink: 0;
   }
-  :global(.modal-pill--source) { background: rgba(115, 209, 61, 0.15); color: #fff; }
-  :global(.modal-pill--target) { background: rgba(99, 176, 244, 0.15); color: #fff; }
-  :global(.modal-pill--danger) { background: rgba(244, 67, 54, 0.15); color: #fff; }
-  :global(.modal-pill--tag) { background: rgba(240, 192, 64, 0.25); color: #fff; }
-  :global(.modal-pill--stash) { background: rgba(136, 136, 136, 0.2); color: #fff; }
 
-  :global(body.vscode-light .modal-pill--source) { background: rgba(80, 160, 40, 0.12); color: #000; }
-  :global(body.vscode-light .modal-pill--target) { background: rgba(60, 130, 200, 0.12); color: #000; }
-  :global(body.vscode-light .modal-pill--danger) { background: rgba(220, 50, 40, 0.12); color: #000; }
-  :global(body.vscode-light .modal-pill--tag) { background: rgba(190, 130, 20, 0.15); color: #8a6000; }
-  :global(body.vscode-light .modal-pill--stash) { background: rgba(100, 100, 100, 0.12); color: #000; }
+  :global(.modal-pill--source) { --pill-color: #73d13d; }
+  :global(.modal-pill--target) { --pill-color: #63b0f4; }
+  :global(.modal-pill--danger) { --pill-color: #f44336; }
+  :global(.modal-pill--tag)    { --pill-color: #f0c040; background: color-mix(in srgb, #f0c040 55%, transparent); border-color: color-mix(in srgb, #f0c040 70%, transparent); }
+  :global(.modal-pill--stash)  { --pill-color: #888; }
+
+  /* Light theme — mirrors graph ref-badge light overrides */
+  :global(body.vscode-light .modal-pill) {
+    background: color-mix(in srgb, var(--pill-color) 18%, transparent);
+    color: #000;
+    border: 1px solid color-mix(in srgb, var(--pill-color) 40%, transparent);
+  }
+
+  :global(body.vscode-light .modal-pill--tag) {
+    background: color-mix(in srgb, #f0c040 75%, #fff);
+    border-color: color-mix(in srgb, #f0c040 85%, transparent);
+    color: #000;
+  }
 
   :global(.modal-label) {
     font-size: 11px;
@@ -200,7 +213,7 @@
     align-items: center;
     gap: 10px;
     margin-bottom: 8px;
-    font-size: 12px;
+    font-size: inherit;
   }
 
   :global(.modal-field-row .modal-field-label) {
@@ -218,7 +231,7 @@
     border-radius: 5px;
     padding: 6px 10px;
     color: var(--input-fg);
-    font-size: 12px;
+    font-size: inherit;
     font-family: inherit;
     outline: none;
   }
@@ -234,7 +247,7 @@
     border-radius: 5px;
     padding: 6px 10px;
     color: var(--input-fg);
-    font-size: 12px;
+    font-size: inherit;
     font-family: inherit;
     outline: none;
     resize: vertical;
@@ -247,7 +260,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: inherit;
     color: var(--text-secondary);
     cursor: pointer;
   }
@@ -295,7 +308,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: inherit;
     color: var(--text-secondary);
     cursor: pointer;
     padding: 2px 0;
@@ -387,7 +400,7 @@
     padding: 1px 6px;
     background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.1));
     border: 1px solid var(--vscode-editorWidget-border, rgba(128, 128, 128, 0.25));
-    border-radius: 100px;
+    border-radius: 6px;
     color: var(--text-secondary);
     flex-shrink: 0;
     margin-left: 4px;

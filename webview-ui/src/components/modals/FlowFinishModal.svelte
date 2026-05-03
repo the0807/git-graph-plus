@@ -94,7 +94,7 @@
     align-items: center;
     gap: 8px;
     padding: 6px 12px;
-    font-size: 12px;
+    font-size: inherit;
     color: var(--text-primary);
   }
 
@@ -114,7 +114,7 @@
 
   .flow-step i {
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: inherit;
     flex-shrink: 0;
   }
 

@@ -111,13 +111,13 @@
     padding: 6px 10px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
-    font-size: 12px;
+    font-size: inherit;
     flex-shrink: 0;
   }
 
   .nav-btn {
     padding: 2px 6px;
-    font-size: 12px;
+    font-size: inherit;
     font-weight: bold;
   }
 
@@ -143,7 +143,7 @@
     padding: 20px;
     text-align: center;
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: inherit;
   }
 
   .tree-item {
@@ -157,7 +157,7 @@
     color: var(--text-primary);
     border: none;
     border-radius: 0;
-    font-size: 12px;
+    font-size: inherit;
     cursor: pointer;
   }
 

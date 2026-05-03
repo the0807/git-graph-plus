@@ -156,7 +156,7 @@
   }
 
   .bisect-title {
-    font-size: 12px;
+    font-size: inherit;
     font-weight: 600;
     color: var(--text-primary);
   }
@@ -170,7 +170,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: inherit;
     color: var(--text-secondary);
   }
 
@@ -178,7 +178,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: inherit;
     padding: 6px 10px;
     background: rgba(128, 128, 128, 0.1);
     border-radius: 4px;
@@ -209,7 +209,7 @@
 
   .bisect-btn {
     padding: 3px 10px;
-    font-size: 11px;
+    font-size: inherit;
     border-radius: 3px;
     border: 1px solid var(--border-color);
     background: transparent;
@@ -249,5 +249,42 @@
   .bisect-reset {
     color: var(--text-secondary);
     margin-left: auto;
+  }
+
+  /* ---- Light theme overrides ---- */
+  :global(body.vscode-light) .bisect-banner {
+    background: rgba(21, 101, 192, 0.07);
+    border-color: rgba(21, 101, 192, 0.3);
+  }
+
+  :global(body.vscode-light) .bisect-banner.finished {
+    background: rgba(46, 125, 50, 0.07);
+    border-color: rgba(46, 125, 50, 0.3);
+  }
+
+  :global(body.vscode-light) .bisect-header i {
+    color: #1565c0;
+  }
+
+  :global(body.vscode-light) .bisect-banner.finished .bisect-header i {
+    color: #2e7d32;
+  }
+
+  :global(body.vscode-light) .bisect-good {
+    color: #2e7d32;
+    border-color: rgba(46, 125, 50, 0.4);
+  }
+
+  :global(body.vscode-light) .bisect-good:hover {
+    background: rgba(46, 125, 50, 0.1);
+  }
+
+  :global(body.vscode-light) .bisect-bad {
+    color: #b71c1c;
+    border-color: rgba(183, 28, 28, 0.4);
+  }
+
+  :global(body.vscode-light) .bisect-bad:hover {
+    background: rgba(183, 28, 28, 0.1);
   }
 </style>

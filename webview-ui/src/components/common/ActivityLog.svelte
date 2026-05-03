@@ -154,7 +154,7 @@
     color: var(--text-secondary);
     cursor: pointer;
     padding: 2px;
-    font-size: 12px;
+    font-size: inherit;
   }
 
   .log-refresh:hover {
@@ -228,5 +228,10 @@
     padding: 20px;
     text-align: center;
     color: var(--text-secondary);
+  }
+
+  /* ---- Light theme overrides ---- */
+  :global(body.vscode-light) .log-entry:not(.failed) .log-status {
+    color: #2e7d32;
   }
 </style>

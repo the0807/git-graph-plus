@@ -570,7 +570,7 @@
     gap: 5px;
     padding: 8px 16px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: normal;
     background: transparent;
     color: var(--text-secondary);
     border: none;
@@ -609,7 +609,7 @@
 
   .info-columns {
     display: flex;
-    gap: 40px;
+    gap: 20px;
   }
 
   .info-column {
@@ -619,9 +619,8 @@
 
   .info-label {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-secondary);
-    letter-spacing: 0.5px;
     margin-bottom: 8px;
   }
 
@@ -644,17 +643,17 @@
 
   .person-name {
     font-size: 13px;
-    font-weight: 600;
+    font-weight: normal;
   }
 
   .person-email {
     font-weight: 400;
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: inherit;
   }
 
   .person-date {
-    font-size: 12px;
+    font-size: inherit;
     color: var(--text-secondary);
     margin-top: 2px;
   }
@@ -677,9 +676,8 @@
     width: 65px;
     flex-shrink: 0;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-secondary);
-    letter-spacing: 0.5px;
   }
 
   .meta-value {
@@ -713,9 +711,9 @@
     padding: 2px 8px;
     border-radius: 0;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: normal;
     margin-right: 6px;
-    border: 1px solid rgba(128, 128, 128, 0.4);
+    border: 1px solid rgba(128, 128, 128, 0.15);
     background: rgba(128, 128, 128, 0.1);
     color: var(--text-primary);
   }
@@ -790,16 +788,16 @@
 
   .dir-item {
     color: var(--text-secondary);
-    font-weight: 600;
-    font-size: 12px;
+    font-weight: normal;
+    font-size: inherit;
   }
 
-  .file-name { font-weight: 500; min-width: 0; }
+  .file-name { font-weight: normal; min-width: 0; }
   .dir-name { min-width: 0; }
   .file-status {
     margin-left: auto;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     font-family: var(--vscode-editor-font-family, monospace);
     flex-shrink: 0;
   }

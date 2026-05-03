@@ -70,7 +70,7 @@ export class RepoDiscoveryService {
       await this.discoverNestedRepos(folderPath, seen, repos, 0);
     }
 
-    const typeOrder: Record<RepoType, number> = { root: 0, submodule: 1, nested: 2 };
+    const typeOrder: Record<RepoType, number> = { root: 0, nested: 1, submodule: 2 };
     repos.sort((a, b) => typeOrder[a.type] - typeOrder[b.type] || a.name.localeCompare(b.name));
 
     this.cache = { repos, rootPath };

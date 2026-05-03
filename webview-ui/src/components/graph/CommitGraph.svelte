@@ -317,7 +317,7 @@
   let displayLeftMargin = $derived(commitStore.commitLeftMargin);
 
 
-  const ROW_HEIGHT = 28;
+  const ROW_HEIGHT = 30;
   // SourceGit uses unitWidth=12 for X coordinates, we scale them up for display
   const X_SCALE = 1.05; // multiply SourceGit X coords by this for pixel positions
   const BUFFER_ROWS = 20; // Larger buffer to keep lines visible during scroll
@@ -956,6 +956,7 @@
                     class="ref-badge"
                     style="--badge-color: {badgeColor};"
                     class:badge-bold={ref.type === 'head' || ref.type === 'tag' || ref.type === 'stash' || isWtBranch}
+                    class:badge-head={ref.type === 'head'}
                     title="Double-click to checkout: {ref.type === 'remote-branch' ? `${ref.remote}/${ref.name}` : ref.name}"
                     ondblclick={(e) => {
                       e.stopPropagation();
@@ -1234,7 +1235,7 @@
     align-items: center;
     gap: 6px;
     padding: 5px 16px;
-    font-size: 12px;
+    font-size: inherit;
     background: transparent;
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
@@ -1261,9 +1262,8 @@
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     font-size: 11px;
-    font-weight: 500;
+    font-weight: normal;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
     color: var(--text-secondary);
     position: sticky;
     top: 0;
@@ -1288,7 +1288,7 @@
   .commit-row {
     display: flex;
     align-items: center;
-    font-size: 13px;
+    font-size: inherit;
     cursor: pointer;
     transition: background 0.08s;
     user-select: none;
@@ -1333,7 +1333,7 @@
   }
 
   .commit-row:not(.other-branch) .commit-subject {
-    font-weight: 500;
+    font-weight: normal;
   }
 
   .commit-row.other-branch .commit-subject,
@@ -1374,6 +1374,10 @@
     flex-shrink: 0;
     background: #4da6ff;
     opacity: 0.8;
+  }
+
+  :global(body.vscode-light) .local-dot {
+    background: #1565c0;
   }
 
   .remote-dot {
@@ -1428,7 +1432,6 @@
   .commit-subject {
     flex: 1;
     min-width: 0;
-    font-size: 14px;
   }
 
   /* ---- Ref badges ---- */
@@ -1439,7 +1442,7 @@
     padding: 1px 7px;
     border-radius: 4px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: normal;
     white-space: nowrap;
     flex-shrink: 0;
     line-height: 17px;
@@ -1454,6 +1457,14 @@
   .ref-badge.badge-bold {
     background: color-mix(in srgb, var(--badge-color) 55%, transparent);
     border-color: color-mix(in srgb, var(--badge-color) 70%, transparent);
+  }
+
+  .ref-badge.badge-head {
+    font-weight: 600;
+  }
+
+  .ref-badge.badge-head .ref-icon {
+    -webkit-text-stroke: 1px currentColor;
   }
 
   /* Light theme overrides */
@@ -1507,7 +1518,7 @@
     color: #63b0f4;
     padding: 6px 14px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: inherit;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1523,7 +1534,6 @@
 
   .compare-hash {
     font-family: monospace;
-    font-weight: 500;
     color: #63b0f4;
   }
 
@@ -1536,7 +1546,7 @@
     cursor: pointer;
     display: flex;
     align-items: center;
-    font-size: 12px;
+    font-size: inherit;
   }
 
   .compare-cancel:hover {
@@ -1555,7 +1565,7 @@
     color: #f44336;
     padding: 6px 14px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: inherit;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1571,7 +1581,6 @@
 
   .bisect-indicator-hash {
     font-family: monospace;
-    font-weight: 500;
     color: #f44336;
   }
 
@@ -1584,7 +1593,7 @@
     cursor: pointer;
     display: flex;
     align-items: center;
-    font-size: 12px;
+    font-size: inherit;
   }
 
   .bisect-indicator-cancel:hover {

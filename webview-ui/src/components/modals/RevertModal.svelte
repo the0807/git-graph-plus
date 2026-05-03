@@ -34,8 +34,8 @@
 <Modal title={t('revert.title')} {onClose}>
   <p class="modal-desc">{t('revert.desc')}</p>
   <div class="modal-context-card">
-    <span class="modal-pill modal-pill--danger"><i class="codicon codicon-git-commit"></i><span class="modal-pill-text">{commit.substring(0, 7)}</span></span>
-    <span class="modal-arrow">↺</span>
+    <span class="modal-pill modal-pill--danger" title={commit}><i class="codicon codicon-git-commit"></i><span class="modal-pill-text">{commit.substring(0, 7)}</span></span>
+    <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
     <span class="modal-pill modal-pill--source" title={branch}><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branch}</span></span>
   </div>
   <div class="modal-form-group">
@@ -67,7 +67,7 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 12px;
+    font-size: inherit;
     margin-right: auto;
     color: var(--text-secondary);
   }

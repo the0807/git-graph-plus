@@ -137,17 +137,18 @@
   }
 
   .menu-item {
-    display: block;
+    display: flex;
+    align-items: center;
     width: 100%;
-    padding: 4px 16px;
+    padding: 5px 14px;
     white-space: nowrap;
     text-align: left;
-    font-size: 12px;
+    font-size: inherit;
     background: transparent;
     color: var(--vscode-menu-foreground, var(--text-primary));
     border: none;
-    border-radius: 0;
     cursor: pointer;
+    transition: background 0.08s;
   }
 
   .menu-item:hover:not(:disabled) {
@@ -181,9 +182,7 @@
   }
 
   .has-children {
-    display: flex;
     justify-content: space-between;
-    align-items: center;
   }
 
   .submenu-arrow {
@@ -228,7 +227,7 @@
     background: var(--border-color);
   }
 
-  :global(body.vscode-light) .menu {
+  :global(body.vscode-light) .context-menu {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 

@@ -192,7 +192,7 @@
     padding: 32px;
     text-align: center;
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -207,10 +207,9 @@
     border-bottom: 1px solid var(--border-color);
     background: var(--bg-secondary);
     flex-shrink: 0;
-    font-size: 11px;
-    font-weight: 500;
+    font-size: inherit;
+    font-weight: normal;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
     color: var(--text-secondary);
     user-select: none;
   }
@@ -225,8 +224,7 @@
   .reflog-row {
     display: flex;
     align-items: center;
-    height: 28px;
-    font-size: 13px;
+    height: 30px;
     border-bottom: 1px solid var(--border-color);
     cursor: default;
     user-select: none;
@@ -243,7 +241,7 @@
     flex-shrink: 0;
     padding: 0 10px 0 6px;
     font-family: var(--vscode-editor-font-family, monospace);
-    font-size: 11px;
+    font-size: inherit;
     color: var(--text-secondary);
     text-align: right;
     opacity: 0.7;
@@ -295,7 +293,7 @@
   }
 
   .action-type {
-    font-size: 11px;
+    font-size: inherit;
     color: var(--text-secondary);
     flex-shrink: 0;
     opacity: 0.8;
@@ -304,7 +302,7 @@
   .reflog-msg {
     flex: 1;
     min-width: 0;
-    font-size: 13px;
+    font-size: inherit;
   }
 
   .truncate {

@@ -251,7 +251,7 @@
     background: transparent;
     color: var(--input-fg);
     border: none;
-    font-size: 12px;
+    font-size: inherit;
     font-family: inherit;
     outline: none;
     min-width: 0;
@@ -337,7 +337,7 @@
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-size: 12px;
+    font-size: inherit;
     font-family: inherit;
     cursor: pointer;
     white-space: nowrap;
@@ -380,7 +380,7 @@
 
   .filter-count {
     background: var(--vscode-focusBorder, #007fd4);
-    color: #fff;
+    color: var(--vscode-button-foreground, #fff);
     border-radius: 8px;
     padding: 0 5px;
     font-size: 10px;
@@ -410,6 +410,10 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
 
+  :global(body.vscode-light) .dropdown {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
   .dd-item {
     display: flex;
     align-items: center;
@@ -419,7 +423,7 @@
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: inherit;
     font-family: inherit;
     cursor: pointer;
     text-align: left;

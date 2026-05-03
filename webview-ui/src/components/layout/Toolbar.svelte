@@ -149,11 +149,11 @@
   <div class="toolbar-right">
     <button
       class="toolbar-btn"
-      onclick={() => { modalStore.openStashSave(); }}
+      onclick={refresh}
       disabled={uiStore.operating !== null}
-      title={t('toolbar.stashDesc')}
+      title={t('toolbar.refresh')}
     >
-      <i class="codicon codicon-archive"></i>
+      {#if uiStore.operating === 'refresh'}<span class="spinner"></span>{:else}<i class="codicon codicon-refresh"></i>{/if}
     </button>
     <span class="separator"></span>
     <button
@@ -164,7 +164,6 @@
     >
       {#if uiStore.operating === 'fetch'}<span class="spinner"></span>{:else}<i class="codicon codicon-cloud-download"></i>{/if}
     </button>
-    <span class="separator"></span>
     <button
       class="toolbar-btn"
       class:has-badge={behind > 0}
@@ -175,7 +174,6 @@
       {#if uiStore.operating === 'pull'}<span class="spinner"></span>{:else}<i class="codicon codicon-arrow-down"></i>{/if}
       {#if behind > 0}<span class="btn-badge pull-badge">{behind}</span>{/if}
     </button>
-    <span class="separator"></span>
     <button
       class="toolbar-btn"
       class:has-badge={ahead > 0}
@@ -193,8 +191,13 @@
       {#if ahead > 0}<span class="btn-badge push-badge">{ahead}</span>{/if}
     </button>
     <span class="separator"></span>
-    <button class="toolbar-btn icon-only" onclick={refresh} disabled={uiStore.operating !== null} title={t('toolbar.refreshDesc')}>
-      {#if uiStore.operating === 'refresh'}<span class="spinner"></span>{:else}<i class="codicon codicon-refresh"></i>{/if}
+    <button
+      class="toolbar-btn"
+      onclick={() => { modalStore.openStashSave(); }}
+      disabled={uiStore.operating !== null}
+      title={t('toolbar.stashDesc')}
+    >
+      <i class="codicon codicon-archive"></i>
     </button>
     <span class="separator"></span>
     <div class="flow-wrapper">
@@ -331,8 +334,8 @@
     border: 1px solid rgba(128, 128, 128, 0.15);
     color: var(--text-primary);
     border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: inherit;
+    font-weight: normal;
     cursor: default;
   }
 
@@ -382,13 +385,17 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   }
 
+  :global(body.vscode-light) .repo-dropdown {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
   .repo-dropdown-item {
     display: flex;
     align-items: center;
     gap: 8px;
     width: 100%;
     padding: 5px 10px;
-    font-size: 12px;
+    font-size: inherit;
     color: var(--vscode-menu-foreground, var(--text-primary));
     background: transparent;
     border-radius: 4px;
@@ -402,7 +409,7 @@
   }
 
   .repo-dropdown-item.active {
-    font-weight: 600;
+    font-weight: normal;
   }
 
   .repo-dropdown-item .codicon {
@@ -420,8 +427,8 @@
     background: var(--button-bg);
     color: var(--button-fg);
     border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: inherit;
+    font-weight: normal;
   }
 
   .branch-icon {
@@ -450,11 +457,11 @@
     align-items: center;
     gap: 4px;
     padding: 3px 11px;
-    font-size: 11px;
+    font-size: inherit;
     border-radius: 4px;
     background: transparent;
     color: var(--text-secondary);
-    font-weight: 500;
+    font-weight: normal;
   }
 
   .view-tab.active {
@@ -498,16 +505,12 @@
     cursor: wait;
   }
 
-  .toolbar-btn.icon-only {
-    padding: 4px 6px;
-  }
-
   .btn-badge {
     position: absolute;
     top: -2px;
     right: -2px;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     padding: 0 5px;
     border-radius: 8px;
     min-width: 16px;
@@ -576,11 +579,15 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
+  :global(body.vscode-light) .flow-dropdown {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
   .flow-dropdown-item {
     display: block;
     width: 100%;
     padding: 6px 12px;
-    font-size: 12px;
+    font-size: inherit;
     text-align: left;
     background: none;
     border: none;
@@ -631,6 +638,10 @@
     padding: 4px 0;
     z-index: 101;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  :global(body.vscode-light) .flow-submenu {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   .flow-submenu-wrapper:hover .flow-submenu {

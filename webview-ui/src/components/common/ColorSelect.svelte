@@ -113,7 +113,7 @@
     align-items: center;
     gap: 6px;
     padding: 5px 8px;
-    font-size: 12px;
+    font-size: inherit;
     white-space: nowrap;
   }
 
@@ -127,7 +127,7 @@
     color: var(--input-fg);
     border: 1px solid var(--input-border, var(--border-color));
     border-radius: 4px;
-    font-size: 12px;
+    font-size: inherit;
     font-family: inherit;
     cursor: pointer;
     text-align: left;
@@ -182,7 +182,7 @@
     color: var(--text-primary);
     border: none;
     border-radius: 0;
-    font-size: 12px;
+    font-size: inherit;
     font-family: inherit;
     cursor: pointer;
     text-align: left;
@@ -201,7 +201,7 @@
   .warning-icon {
     margin-left: auto;
     color: #f0a020;
-    font-size: 12px;
+    font-size: inherit;
     flex-shrink: 0;
   }
 
@@ -225,8 +225,19 @@
     padding: 1px 6px;
     background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.1));
     border: 1px solid var(--vscode-editorWidget-border, rgba(128, 128, 128, 0.25));
-    border-radius: 100px;
+    border-radius: 6px;
     color: var(--text-secondary);
     flex-shrink: 0;
+  }
+
+  /* ---- Light theme overrides ---- */
+  :global(body.vscode-light) .warning-icon {
+    color: #9a6700;
+  }
+
+  :global(body.vscode-light) .warning-message {
+    background: rgba(200, 120, 0, 0.08);
+    border-color: rgba(200, 120, 0, 0.3);
+    color: #9a6700;
   }
 </style>

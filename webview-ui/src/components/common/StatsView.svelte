@@ -159,7 +159,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: inherit;
     padding: 4px 6px;
     border-radius: 4px;
   }
@@ -193,7 +193,7 @@
   }
 
   .author-name {
-    font-size: 12px;
+    font-size: inherit;
     color: var(--text-primary);
   }
 

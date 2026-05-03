@@ -912,7 +912,7 @@
     padding: 6px 14px;
     background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
     border-bottom: 1px solid var(--vscode-inputValidation-errorBorder, #be1100);
-    font-size: 12px;
+    font-size: inherit;
     gap: 12px;
   }
 
@@ -936,7 +936,7 @@
     background: rgba(156, 39, 176, 0.08);
     border-bottom: 1px solid rgba(156, 39, 176, 0.3);
     color: #9c27b0;
-    font-size: 12px;
+    font-size: inherit;
     flex-shrink: 0;
   }
 
@@ -969,11 +969,36 @@
     background: rgba(244, 67, 54, 0.08);
   }
 
+  /* ---- Light theme overrides (rebase pause) ---- */
+  :global(body.vscode-light) .rebase-pause-banner {
+    background: rgba(123, 31, 162, 0.07);
+    border-bottom-color: rgba(123, 31, 162, 0.3);
+    color: #7b1fa2;
+  }
+
+  :global(body.vscode-light) .rebase-pause-actions button {
+    color: #7b1fa2;
+    border-color: rgba(123, 31, 162, 0.35);
+  }
+
+  :global(body.vscode-light) .rebase-pause-actions button:hover {
+    background: rgba(123, 31, 162, 0.08);
+  }
+
+  :global(body.vscode-light) .rebase-pause-actions button.danger {
+    color: #b71c1c;
+    border-color: rgba(183, 28, 28, 0.35);
+  }
+
+  :global(body.vscode-light) .rebase-pause-actions button.danger:hover {
+    background: rgba(183, 28, 28, 0.06);
+  }
+
   /* ---- Conflict banner ---- */
   .conflict-banner {
     background: rgba(240, 160, 32, 0.06);
     border-bottom: 1px solid rgba(240, 160, 32, 0.25);
-    font-size: 12px;
+    font-size: inherit;
   }
 
   .conflict-header {
@@ -1112,7 +1137,7 @@
     color: #4caf50;
     cursor: pointer;
     flex-shrink: 0;
-    font-size: 12px;
+    font-size: inherit;
   }
 
   .conflict-file:hover .conflict-stage-hint {

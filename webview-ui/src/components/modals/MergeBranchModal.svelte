@@ -78,7 +78,7 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 12px;
+    font-size: inherit;
     margin-right: auto;
     color: var(--text-secondary);
   }

@@ -161,7 +161,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: inherit;
     color: var(--text-secondary);
     margin: 0;
   }

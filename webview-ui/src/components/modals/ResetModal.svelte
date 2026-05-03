@@ -19,16 +19,10 @@
   <p class="modal-desc">{t('reset.desc')}</p>
   <div class="modal-context-card">
     {#if branchName}
-      <span class="modal-pill modal-pill--source" title={branchName}>
-        <i class="codicon codicon-git-branch"></i>
-        <span class="modal-pill-text">{branchName}</span>
-      </span>
+      <span class="modal-pill modal-pill--source" title={branchName}><i class="codicon codicon-git-branch"></i><span class="modal-pill-text">{branchName}</span></span>
       <i class="codicon codicon-arrow-right" style="color: var(--text-secondary);"></i>
     {/if}
-    <span class="modal-pill modal-pill--target">
-      <i class="codicon codicon-git-commit"></i>
-      <span class="modal-pill-text">{hash.substring(0, 7)}</span>
-    </span>
+    <span class="modal-pill modal-pill--target" title={hash}><i class="codicon codicon-git-commit"></i><span class="modal-pill-text">{hash.substring(0, 7)}</span></span>
   </div>
   <div class="modal-form-group">
     <div class="modal-field-label">{t('reset.resetType')}</div>
