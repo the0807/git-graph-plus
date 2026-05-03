@@ -120,7 +120,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 | **Git LFS**    | View LFS-tracked files and manage file locks                                                       |
 | **Submodules** | View status, update submodules, and switch graph to submodule repos                                |
 | **Statistics** | Commits by author (with Gravatar), activity heatmap                                                |
-| **Reflog**     | Browse the full git reference log — reset, checkout, or cherry-pick from any past HEAD state       |
+| **Reflog**     | Browse the full git reference log with search, action-type filters, and per-branch view — reset or checkout from any past HEAD or branch state, with dangling commit detection |
 
 ### Multi-Repository & Submodules
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.1 (2026-05-03)
+
+### New Features
+- **Reflog search** — Real-time filtering by message or hash directly in the Reflog tab
+- **Reflog filter dropdowns** — Separate dropdowns for Ref (HEAD or any branch) and Action type (commit, checkout, reset, rebase, merge, etc.)
+- **Per-branch reflog** — Switch the Reflog view to any local branch to see only that branch's ref movements
+- **Dangling commit detection** — Reflog entries unreachable from any branch are highlighted with a warning icon and tooltip; recoverable via Reset
+
+### Improvements
+- Reflog dangling-only toggle button filters to only dangling entries at a glance
+- Match count shown in search bar when filters are active (even without a text query)
+- Reflog list scrolling fixed — wrapper layout now correctly constrains the scrollable area
+- Various UI polish across Modal, Toolbar, CommitGraph, SearchBar, BisectBanner, and other components
+
 ## 0.3.0 (2026-05-02)
 
 ### New Features

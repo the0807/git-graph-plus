@@ -120,7 +120,7 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 | **Git LFS**    | LFS 추적 파일 목록 확인 및 파일 잠금 관리                                         |
 | **서브모듈**   | 상태 확인, 업데이트, 서브모듈 리포지토리로 그래프 전환                            |
 | **통계**       | 작성자별 커밋 통계 (Gravatar 포함), 활동 히트맵                                   |
-| **Reflog**     | git 참조 로그 전체 탐색 — 과거 HEAD 상태에서 reset, checkout, cherry-pick 가능    |
+| **Reflog**     | 검색/액션 필터와 브랜치별 뷰를 갖춘 git 참조 로그 탐색 — 과거 HEAD 또는 브랜치 상태에서 reset·checkout, Dangling 커밋 감지 지원 |
 
 ### 멀티 리포지토리 & 서브모듈
 
