@@ -411,6 +411,7 @@
   <ResetModal
     hash={resetTarget}
     branchName={branchStore.currentBranch?.name ?? 'HEAD'}
+    defaultMode="hard"
     onConfirm={(mode) => { vscode.postMessage({ type: 'reset', payload: { ref: resetTarget, mode } }); }}
     onClose={() => { showResetModal = false; }}
   />

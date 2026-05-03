@@ -6,13 +6,14 @@
   interface Props {
     hash: string;
     branchName?: string;
+    defaultMode?: 'soft' | 'mixed' | 'hard';
     onConfirm: (mode: 'soft' | 'mixed' | 'hard') => void;
     onClose: () => void;
   }
 
-  let { hash, branchName, onConfirm, onClose }: Props = $props();
+  let { hash, branchName, defaultMode = 'mixed', onConfirm, onClose }: Props = $props();
 
-  let resetMode = $state<'soft' | 'mixed' | 'hard'>('mixed');
+  let resetMode = $state<'soft' | 'mixed' | 'hard'>(defaultMode);
 </script>
 
 <Modal title={t('reset.modalTitle')} {onClose}>
