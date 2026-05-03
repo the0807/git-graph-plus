@@ -230,6 +230,7 @@ export const ko: Record<string, string> = {
   'reflog.filterAction': '액션',
   'reflog.filterAll': '전체',
   'reflog.filterDanglingOnly': 'Dangling 커밋만 보기',
+  'reflog.loadMore': '더 보기',
   'reflog.timeSecond': '{n}초 전',
   'reflog.timeMinute': '{n}분 전',
   'reflog.timeHour': '{n}시간 전',

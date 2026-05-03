@@ -587,8 +587,8 @@ export class MainPanel {
           break;
         }
         case 'getReflog': {
-          const entries = await this.gitService.getReflog(500, message.payload?.ref ?? 'HEAD');
-          this.panel.webview.postMessage({ type: 'reflogData', payload: entries });
+          const result = await this.gitService.getReflog(message.payload?.limit ?? 200, message.payload?.ref ?? 'HEAD');
+          this.panel.webview.postMessage({ type: 'reflogData', payload: result });
           break;
         }
         // --- Bisect ---

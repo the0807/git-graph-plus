@@ -42,25 +42,29 @@ export class GitService {
     return this.activityLog;
   }
 
-  async getReflog(limit = 500, ref = 'HEAD'): Promise<Array<{
+  async getReflog(limit = 200, ref = 'HEAD'): Promise<{ entries: Array<{
     hash: string;
     shortHash: string;
     selector: string;
     message: string;
     date: string;
     dangling: boolean;
-  }>> {
+  }>; hasMore: boolean }> {
     const SEP = '\x1f';
     try {
       const out = await this.exec([
         'reflog', 'show', ref,
         `--format=%H${SEP}%h${SEP}%gd${SEP}%gs`,
         `--date=iso`,
-        `-n`, String(limit),
+        `-n`, String(limit + 1),
       ], { silent: true });
 
       const refName = ref === 'HEAD' ? 'HEAD' : ref.replace(/^refs\/(heads|remotes)\//, '');
-      const entries = out.trim().split('\n').filter(Boolean).map((line, i) => {
+      const allLines = out.trim().split('\n').filter(Boolean);
+      const hasMore = allLines.length > limit;
+      const lines = hasMore ? allLines.slice(0, limit) : allLines;
+
+      const entries = lines.map((line, i) => {
         const parts = line.split(SEP);
         // %gd with --date=iso gives "HEAD@{2026-05-02 10:00:00 +0900}" — extract the date inside {}
         const rawSelector = parts[2] ?? '';
@@ -87,9 +91,9 @@ export class GitService {
         }
       }
 
-      return entries;
+      return { entries, hasMore };
     } catch {
-      return [];
+      return { entries: [], hasMore: false };
     }
   }
 

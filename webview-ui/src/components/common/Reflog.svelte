@@ -31,6 +31,9 @@
   // ── 데이터 ──────────────────────────────────────────────
   let entries       = $state<ReflogEntry[]>([]);
   let loading       = $state(true);
+  let hasMore       = $state(false);
+  let loadingMore   = $state(false);
+  let currentLimit  = $state(200);
 
   // ── 검색 ────────────────────────────────────────────────
   let query         = $state('');
@@ -128,14 +131,21 @@
   function load() {
     if (!selectedRef) selectedRef = 'HEAD';
     if (entries.length === 0) loading = true;
-    vscode.postMessage({ type: 'getReflog', payload: { ref: selectedRef } });
+    vscode.postMessage({ type: 'getReflog', payload: { ref: selectedRef, limit: currentLimit } });
   }
 
   function changeRef(ref: string) {
     selectedRef = ref;
+    currentLimit = 200;
     entries = [];
     loading = true;
-    vscode.postMessage({ type: 'getReflog', payload: { ref } });
+    vscode.postMessage({ type: 'getReflog', payload: { ref, limit: 200 } });
+  }
+
+  function loadMore() {
+    loadingMore = true;
+    currentLimit += 200;
+    vscode.postMessage({ type: 'getReflog', payload: { ref: selectedRef || 'HEAD', limit: currentLimit } });
   }
 
   $effect(() => { if (active) load(); });
@@ -144,8 +154,10 @@
     function handleMessage(e: MessageEvent) {
       const msg = e.data;
       if (msg.type === 'reflogData') {
-        entries = msg.payload;
+        entries = msg.payload.entries;
+        hasMore = msg.payload.hasMore;
         loading = false;
+        loadingMore = false;
       } else if (msg.type === 'repoChanged' || msg.type === 'operationComplete') {
         if (active) load();
       }
@@ -360,6 +372,19 @@
           <div class="col-date" title={new Date(entry.date).toLocaleString()}>{relativeTime(entry.date)}</div>
         </div>
       {/each}
+
+      {#if hasMore}
+        <div class="load-more-row">
+          <button class="load-more-btn" disabled={loadingMore} onclick={loadMore}>
+            {#if loadingMore}
+              <span class="spinner"></span>
+            {:else}
+              <i class="codicon codicon-chevron-down"></i>
+            {/if}
+            {t('reflog.loadMore')}
+          </button>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -837,4 +862,35 @@
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── 더보기 ─────────────────────────────────────────── */
+  .load-more-row {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0 12px;
+  }
+
+  .load-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 16px;
+    font-size: inherit;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .load-more-btn:hover:not(:disabled) {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+    border-color: var(--text-secondary);
+  }
+
+  .load-more-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
 </style>

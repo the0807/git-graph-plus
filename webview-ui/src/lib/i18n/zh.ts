@@ -230,6 +230,7 @@ export const zh: Record<string, string> = {
   'reflog.filterAction': '操作类型',
   'reflog.filterAll': '全部',
   'reflog.filterDanglingOnly': '仅显示 Dangling 提交',
+  'reflog.loadMore': '加载更多',
   'reflog.timeSecond': '{n}秒前',
   'reflog.timeMinute': '{n}分钟前',
   'reflog.timeHour': '{n}小时前',

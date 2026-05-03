@@ -229,6 +229,7 @@ export const en: Record<string, string> = {
   'reflog.filterAction': 'Action',
   'reflog.filterAll': 'All',
   'reflog.filterDanglingOnly': 'Dangling commits only',
+  'reflog.loadMore': 'Load more entries',
   'reflog.timeSecond': '{n}s ago',
   'reflog.timeMinute': '{n}m ago',
   'reflog.timeHour': '{n}h ago',
