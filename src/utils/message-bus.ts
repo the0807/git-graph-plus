@@ -85,7 +85,7 @@ export type ExtensionMessage =
   | { type: 'logData'; payload: CommitGraphData }
   | { type: 'branchData'; payload: BranchData }
   | { type: 'fullRefresh'; payload: { logData: CommitGraphData; branchData: BranchData } }
-  | { type: 'commitDiffData'; payload: { diffs: DiffData[]; files: Array<{ path: string; status: string }> } }
+  | { type: 'commitDiffData'; payload: { hash?: string; diffs: DiffData[]; files: Array<{ path: string; status: string }> } }
   | { type: 'rebaseCommitsData'; payload: { base: string; commits: Commit[] } }
   | { type: 'searchResults'; payload: CommitGraphData }
   | { type: 'activityLogData'; payload: Array<{ command: string; timestamp: string; success: boolean; duration: number }> }

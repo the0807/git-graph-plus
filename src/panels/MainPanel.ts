@@ -660,7 +660,7 @@ export class MainPanel {
             this.gitService.diffCommitToWorking(message.payload.hash),
             this.gitService.diffFiles(message.payload.hash),
           ]);
-          this.panel.webview.postMessage({ type: 'commitDiffData', payload: { diffs: workingDiffs, files: workingFiles } });
+          this.panel.webview.postMessage({ type: 'commitDiffData', payload: { hash: '', diffs: workingDiffs, files: workingFiles } });
           break;
         }
         case 'compareCommits': {
@@ -668,7 +668,7 @@ export class MainPanel {
             this.gitService.diffCommits(message.payload.ref1, message.payload.ref2),
             this.gitService.diffFiles(message.payload.ref1, message.payload.ref2),
           ]);
-          this.panel.webview.postMessage({ type: 'commitDiffData', payload: { diffs: compareDiffs, files: compareFiles } });
+          this.panel.webview.postMessage({ type: 'commitDiffData', payload: { hash: '', diffs: compareDiffs, files: compareFiles } });
           break;
         }
         // --- File tree at commit ---
