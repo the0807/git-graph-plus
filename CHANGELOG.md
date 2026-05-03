@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.2 (2026-05-03)
+
+### New Features
+- **Reflog Pagination** — Added "Load more" button to the Reflog tab (200 entries per page) to improve performance
+- **Reflog Reset Default** — Default reset mode in Reflog context menu set to "Hard" for faster recovery
+
+### Improvements
+- **UI Consistency** — Unified filter dropdown styles between SearchBar and Reflog
+
+### Bug Fixes
+- **Comparison Data** — Fixed missing commit hash in `compareToWorking` and `compareCommits` responses
+
 ## 0.3.1 (2026-05-03)
 
 ### New Features
