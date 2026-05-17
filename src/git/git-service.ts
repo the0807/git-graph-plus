@@ -17,6 +17,8 @@ export class GitError extends Error {
   }
 }
 
+const REMOTE_NAMES_CACHE_TTL_MS = 30_000;
+
 export class GitService {
   private activityLog: Array<{ command: string; timestamp: string; success: boolean; duration: number }> = [];
   private cachedRemoteNames: string[] | null = null;
@@ -368,8 +370,8 @@ export class GitService {
 
   private async getRemoteNames(): Promise<string[]> {
     const now = Date.now();
-    // 30s TTL: remote names rarely change at runtime; addRemote/removeRemote invalidate explicitly.
-    if (this.cachedRemoteNames && now - this.remoteNamesCacheTime < 30000) {
+    // Remote names rarely change at runtime; addRemote/removeRemote invalidate explicitly.
+    if (this.cachedRemoteNames && now - this.remoteNamesCacheTime < REMOTE_NAMES_CACHE_TTL_MS) {
       return this.cachedRemoteNames;
     }
     // Dedupe concurrent callers: if a request is already in flight, await it
