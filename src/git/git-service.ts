@@ -368,6 +368,7 @@ export class GitService {
 
   private async getRemoteNames(): Promise<string[]> {
     const now = Date.now();
+    // 30s TTL: remote names rarely change at runtime; addRemote/removeRemote invalidate explicitly.
     if (this.cachedRemoteNames && now - this.remoteNamesCacheTime < 30000) {
       return this.cachedRemoteNames;
     }
