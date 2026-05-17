@@ -16,6 +16,8 @@ const IGNORED_DIRS = new Set([
 ]);
 
 const MAX_DEPTH = 3;
+const DEFAULT_EXEC_TIMEOUT_MS = 15_000;
+const FORCE_KILL_DELAY_MS = 2_000;
 
 export class RepoDiscoveryService {
   private static cache: { repos: RepoInfo[]; cacheKey: string } | null = null;
@@ -208,7 +210,7 @@ export class RepoDiscoveryService {
     }
   }
 
-  private static execGit(args: string[], cwd: string, timeoutMs = 15000): Promise<string> {
+  private static execGit(args: string[], cwd: string, timeoutMs = DEFAULT_EXEC_TIMEOUT_MS): Promise<string> {
     return new Promise((resolve, reject) => {
       const proc = spawn('git', args, {
         cwd,
@@ -217,7 +219,7 @@ export class RepoDiscoveryService {
 
       const timer = setTimeout(() => {
         proc.kill('SIGTERM');
-        setTimeout(() => { try { proc.kill('SIGKILL'); } catch { /* already dead */ } }, 2000);
+        setTimeout(() => { try { proc.kill('SIGKILL'); } catch { /* already dead */ } }, FORCE_KILL_DELAY_MS);
         reject(new Error(`git ${args[0]} timed out after ${timeoutMs}ms`));
       }, timeoutMs);
 

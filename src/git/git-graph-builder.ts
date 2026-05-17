@@ -262,11 +262,15 @@ function pickColor(unsolved: PathHelper[]): number {
 
 // ── Main parse function (SourceGit CommitGraph.Parse port) ──
 
+// Layout grid: one rail is UNIT_W wide and one commit row is UNIT_H tall.
+// The webview consumes these in svg-coordinate space; HALF_* values are
+// pre-computed because every link/path math touches them.
+const UNIT_W = 12;
+const HALF_W = 6;
+const UNIT_H = 1;
+const HALF_H = 0.5;
+
 export function buildFullGraph(commits: Commit[], branches: BranchInfo[] = []): FullGraphData {
-  const UNIT_W = 12;
-  const HALF_W = 6;
-  const UNIT_H = 1;
-  const HALF_H = 0.5;
 
   const result: FullGraphData = {
     paths: [],

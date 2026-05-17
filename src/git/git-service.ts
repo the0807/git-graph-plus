@@ -17,6 +17,14 @@ export class GitError extends Error {
   }
 }
 
+const MAX_IMAGE_SIZE_BYTES = 50 * 1024 * 1024;
+const IMAGE_LOAD_TIMEOUT_MS = 30_000;
+const DEFAULT_EXEC_TIMEOUT_MS = 30_000;
+const FORCE_KILL_DELAY_MS = 5_000;
+const ACTIVITY_LOG_MAX_ENTRIES = 200;
+const MERGE_TREE_TIMEOUT_MS = 15_000;
+const REMOTE_NAMES_CACHE_TTL_MS = 30_000;
+
 export class GitService {
   private activityLog: Array<{ command: string; timestamp: string; success: boolean; duration: number }> = [];
   private cachedRemoteNames: string[] | null = null;
@@ -162,7 +170,7 @@ export class GitService {
   private exec(args: string[], options?: { stdin?: string; timeout?: number; silent?: boolean }): Promise<string> {
     const startTime = Date.now();
     const command = `git ${args.join(' ')}`;
-    const timeoutMs = options?.timeout ?? 30000;
+    const timeoutMs = options?.timeout ?? DEFAULT_EXEC_TIMEOUT_MS;
 
     return new Promise((resolve, reject) => {
       const proc = spawn('git', args, {
@@ -172,8 +180,8 @@ export class GitService {
 
       const timer = setTimeout(() => {
         proc.kill('SIGTERM');
-        // Force kill if SIGTERM doesn't work after 5s
-        setTimeout(() => { try { proc.kill('SIGKILL'); } catch { /* already dead */ } }, 5000);
+        // Force kill if SIGTERM doesn't work after the grace period
+        setTimeout(() => { try { proc.kill('SIGKILL'); } catch { /* already dead */ } }, FORCE_KILL_DELAY_MS);
         reject(new GitError(`Command timed out after ${timeoutMs}ms`, null, args));
       }, timeoutMs);
 
@@ -207,9 +215,8 @@ export class GitService {
             success: code === 0,
             duration,
           });
-          // Keep last 200 entries
-          if (this.activityLog.length > 200) {
-            this.activityLog.length = 200;
+          if (this.activityLog.length > ACTIVITY_LOG_MAX_ENTRIES) {
+            this.activityLog.length = ACTIVITY_LOG_MAX_ENTRIES;
           }
         }
 
@@ -368,7 +375,7 @@ export class GitService {
 
   private async getRemoteNames(): Promise<string[]> {
     const now = Date.now();
-    if (this.cachedRemoteNames && now - this.remoteNamesCacheTime < 30000) {
+    if (this.cachedRemoteNames && now - this.remoteNamesCacheTime < REMOTE_NAMES_CACHE_TTL_MS) {
       return this.cachedRemoteNames;
     }
     // Dedupe concurrent callers: if a request is already in flight, await it
@@ -579,7 +586,7 @@ export class GitService {
         cwd: this.repoPath,
         env: { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' },
       });
-      const timer = setTimeout(() => { proc.kill('SIGTERM'); resolve({ hasConflict: false, files: [] }); }, 15000);
+      const timer = setTimeout(() => { proc.kill('SIGTERM'); resolve({ hasConflict: false, files: [] }); }, MERGE_TREE_TIMEOUT_MS);
       let stdout = '';
       let stderr = '';
       proc.stdout.on('data', (data: Buffer) => { stdout += data.toString(); });
@@ -1506,19 +1513,18 @@ export class GitService {
     if (filePath.startsWith('/') || filePath.split(/[\\/]/).includes('..')) {
       throw new GitError(`Unsafe filePath: ${filePath}`, null, []);
     }
-    const MAX_IMAGE_SIZE = 50 * 1024 * 1024; // 50MB limit
     return new Promise((resolve, reject) => {
       const proc = spawn('git', ['show', `${ref}:${filePath}`], {
         cwd: this.repoPath,
         env: { ...process.env, ...this.extraEnv, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C', GIT_MERGE_AUTOEDIT: 'no', GIT_EDITOR: 'true', EDITOR: 'true' },
       });
 
-      const timer = setTimeout(() => { proc.kill('SIGTERM'); reject(new GitError('Image load timed out', null, ['show'])); }, 30000);
+      const timer = setTimeout(() => { proc.kill('SIGTERM'); reject(new GitError('Image load timed out', null, ['show'])); }, IMAGE_LOAD_TIMEOUT_MS);
       const chunks: Buffer[] = [];
       let totalSize = 0;
       proc.stdout.on('data', (data: Buffer) => {
         totalSize += data.length;
-        if (totalSize > MAX_IMAGE_SIZE) { proc.kill('SIGTERM'); return; }
+        if (totalSize > MAX_IMAGE_SIZE_BYTES) { proc.kill('SIGTERM'); return; }
         chunks.push(data);
       });
 
@@ -1527,7 +1533,7 @@ export class GitService {
 
       proc.on('close', (code) => {
         clearTimeout(timer);
-        if (totalSize > MAX_IMAGE_SIZE) {
+        if (totalSize > MAX_IMAGE_SIZE_BYTES) {
           reject(new GitError('Image file too large', null, ['show', `${ref}:${filePath}`]));
         } else if (code === 0) {
           const buffer = Buffer.concat(chunks);
