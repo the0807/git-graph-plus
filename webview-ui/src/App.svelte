@@ -125,7 +125,15 @@ import AmendModal from './components/modals/AmendModal.svelte';
           commitLinkRulesStore.set(msg.payload.rules);
           break;
         case 'avatarData':
-          avatarStore.receive(msg.payload.email, msg.payload.size, msg.payload.dataUri);
+          avatarStore.receive(
+            msg.payload.email,
+            msg.payload.size,
+            msg.payload.dataUri,
+            msg.payload.generation,
+          );
+          break;
+        case 'resetAvatars':
+          avatarStore.reset();
           break;
         case 'repoList':
           uiStore.repos = msg.payload.repos;

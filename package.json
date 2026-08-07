@@ -434,6 +434,20 @@
           "default": "topological",
           "description": "Commit sort order in the graph"
         },
+        "gitGraphPlus.avatarSource": {
+          "type": "string",
+          "enum": [
+            "gravatar",
+            "retro"
+          ],
+          "enumDescriptions": [
+            "Download each author's Gravatar and cache it locally",
+            "Generate a deterministic retro pixel avatar locally without network access"
+          ],
+          "default": "gravatar",
+          "scope": "application",
+          "description": "Source used for author avatars"
+        },
         "gitGraphPlus.showSignatureStatus": {
           "type": "boolean",
           "default": true,

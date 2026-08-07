@@ -125,7 +125,7 @@ export type WebviewMessage =
   | { type: 'getUncommittedDiff' }
   | { type: 'getUncommittedFileDiff'; payload: { file: string; staged: boolean } }
   | { type: 'getMultiCommitSections'; payload: { hashes: string[] } }
-  | { type: 'getAvatar'; payload: { email: string; size: number } }
+  | { type: 'getAvatar'; payload: { email: string; size: number; generation?: number } }
   | { type: 'openExternalUrl'; payload: { url: string } }
   | { type: 'openExtensionSettings' };
 
@@ -166,7 +166,8 @@ export type ExtensionMessage =
   | { type: 'uncommittedDiffData'; payload: { staged: Array<{ path: string; status: string }>; unstaged: Array<{ path: string; status: string }> } }
   | { type: 'multiCommitSectionsData'; payload: { files: Array<{ path: string; status: string }>; sections: Array<{ file: string; commit: string; diff: DiffData }> } }
   | { type: 'imageData'; payload: { ref: string; path: string; base64: string; mimeType: string } }
-  | { type: 'avatarData'; payload: { email: string; size: number; dataUri: string | null } }
+  | { type: 'avatarData'; payload: { email: string; size: number; dataUri: string | null; generation?: number } }
+  | { type: 'resetAvatars' }
   | { type: 'conflictData'; payload: { operation: string; files: Array<{ path: string; resolved: boolean }> } }
   | { type: 'flowStatus'; payload: { installed: boolean; initialized: boolean; config: { productionBranch: string; developBranch: string; featurePrefix: string; releasePrefix: string; hotfixPrefix: string; versionTagPrefix: string } | null } }
   | { type: 'flowBranches'; payload: { features: string[]; releases: string[]; hotfixes: string[] } }

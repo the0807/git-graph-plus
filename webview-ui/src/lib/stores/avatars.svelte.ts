@@ -21,6 +21,7 @@ class AvatarStore {
   // key -> data URI; '' means resolved-but-unavailable (failed fetch).
   private cache = new SvelteMap<string, string>();
   private requested = new Set<string>();
+  private generation = 0;
 
   private key(email: string, size: number): string {
     return `${email.trim().toLowerCase()}:${size}`;
@@ -31,13 +32,23 @@ class AvatarStore {
     const hit = this.cache.get(key);
     if (hit === undefined && !this.requested.has(key)) {
       this.requested.add(key);
-      getVsCodeApi().postMessage({ type: 'getAvatar', payload: { email, size } });
+      getVsCodeApi().postMessage({
+        type: 'getAvatar',
+        payload: { email, size, generation: this.generation },
+      });
     }
     return hit || TRANSPARENT_PIXEL;
   }
 
-  receive(email: string, size: number, dataUri: string | null): void {
+  receive(email: string, size: number, dataUri: string | null, generation = this.generation): void {
+    if (generation !== this.generation) return;
     this.cache.set(this.key(email, size), dataUri ?? '');
+  }
+
+  reset(): void {
+    this.generation += 1;
+    this.cache.clear();
+    this.requested.clear();
   }
 }
 

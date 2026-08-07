@@ -39,6 +39,44 @@ describe('AvatarCache', () => {
     expect(calls[0]).toContain('s=32');
   });
 
+  it('generates a retro avatar offline', async () => {
+    const { fetcher, calls } = makeFetcher();
+    const cache = new AvatarCache(null, fetcher, { source: 'retro' });
+
+    const uri = await cache.get('Alice@Example.com', 32);
+
+    expect(uri).toMatch(/^data:image\/svg\+xml;base64,/);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('generates the same Retro avatar for equivalent emails across instances', async () => {
+    const first = new AvatarCache(null, makeFetcher().fetcher, { source: 'retro' });
+    const second = new AvatarCache(null, makeFetcher().fetcher, { source: 'retro' });
+
+    expect(await first.get('Alice@Example.com', 32)).toBe(
+      await second.get('  alice@example.com  ', 32),
+    );
+  });
+
+  it('generates different Retro avatars for different emails', async () => {
+    const cache = new AvatarCache(null, makeFetcher().fetcher, { source: 'retro' });
+
+    expect(await cache.get('alice@example.com', 32)).not.toBe(
+      await cache.get('bob@example.com', 32),
+    );
+  });
+
+  it('does not reuse a Gravatar disk entry for the Retro source', async () => {
+    await new AvatarCache(tmpDir, makeFetcher().fetcher).get('alice@example.com', 32);
+    const { fetcher, calls } = makeFetcher();
+
+    const uri = await new AvatarCache(tmpDir, fetcher, { source: 'retro' })
+      .get('alice@example.com', 32);
+
+    expect(uri).toMatch(/^data:image\/svg\+xml;base64,/);
+    expect(calls).toHaveLength(0);
+  });
+
   it('serves repeat requests from memory without re-fetching', async () => {
     const { fetcher, calls } = makeFetcher();
     const cache = new AvatarCache(null, fetcher);

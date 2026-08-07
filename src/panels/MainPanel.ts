@@ -12,7 +12,7 @@ import { compileBranchColorRules, makeBranchColorResolver } from '../git/branch-
 import { resolveGraphColors } from '../git/graph-colors';
 import { triggerVSCodeGitAuth } from '../git/vscode-git-bridge';
 import { FileWatcher } from '../services/file-watcher';
-import { AvatarCache } from '../services/avatar-cache';
+import { AvatarCache, type AvatarSource } from '../services/avatar-cache';
 import { resolveGitDirs, shouldRefreshGraph } from '../services/file-watcher-helpers';
 import { RepoDiscoveryService, RepoInfo } from '../services/repo-discovery';
 import type { WebviewMessage, ModalDefaults } from '../utils/message-bus';
@@ -35,6 +35,7 @@ export class MainPanel {
   // each one re-fetching from gravatar.com (issue #38).
   private static avatarCacheDir: string | undefined = undefined;
   private static avatarCache: AvatarCache | undefined = undefined;
+  private static avatarCacheSource: AvatarSource | undefined = undefined;
 
   private readonly panel: vscode.WebviewPanel;
   private readonly extensionUri: vscode.Uri;
@@ -89,8 +90,14 @@ export class MainPanel {
   }
 
   private static getAvatarCache(): AvatarCache {
-    if (!this.avatarCache) {
-      this.avatarCache = new AvatarCache(this.avatarCacheDir ?? null);
+    const configuredSource = vscode.workspace
+      .getConfiguration('gitGraphPlus')
+      .get<string>('avatarSource', 'gravatar');
+    const source: AvatarSource = configuredSource === 'gravatar' ? 'gravatar' : 'retro';
+
+    if (!this.avatarCache || this.avatarCacheSource !== source) {
+      this.avatarCache = new AvatarCache(this.avatarCacheDir ?? null, undefined, { source });
+      this.avatarCacheSource = source;
     }
     return this.avatarCache;
   }
@@ -208,6 +215,10 @@ export class MainPanel {
         }
         if (e.affectsConfiguration('gitGraphPlus.graphSortOrder')) {
           this.refreshAll();
+        }
+        if (e.affectsConfiguration('gitGraphPlus.avatarSource')) {
+          MainPanel.avatarCache = undefined;
+          this.post({ type: 'resetAvatars' });
         }
         if (e.affectsConfiguration('gitGraphPlus.locale')) {
           const localeSetting = vscode.workspace.getConfiguration('gitGraphPlus').get<string>('locale', 'auto');
@@ -1443,9 +1454,9 @@ export class MainPanel {
         }
         // --- Avatar (cached in the extension host; see AvatarCache) ---
         case 'getAvatar': {
-          const { email, size } = message.payload;
+          const { email, size, generation } = message.payload;
           const dataUri = await MainPanel.getAvatarCache().get(email, size);
-          this.post({ type: 'avatarData', payload: { email, size, dataUri } });
+          this.post({ type: 'avatarData', payload: { email, size, dataUri, generation } });
           break;
         }
         // --- Image Diff ---

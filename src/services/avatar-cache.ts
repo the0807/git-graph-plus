@@ -2,11 +2,13 @@ import { createHash } from 'crypto';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import * as https from 'https';
+import { generateRetroAvatar } from './retro-avatar';
 
 /** Fetches the raw bytes for an avatar URL. Returns null on any failure so the
  *  cache can degrade gracefully (the webview falls back to no avatar). Injected
  *  in tests so they never touch the network. */
 export type AvatarFetcher = (url: string) => Promise<{ data: Buffer; contentType: string } | null>;
+export type AvatarSource = 'gravatar' | 'retro';
 
 const MAX_MEMORY_ENTRIES = 500;
 const FETCH_TIMEOUT_MS = 10000;
@@ -36,20 +38,22 @@ export class AvatarCache {
   private inflight = new Map<string, Promise<string | null>>();
   private maxDiskEntries: number;
   private ttlMs: number;
+  private source: AvatarSource;
 
   constructor(
     private cacheDir: string | null = null,
     private fetcher: AvatarFetcher = defaultFetcher,
-    opts?: { maxDiskEntries?: number; ttlMs?: number },
+    opts?: { maxDiskEntries?: number; ttlMs?: number; source?: AvatarSource },
   ) {
     this.maxDiskEntries = opts?.maxDiskEntries ?? DEFAULT_MAX_DISK_ENTRIES;
     this.ttlMs = opts?.ttlMs ?? DEFAULT_TTL_MS;
+    this.source = opts?.source === 'retro' ? 'retro' : 'gravatar';
   }
 
   /** Returns a base64 data URI for the avatar, or null if it cannot be loaded. */
   async get(email: string, size: number): Promise<string | null> {
     const norm = normalizeEmail(email);
-    const key = `${norm}:${size}`;
+    const key = `${this.source}:${norm}:${size}`;
 
     const mem = this.memory.get(key);
     if (mem !== undefined) {
@@ -68,6 +72,12 @@ export class AvatarCache {
   }
 
   private async load(key: string, normEmail: string, size: number): Promise<string | null> {
+    if (this.source === 'retro') {
+      const dataUri = generateRetroAvatar(normEmail, size);
+      this.remember(key, dataUri);
+      return dataUri;
+    }
+
     const hash = md5(normEmail);
     const diskFile = this.cacheDir ? path.join(this.cacheDir, `${hash}-${size}`) : null;
 

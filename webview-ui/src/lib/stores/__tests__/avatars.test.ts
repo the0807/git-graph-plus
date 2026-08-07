@@ -18,9 +18,13 @@ describe('avatarStore', () => {
     expect(postedTypes()).toContain('getAvatar');
     const msg = globalThis.__postedMessages.at(-1)?.data as {
       type: string;
-      payload: { email: string; size: number };
+      payload: { email: string; size: number; generation: number };
     };
-    expect(msg.payload).toEqual({ email: 'first@example.com', size: 32 });
+    expect(msg.payload).toEqual({
+      email: 'first@example.com',
+      size: 32,
+      generation: expect.any(Number),
+    });
   });
 
   it('does not re-request a key that is already pending', () => {
@@ -48,5 +52,42 @@ describe('avatarStore', () => {
   it('normalizes email casing and whitespace into the same cache key', () => {
     avatarStore.receive('Fifth@Example.com', 32, 'data:image/png;base64,BBBB');
     expect(avatarStore.url('  fifth@example.com  ', 32)).toBe('data:image/png;base64,BBBB');
+  });
+
+  it('requests avatars again after the configured source changes', () => {
+    const email = 'source-switch@example.com';
+    avatarStore.receive(email, 32, 'data:image/png;base64,OLD');
+    const messagesBeforeReset = globalThis.__postedMessages.length;
+
+    avatarStore.reset();
+    const result = avatarStore.url(email, 32);
+
+    expect(result).toBe(TRANSPARENT_PIXEL);
+    expect(globalThis.__postedMessages).toHaveLength(messagesBeforeReset + 1);
+    expect(globalThis.__postedMessages.at(-1)?.data).toEqual({
+      type: 'getAvatar',
+      payload: { email, size: 32, generation: expect.any(Number) },
+    });
+  });
+
+  it('ignores a response from the avatar source used before reset', () => {
+    const email = 'source-race@example.com';
+    avatarStore.reset();
+    avatarStore.url(email, 32);
+    const oldRequest = globalThis.__postedMessages.at(-1)?.data as {
+      payload: { generation: number };
+    };
+
+    avatarStore.reset();
+    avatarStore.url(email, 32);
+    const newRequest = globalThis.__postedMessages.at(-1)?.data as {
+      payload: { generation: number };
+    };
+
+    avatarStore.receive(email, 32, 'data:image/png;base64,OLD', oldRequest.payload.generation);
+    expect(avatarStore.url(email, 32)).toBe(TRANSPARENT_PIXEL);
+
+    avatarStore.receive(email, 32, 'data:image/png;base64,NEW', newRequest.payload.generation);
+    expect(avatarStore.url(email, 32)).toBe('data:image/png;base64,NEW');
   });
 });

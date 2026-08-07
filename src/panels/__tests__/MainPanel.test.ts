@@ -34,6 +34,10 @@ const H = vi.hoisted(() => {
   };
   return {
     git,
+    avatarGet: vi.fn(async () => 'data:image/png;base64,AAAA'),
+    avatarOptions: undefined as { source?: string } | undefined,
+    avatarSource: undefined as string | undefined,
+    configurationHandler: null as null | ((event: { affectsConfiguration(section: string): boolean }) => void),
     messageHandler: null as null | ((m: unknown) => unknown),
     panel: null as null | { webview: { postMessage: ReturnType<typeof vi.fn> } },
     repos: [] as Array<{ path: string; name: string; type: string }>,
@@ -70,10 +74,18 @@ vi.mock('vscode', () => {
       showSaveDialog: vi.fn(async () => undefined),
     },
     workspace: {
-      getConfiguration: () => ({ get: (_k: string, d?: unknown) => d }),
+      getConfiguration: (section?: string) => ({
+        get: (key: string, d?: unknown) => {
+          if (section === 'gitGraphPlus' && key === 'avatarSource') return H.avatarSource ?? d;
+          return d;
+        },
+      }),
       getWorkspaceFolder: () => ({ uri: { fsPath: '/repo' } }),
       workspaceFolders: [{ uri: { fsPath: '/repo' } }],
-      onDidChangeConfiguration: () => ({ dispose() {} }),
+      onDidChangeConfiguration: (cb: (event: { affectsConfiguration(section: string): boolean }) => void) => {
+        H.configurationHandler = cb;
+        return { dispose() {} };
+      },
       fs: { writeFile: vi.fn(async () => {}) },
     },
     commands: { executeCommand: vi.fn() },
@@ -95,6 +107,18 @@ vi.mock('../../git/git-service', async (orig) => {
 vi.mock('../../services/file-watcher', () => ({ FileWatcher: class { enabled = true; suppress() {} dispose() {} } }));
 vi.mock('../../services/repo-discovery', () => ({ RepoDiscoveryService: { discoverRepos: vi.fn(async () => H.repos), clearCache: vi.fn() } }));
 vi.mock('../../git/vscode-git-bridge', () => ({ triggerVSCodeGitAuth: vi.fn(async () => false) }));
+vi.mock('../../services/avatar-cache', () => ({
+  AvatarCache: class {
+    constructor(
+      _cacheDir: string | null,
+      _fetcher?: unknown,
+      options?: { source?: string },
+    ) {
+      H.avatarOptions = options;
+    }
+    get = H.avatarGet;
+  },
+}));
 
 import { MainPanel } from '../MainPanel';
 import { GitError } from '../../git/git-service';
@@ -127,8 +151,13 @@ beforeEach(() => {
   H.git.showCommitDiff.mockResolvedValue([]);
   H.git.fileExistsAtRef.mockResolvedValue(true);
   H.git.getEmptyTreeRef.mockResolvedValue('4b825dc642cb6eb9a060e54bf8d69288fbee4904');
+  H.avatarGet.mockReset();
+  H.avatarGet.mockResolvedValue('data:image/png;base64,AAAA');
+  H.avatarOptions = undefined;
+  H.avatarSource = undefined;
   H.repos = [{ path: '/repo', name: 'repo', type: 'root' }];
   (MainPanel as unknown as { currentPanel: unknown }).currentPanel = undefined;
+  (MainPanel as unknown as { avatarCache: unknown }).avatarCache = undefined;
   MainPanel.createOrShow(extUri, '/repo');
 });
 
@@ -267,6 +296,46 @@ describe('MainPanel message routing', () => {
     expect(H.git.showCommitFiles).toHaveBeenCalledWith('h1');
     const data = postedOfType('commitDiffData').at(-1)!;
     expect(data.payload!.hash).toBe('h1');
+  });
+
+  it('getAvatar uses the selected source and posts the resolved image', async () => {
+    await dispatch({
+      type: 'getAvatar',
+      payload: { email: 'author@example.com', size: 20, generation: 7 },
+    });
+
+    expect(H.avatarOptions).toEqual({ source: 'gravatar' });
+    expect(H.avatarGet).toHaveBeenCalledWith('author@example.com', 20);
+    expect(postedOfType('avatarData').at(-1)?.payload).toEqual({
+      email: 'author@example.com',
+      size: 20,
+      dataUri: 'data:image/png;base64,AAAA',
+      generation: 7,
+    });
+  });
+
+  it('getAvatar uses the selected offline Retro source', async () => {
+    H.avatarSource = 'retro';
+
+    await dispatch({ type: 'getAvatar', payload: { email: 'author@example.com', size: 20 } });
+
+    expect(H.avatarOptions).toEqual({ source: 'retro' });
+  });
+
+  it('getAvatar falls back to Retro for an invalid configured source', async () => {
+    H.avatarSource = 'unexpected';
+
+    await dispatch({ type: 'getAvatar', payload: { email: 'author@example.com', size: 20 } });
+
+    expect(H.avatarOptions).toEqual({ source: 'retro' });
+  });
+
+  it('asks the webview to reset when the avatar source changes', () => {
+    H.configurationHandler?.({
+      affectsConfiguration: (section) => section === 'gitGraphPlus.avatarSource',
+    });
+
+    expect(postedOfType('resetAvatars')).toHaveLength(1);
   });
 
   it('merge calls GitService.merge then refreshes the whole view', async () => {
