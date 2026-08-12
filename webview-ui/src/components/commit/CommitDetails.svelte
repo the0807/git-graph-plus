@@ -426,6 +426,29 @@
 
   let expandedDirs = $state<Set<string>>(new Set());
 
+  function compactDirectoryChains(nodes: FileTreeNode[]): FileTreeNode[] {
+    return nodes.map(node => {
+      if (node.isFile) return { ...node, children: [] };
+
+      let name = node.name;
+      let path = node.path;
+      let children = node.children;
+      while (children.length === 1 && !children[0].isFile) {
+        const child = children[0];
+        name = `${name} / ${child.name}`;
+        path = child.path;
+        children = child.children;
+      }
+
+      return {
+        ...node,
+        name,
+        path,
+        children: compactDirectoryChains(children),
+      };
+    });
+  }
+
   function buildFileTree(commitFiles: CommitFile[]): FileTreeNode[] {
     const root: FileTreeNode = { name: '', path: '', children: [], isFile: false };
 
@@ -460,7 +483,7 @@
       return nodes;
     }
 
-    return sortTree(root.children);
+    return compactDirectoryChains(sortTree(root.children));
   }
 
   // All changed-file paths under a tree node (the node itself if it's a file).
@@ -860,7 +883,7 @@
                   >
                     <i class="codicon" class:codicon-chevron-right={!expandedDirs.has(`${staged ? 'staged' : 'unstaged'}:${node.path}`)} class:codicon-chevron-down={expandedDirs.has(`${staged ? 'staged' : 'unstaged'}:${node.path}`)}></i>
                     <i class="codicon codicon-folder"></i>
-                    <span class="dir-name">{node.name}</span>
+                    <span class="dir-name" title={node.path}>{node.name}</span>
                   </button>
                   {#if expandedDirs.has(`${staged ? 'staged' : 'unstaged'}:${node.path}`)}
                     {@render renderUncommittedTree(node.children, depth + 1, staged)}
@@ -1103,7 +1126,7 @@
                 >
                   <i class="codicon" class:codicon-chevron-right={!expandedDirs.has(node.path)} class:codicon-chevron-down={expandedDirs.has(node.path)}></i>
                   <i class="codicon codicon-folder"></i>
-                  <span class="dir-name">{node.name}</span>
+                  <span class="dir-name" title={node.path}>{node.name}</span>
                 </button>
                 {#if expandedDirs.has(node.path)}
                   {@render renderTree(node.children, depth + 1)}
@@ -1632,7 +1655,12 @@
   }
 
   .file-name { font-weight: normal; min-width: 0; }
-  .dir-name { min-width: 0; }
+  .dir-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .file-status {
     margin-left: auto;
     font-size: 0.85em;

@@ -564,6 +564,23 @@ describe('CommitDetails — uncommitted (staged/unstaged)', () => {
     }));
   }
 
+  it('compacts deep folder chains in both staged and unstaged trees', async () => {
+    const { container } = render(CommitDetails, { commit: commit({ hash: 'UNCOMMITTED' }) });
+    deliverUncommitted(
+      [{ path: 'src/main/java/App.java', status: 'M' }],
+      [{ path: 'tests/unit/App.test.ts', status: 'A' }],
+    );
+    await waitFor(() => expect(container.querySelector('.file-item')).toBeTruthy());
+    expect(container.querySelector('.dir-name')?.textContent?.replace(/\s+/g, '')).toBe('src/main/java');
+
+    const unstagedTab = Array.from(container.querySelectorAll<HTMLButtonElement>('.top-tab'))
+      .find(t => /unstaged/i.test(t.textContent ?? ''))!;
+    await fireEvent.click(unstagedTab);
+    await waitFor(() => {
+      expect(container.querySelector('.dir-name')?.textContent?.replace(/\s+/g, '')).toBe('tests/unit');
+    });
+  });
+
   it('shows "No staged changes" when staged list is empty', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'UNCOMMITTED' }) });
     deliverUncommitted([], [{ path: 'a.ts', status: 'M' }]);
@@ -850,6 +867,66 @@ describe('CommitDetails — resize handle', () => {
 });
 
 describe('CommitDetails — directory toggle', () => {
+  it('compacts a chain of single-child folders into one visible row', async () => {
+    const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    deliverCommitDiff('h1', [{ path: 'src/main/java/App.java', status: 'M' }]);
+    const changesTab = Array.from(container.querySelectorAll<HTMLButtonElement>('.top-tab'))
+      .find(t => /change/i.test(t.textContent ?? ''))!;
+    await fireEvent.click(changesTab);
+    await waitFor(() => expect(container.querySelector('.file-item')).toBeTruthy());
+
+    const labels = Array.from(container.querySelectorAll('.dir-name'))
+      .map(el => (el.textContent ?? '').replace(/\s+/g, ''));
+    expect(labels).toEqual(['src/main/java']);
+    expect(container.querySelector('.dir-name')?.getAttribute('title')).toBe('src/main/java');
+    expect(container.querySelector('.file-name')?.textContent).toBe('App.java');
+  });
+
+  it('handles a pathological deep folder chain without overflowing the stack', async () => {
+    const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    const deepPath = `${Array.from({ length: 3000 }, (_, i) => `d${i}`).join('/')}/leaf.ts`;
+    deliverCommitDiff('h1', [{ path: deepPath, status: 'M' }]);
+    const changesTab = Array.from(container.querySelectorAll<HTMLButtonElement>('.top-tab'))
+      .find(t => /change/i.test(t.textContent ?? ''))!;
+    await fireEvent.click(changesTab);
+    await waitFor(() => expect(container.querySelector('.file-item')).toBeTruthy());
+
+    expect(container.querySelectorAll('.dir-item')).toHaveLength(1);
+    expect(container.querySelector('.file-name')?.textContent).toBe('leaf.ts');
+  });
+
+  it('stops compacting at a directory branch', async () => {
+    const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    deliverCommitDiff('h1', [
+      { path: 'src/main/java/App.java', status: 'M' },
+      { path: 'src/test/java/AppTest.java', status: 'A' },
+    ]);
+    const changesTab = Array.from(container.querySelectorAll<HTMLButtonElement>('.top-tab'))
+      .find(t => /change/i.test(t.textContent ?? ''))!;
+    await fireEvent.click(changesTab);
+    await waitFor(() => expect(container.querySelectorAll('.file-item')).toHaveLength(2));
+
+    const labels = Array.from(container.querySelectorAll('.dir-name'))
+      .map(el => (el.textContent ?? '').replace(/\s+/g, ''));
+    expect(labels).toEqual(['src', 'main/java', 'test/java']);
+  });
+
+  it('does not compact across a folder that also contains a file', async () => {
+    const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    deliverCommitDiff('h1', [
+      { path: 'src/index.ts', status: 'M' },
+      { path: 'src/lib/a.ts', status: 'M' },
+    ]);
+    const changesTab = Array.from(container.querySelectorAll<HTMLButtonElement>('.top-tab'))
+      .find(t => /change/i.test(t.textContent ?? ''))!;
+    await fireEvent.click(changesTab);
+    await waitFor(() => expect(container.querySelectorAll('.file-item')).toHaveLength(2));
+
+    const labels = Array.from(container.querySelectorAll('.dir-name'))
+      .map(el => (el.textContent ?? '').replace(/\s+/g, ''));
+    expect(labels).toEqual(['src', 'lib']);
+  });
+
   it('clicking a dir toggles its expand state', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
     deliverCommitDiff('h1', [
@@ -1122,7 +1199,7 @@ describe('CommitDetails — file context menu actions', () => {
 
   it('folder "Create Patch from folder" posts saveCommitPatch for the folder', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
-    deliverCommitDiff('h1', [{ path: 'src/a.ts', status: 'M' }]);
+    deliverCommitDiff('h1', [{ path: 'src/main/java/App.java', status: 'M' }]);
     const changesTab = Array.from(container.querySelectorAll<HTMLButtonElement>('.top-tab'))
       .find(t => /change/i.test(t.textContent ?? ''))!;
     await fireEvent.click(changesTab);
@@ -1136,7 +1213,7 @@ describe('CommitDetails — file context menu actions', () => {
     const req = globalThis.__postedMessages.find((m) => (m.data as { type?: string }).type === 'saveCommitPatch');
     expect((req!.data as { payload: { hash: string; paths: string[] } }).payload).toMatchObject({
       hash: 'h1',
-      paths: ['src'],
+      paths: ['src/main/java'],
     });
   });
 
