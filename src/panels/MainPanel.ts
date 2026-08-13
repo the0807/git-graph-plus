@@ -775,6 +775,32 @@ export class MainPanel {
           await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:the0807.git-graph-plus');
           break;
         }
+        case 'getUserDetails': {
+          this.post({ type: 'userDetailsData', payload: await this.gitService.getUserDetails() });
+          break;
+        }
+        case 'editUserDetails': {
+          const { name, email, location, deleteLocalName, deleteLocalEmail } = message.payload;
+          await this.gitService.setUserConfig('user.name', name, location);
+          await this.gitService.setUserConfig('user.email', email, location);
+          // When switching to the global scope, clear any local override so the
+          // global values actually take effect for this repo.
+          if (deleteLocalName) {
+            await this.gitService.unsetUserConfig('user.name', 'local');
+          }
+          if (deleteLocalEmail) {
+            await this.gitService.unsetUserConfig('user.email', 'local');
+          }
+          this.post({ type: 'operationComplete', payload: { operation: 'editUserDetails', success: true } });
+          break;
+        }
+        case 'deleteUserDetails': {
+          const { name, email, location } = message.payload;
+          if (name) await this.gitService.unsetUserConfig('user.name', location);
+          if (email) await this.gitService.unsetUserConfig('user.email', location);
+          this.post({ type: 'operationComplete', payload: { operation: 'deleteUserDetails', success: true } });
+          break;
+        }
         case 'amendCommit': {
           await this.gitService.amendCommit(message.payload);
           // Optional follow-up: amend rewrites HEAD, so the push force-pushes

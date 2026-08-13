@@ -15,6 +15,7 @@ export const en: Record<string, string> = {
   'toolbar.settings': 'Open Extension Settings',
   'toolbar.noRemotes': 'No remotes configured. Add a remote first.',
   'toolbar.addRemote': 'Add Remote',
+  'toolbar.userDetails': 'User Details (name & email)',
   'toolbar.detachedHead': '(Detached HEAD)',
 
   // Push modal
@@ -676,4 +677,18 @@ export const en: Record<string, string> = {
   'setUpstream.willCreate.post': ' will create it.',
   'setUpstream.typeManually': 'Type manually',
   'setUpstream.selectFromList': 'Select from list',
+
+  // User details modal
+  'userDetails.title': 'User Details',
+  'userDetails.desc': 'Set the user name and email used by Git to record the Author and Committer of commits.',
+  'userDetails.loading': 'Loading…',
+  'userDetails.currentScope': 'Currently stored in',
+  'userDetails.local': 'Local',
+  'userDetails.global': 'Global',
+  'userDetails.name': 'User Name',
+  'userDetails.email': 'User Email',
+  'userDetails.useGlobally': 'Use globally',
+  'userDetails.useGloballyInfo': 'Apply to all repositories. Can be overridden per repository.',
+  'userDetails.save': 'Save',
+  'userDetails.remove': 'Remove',
 };

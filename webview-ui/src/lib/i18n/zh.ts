@@ -15,6 +15,7 @@ export const zh: Record<string, string> = {
   'toolbar.settings': '打开扩展设置',
   'toolbar.noRemotes': '未配置远程仓库。请先添加一个远程仓库。',
   'toolbar.addRemote': '添加远程仓库',
+  'toolbar.userDetails': '用户信息（姓名和邮箱）',
   'toolbar.detachedHead': '（分离头指针）',
 
   // Push modal
@@ -674,4 +675,18 @@ export const zh: Record<string, string> = {
   'setUpstream.willCreate.post': ' 进行创建。',
   'setUpstream.typeManually': '手动输入',
   'setUpstream.selectFromList': '从列表选择',
+
+  // User details modal
+  'userDetails.title': '用户信息',
+  'userDetails.desc': '设置 Git 用于记录提交作者和提交者的姓名与邮箱。',
+  'userDetails.loading': '加载中…',
+  'userDetails.currentScope': '当前存储于',
+  'userDetails.local': '本地',
+  'userDetails.global': '全局',
+  'userDetails.name': '姓名',
+  'userDetails.email': '邮箱',
+  'userDetails.useGlobally': '全局使用',
+  'userDetails.useGloballyInfo': '应用到所有仓库。可被单个仓库覆盖。',
+  'userDetails.save': '保存',
+  'userDetails.remove': '移除',
 };

@@ -15,7 +15,7 @@ import { resolveGitDirs } from '../services/file-watcher-helpers';
 const DEFAULT_MAX_BUFFER_BYTES = 256 * 1024 * 1024;
 import { parseLog, parseBranches, parseTags, parseRemotes, parseStashList, parseDiff, parseWorktreeList, parseLfsFiles, parseLfsLocks, mapSignatureStatus } from './git-parser';
 import { buildReversePatch } from './patch-builder';
-import type { Commit, BranchInfo, TagInfo, RemoteInfo, StashEntry, LogOptions, DiffData, WorktreeInfo, CommitSignature } from './types';
+import type { Commit, BranchInfo, TagInfo, RemoteInfo, StashEntry, LogOptions, DiffData, WorktreeInfo, CommitSignature, UserDetails } from './types';
 
 export class GitError extends Error {
   constructor(
@@ -1524,6 +1524,58 @@ export class GitService {
     this.assertSafeRef(name, 'remote remove');
     await this.exec(['remote', 'remove', name]);
     this.cachedRemoteNames = null;
+  }
+
+  /** Reads the `user.name` / `user.email` git config from both the local repo
+   *  and the global user scope. Missing keys resolve to `null` (git `--get`
+   *  exits non-zero when a key is absent, which we swallow here). */
+  async getUserDetails(): Promise<UserDetails> {
+    const get = async (key: 'user.name' | 'user.email', location: 'local' | 'global'): Promise<string | null> => {
+      try {
+        const raw = await this.exec(['config', '--' + location, '--get', key], { silent: true });
+        const value = raw.replace(/\r?\n$/, '').trim();
+        return value.length > 0 ? value : null;
+      } catch {
+        return null;
+      }
+    };
+    const [nameLocal, nameGlobal, emailLocal, emailGlobal] = await Promise.all([
+      get('user.name', 'local'),
+      get('user.name', 'global'),
+      get('user.email', 'local'),
+      get('user.email', 'global'),
+    ]);
+    return {
+      name: { local: nameLocal, global: nameGlobal },
+      email: { local: emailLocal, global: emailGlobal },
+    };
+  }
+
+  /** Sets a `user.name` / `user.email` value in the local or global scope. */
+  async setUserConfig(key: 'user.name' | 'user.email', value: string, location: 'local' | 'global'): Promise<void> {
+    this.assertSafeConfigValue(value);
+    await this.exec(['config', '--' + location, key, value]);
+  }
+
+  /** Removes all `user.name` / `user.email` values from the local or global scope. */
+  async unsetUserConfig(key: 'user.name' | 'user.email', location: 'local' | 'global'): Promise<void> {
+    await this.exec(['config', '--' + location, '--unset-all', key]);
+  }
+
+  /** Reject config values git could misinterpret (flag-like, control chars) or
+   *  that make no sense as an identity. Args are passed via spawn argv (no
+   *  shell), but a leading `-` would still be parsed by git as an option. */
+  private assertSafeConfigValue(value: string): void {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+      throw new GitError('Invalid config value', null, []);
+    }
+    if (value.startsWith('-')) {
+      throw new GitError(`Config value must not start with '-': ${value}`, null, []);
+    }
+    // eslint-disable-next-line no-control-regex
+    if (/[\x00-\x1f\x7f]/.test(value)) {
+      throw new GitError('Config value contains control characters', null, []);
+    }
   }
 
   async setUpstream(localBranch: string, remote: string, remoteBranch: string, options?: { createRemote?: boolean }): Promise<void> {

@@ -35,6 +35,13 @@ export interface Ref {
   remote?: string;
 }
 
+/** The author/committer identity git uses, resolved per scope (`local` repo
+ *  config vs `global` user config). Either scope may be unset (`null`). */
+export interface UserDetails {
+  name: { local: string | null; global: string | null };
+  email: { local: string | null; global: string | null };
+}
+
 export interface GraphNode {
   commit: string;
   column: number;
