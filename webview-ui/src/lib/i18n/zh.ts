@@ -295,6 +295,7 @@ export const zh: Record<string, string> = {
   'search.branchFilterTooltip': '按特定分支筛选',
   'search.allBranches': 'All',
   'search.filterBranches': 'Search',
+  'search.includeReflogTooltip': '包含仅被 reflog 提及的提交',
 
   // Activity log
   'activityLog.title': '活动日志',

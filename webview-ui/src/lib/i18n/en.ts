@@ -295,6 +295,7 @@ export const en: Record<string, string> = {
   'search.branchFilterTooltip': 'Filter by specific branch',
   'search.allBranches': 'All',
   'search.filterBranches': 'Search',
+  'search.includeReflogTooltip': 'Include commits only mentioned by reflogs',
 
   // Activity log
   'activityLog.title': 'Activity Log',

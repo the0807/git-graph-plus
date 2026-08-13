@@ -46,6 +46,7 @@ export class MainPanel {
   private currentLimit = 1000;
   private currentRemoteFilter: string[] | undefined = undefined;
   private currentBranchFilter: string[] | undefined = undefined;
+  private currentIncludeReflog = false;
   private isFirstGetLog = true;
   private logSequence = 0;
   private searchSequence = 0;
@@ -416,7 +417,8 @@ export class MainPanel {
           this.isFirstGetLog = false;
           this.currentRemoteFilter = effectiveFilter;
           this.currentBranchFilter = effectiveBranchFilter;
-          const logPayload = { ...message.payload, remoteFilter: effectiveFilter, branches: effectiveBranchFilter, limit: requestedLimit + 1, sortOrder, includeSignature };
+          this.currentIncludeReflog = message.payload.includeReflog ?? false;
+          const logPayload = { ...message.payload, remoteFilter: effectiveFilter, branches: effectiveBranchFilter, includeReflog: this.currentIncludeReflog, limit: requestedLimit + 1, sortOrder, includeSignature };
           const seq = ++this.logSequence;
           const [allFetched, logBranches] = await Promise.all([
             this.gitService.log(logPayload),
@@ -1816,7 +1818,7 @@ export class MainPanel {
       // repo-unrelated "demo"-looking graph.
       const remoteFilter = this.isFirstGetLog ? MainPanel.savedRemoteFilter : this.currentRemoteFilter;
       const branchFilter = this.isFirstGetLog ? MainPanel.savedBranchFilter : this.currentBranchFilter;
-      const logArgs = { limit: refreshLimit + 1, sortOrder, remoteFilter, branches: branchFilter, includeSignature };
+      const logArgs = { limit: refreshLimit + 1, sortOrder, remoteFilter, branches: branchFilter, includeReflog: this.currentIncludeReflog, includeSignature };
 
       const buildLogData = (allFetched: Awaited<ReturnType<typeof this.gitService.log>>, branches: Awaited<ReturnType<typeof this.gitService.branches>>) => {
         const hasMore = allFetched.length > refreshLimit;

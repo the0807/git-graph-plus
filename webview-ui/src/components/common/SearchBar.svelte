@@ -16,6 +16,8 @@
     onBranchFilterChange?: (filter: string[]) => void;
     headOffscreen?: boolean;
     onJumpToHead?: () => void;
+    includeReflog?: boolean;
+    onIncludeReflogChange?: (value: boolean) => void;
   }
 
   let {
@@ -29,6 +31,8 @@
     onBranchFilterChange = () => {},
     headOffscreen = false,
     onJumpToHead = () => {},
+    includeReflog = false,
+    onIncludeReflogChange = () => {},
   }: Props = $props();
 
   let query = $state('');
@@ -362,6 +366,16 @@
       </div>
     {/if}
   </div>
+
+  <button
+    class="reflog-btn"
+    class:active={includeReflog}
+    onclick={() => onIncludeReflogChange(!includeReflog)}
+    aria-label={t('search.includeReflogTooltip')}
+    use:tooltip={t('search.includeReflogTooltip')}
+  >
+    <i class="codicon codicon-history"></i>
+  </button>
 </div>
 
 <style>
@@ -524,6 +538,32 @@
   .head-btn:disabled {
     opacity: 0.4;
     cursor: default;
+  }
+
+  .reflog-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: color 0.1s, border-color 0.1s;
+  }
+
+  .reflog-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--vscode-focusBorder, #007fd4);
+  }
+
+  .reflog-btn.active {
+    color: var(--vscode-focusBorder, #007fd4);
+    border-color: var(--vscode-focusBorder, #007fd4);
   }
 
   .filter-btn {

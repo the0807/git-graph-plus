@@ -60,6 +60,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
   let headJumpNonce = $state(0);
   let remoteFilter = $state<string[]>([]);
   let branchFilter = $state<string[]>([]);
+  let includeReflog = $state(false);
   let resizing = $state(false);
   let conflict = $state<{ operation: string; files: Array<{ path: string; resolved: boolean }> } | null>(null);
   let rebasePaused = $state(false);
@@ -262,6 +263,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
         limit: commitStore.currentLimit || undefined,
         branches: branchFilter.length > 0 ? [...branchFilter] : undefined,
         remoteFilter: remoteFilter.length > 0 ? [...remoteFilter] : undefined,
+        includeReflog,
       }});
       vscode.postMessage({ type: 'getBranches' });
     }
@@ -317,6 +319,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
         limit: commitStore.currentLimit || undefined,
         branches: branchFilter.length > 0 ? [...branchFilter] : undefined,
         remoteFilter: filter.length > 0 ? [...filter] : undefined,
+        includeReflog,
       },
     });
   }
@@ -330,6 +333,21 @@ import AmendModal from './components/modals/AmendModal.svelte';
         limit: commitStore.currentLimit || undefined,
         branches: branches.length > 0 ? [...branches] : undefined,
         remoteFilter: remoteFilter.length > 0 ? [...remoteFilter] : undefined,
+        includeReflog,
+      },
+    });
+  }
+
+  function handleIncludeReflogChange(value: boolean) {
+    includeReflog = value;
+    commitStore.setLoading(true);
+    vscode.postMessage({
+      type: 'getLog',
+      payload: {
+        limit: commitStore.currentLimit || undefined,
+        branches: branchFilter.length > 0 ? [...branchFilter] : undefined,
+        remoteFilter: remoteFilter.length > 0 ? [...remoteFilter] : undefined,
+        includeReflog: value,
       },
     });
   }
@@ -370,6 +388,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
       limit: commitStore.currentLimit || undefined,
       branches: branchFilter.length > 0 ? [...branchFilter] : undefined,
       remoteFilter: remoteFilter.length > 0 ? [...remoteFilter] : undefined,
+      includeReflog,
     }});
     vscode.postMessage({ type: 'getBranches' });
     vscode.postMessage({ type: 'getRepoList' });
@@ -472,6 +491,8 @@ import AmendModal from './components/modals/AmendModal.svelte';
           onBranchFilterChange={handleBranchFilterChange}
           {headOffscreen}
           onJumpToHead={handleJumpToHead}
+          {includeReflog}
+          onIncludeReflogChange={handleIncludeReflogChange}
         />
       {/if}
       {#if bisectMessage}

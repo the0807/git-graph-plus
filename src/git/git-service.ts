@@ -551,6 +551,20 @@ export class GitService {
       }
     }
 
+    // `--reflog` pulls in commits that are reachable only via the reflog
+    // (abandoned by a rebase/reset/branch delete). Same scope restriction as the
+    // stash base hashes above: only the unfiltered first page, so the extra
+    // commits don't leak into branch/remote-filtered or paginated views.
+    if (
+      options?.includeReflog &&
+      !options?.skip &&
+      !options?.branch &&
+      (!options?.branches || options.branches.length === 0) &&
+      (!options?.remoteFilter || options.remoteFilter.length === 0)
+    ) {
+      args.push('--reflog');
+    }
+
     const [raw, remoteNames] = await Promise.all([
       this.exec(args),
       this.getRemoteNames(),

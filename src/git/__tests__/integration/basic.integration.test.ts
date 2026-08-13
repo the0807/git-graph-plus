@@ -32,6 +32,18 @@ describe('GitService integration — basic queries', () => {
       expect(commits.length).toBeLessThanOrEqual(2);
     });
 
+    it('includeReflog surfaces commits only reachable via the reflog', async () => {
+      const c1 = commit(repo.path, 'first');
+      const c2 = commit(repo.path, 'second');
+      runGit(repo.path, ['reset', '--hard', c1]);
+
+      const without = await svc.log();
+      expect(without.map(c => c.hash)).not.toContain(c2);
+
+      const withReflog = await svc.log({ includeReflog: true });
+      expect(withReflog.map(c => c.hash)).toContain(c2);
+    });
+
     it('does not prepend the UNCOMMITTED row on paginated (skip>0) pages', async () => {
       for (let i = 0; i < 5; i++) commit(repo.path, `c${i}`, { 'a.txt': `${i}\n` });
       // Dirty working tree so the first page would carry an UNCOMMITTED row.

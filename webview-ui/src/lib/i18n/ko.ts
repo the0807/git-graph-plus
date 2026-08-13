@@ -295,6 +295,7 @@ export const ko: Record<string, string> = {
   'search.branchFilterTooltip': '특정 브랜치로 필터',
   'search.allBranches': 'All',
   'search.filterBranches': 'Search',
+  'search.includeReflogTooltip': 'reflog에만 언급된 커밋 포함',
 
   // Activity log
   'activityLog.title': '활동 로그',

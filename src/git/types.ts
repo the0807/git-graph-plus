@@ -178,4 +178,8 @@ export interface LogOptions {
    *  signatureStatus. Off by default — it forces GPG verification of every
    *  commit in the log, which is slow on large repos. */
   includeSignature?: boolean;
+  /** When true, add `--reflog` so commits reachable only via the reflog
+   *  (abandoned by rebase/reset/branch delete) appear in the graph. Only
+   *  applies on the unfiltered first page, mirroring the stash base hashes. */
+  includeReflog?: boolean;
 }

@@ -27,7 +27,7 @@ export interface ModalDefaults {
 
 // Messages from Webview → Extension
 export type WebviewMessage =
-  | { type: 'getLog'; payload: { branch?: string; branches?: string[]; limit?: number; skip?: number; remoteFilter?: string[] } }
+  | { type: 'getLog'; payload: { branch?: string; branches?: string[]; limit?: number; skip?: number; remoteFilter?: string[]; includeReflog?: boolean } }
   | { type: 'getBranches' }
   | { type: 'getRepoList' }
   | { type: 'checkDirty'; payload?: { requestId?: string } }
