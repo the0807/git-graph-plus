@@ -156,6 +156,12 @@ export interface WorktreeInfo {
   isMain: boolean;
 }
 
+/** The author/committer identity git uses, per scope (`local` vs `global`). */
+export interface UserDetails {
+  name: { local: string | null; global: string | null };
+  email: { local: string | null; global: string | null };
+}
+
 export interface FlowConfig {
   productionBranch: string;
   developBranch: string;

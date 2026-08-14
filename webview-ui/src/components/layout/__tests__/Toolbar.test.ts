@@ -134,9 +134,10 @@ describe('Toolbar — refresh', () => {
   it('disables toolbar buttons while operating', async () => {
     uiStore.operating = 'refresh';
     const { container } = render(Toolbar);
-    // The settings gear is always enabled; every operation button is disabled.
+    // The settings gear and user-details buttons are always enabled; every
+    // operation button is disabled.
     toolbarBtns(container).forEach(b => {
-      if (b.querySelector('.codicon-gear')) return;
+      if (b.querySelector('.codicon-gear') || b.querySelector('.codicon-account')) return;
       expect(b.disabled).toBe(true);
     });
   });

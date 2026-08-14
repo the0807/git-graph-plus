@@ -15,6 +15,7 @@ export const ko: Record<string, string> = {
   'toolbar.settings': '확장 프로그램 설정 열기',
   'toolbar.noRemotes': '설정된 리모트가 없습니다. 먼저 리모트를 추가하세요.',
   'toolbar.addRemote': '리모트 추가',
+  'toolbar.userDetails': '사용자 정보 (이름 및 이메일)',
   'toolbar.detachedHead': '(Detached HEAD)',
 
   // Push modal
@@ -674,4 +675,18 @@ export const ko: Record<string, string> = {
   'setUpstream.willCreate.post': '를 실행하여 새로 생성합니다.',
   'setUpstream.typeManually': '직접 입력',
   'setUpstream.selectFromList': '목록에서 선택',
+
+  // User details modal
+  'userDetails.title': '사용자 정보',
+  'userDetails.desc': '커밋의 작성자와 커미터를 기록할 때 Git이 사용할 이름과 이메일을 설정합니다.',
+  'userDetails.loading': '불러오는 중…',
+  'userDetails.currentScope': '현재 저장 위치',
+  'userDetails.local': '로컬',
+  'userDetails.global': '전역',
+  'userDetails.name': '이름',
+  'userDetails.email': '이메일',
+  'userDetails.useGlobally': '전역으로 사용',
+  'userDetails.useGloballyInfo': '모든 저장소에 적용됩니다. 저장소별로 재정의할 수 있습니다.',
+  'userDetails.save': '저장',
+  'userDetails.remove': '제거',
 };

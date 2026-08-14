@@ -1,4 +1,4 @@
-import type { CommitGraphData, BranchData, DiffData, Commit, WorktreeInfo, CommitSignature } from '../git/types';
+import type { CommitGraphData, BranchData, DiffData, Commit, WorktreeInfo, CommitSignature, UserDetails } from '../git/types';
 
 export interface LinkRule {
   pattern: string;
@@ -127,7 +127,10 @@ export type WebviewMessage =
   | { type: 'getMultiCommitSections'; payload: { hashes: string[] } }
   | { type: 'getAvatar'; payload: { email: string; size: number } }
   | { type: 'openExternalUrl'; payload: { url: string } }
-  | { type: 'openExtensionSettings' };
+  | { type: 'openExtensionSettings' }
+  | { type: 'getUserDetails' }
+  | { type: 'editUserDetails'; payload: { name: string; email: string; location: 'local' | 'global'; deleteLocalName?: boolean; deleteLocalEmail?: boolean } }
+  | { type: 'deleteUserDetails'; payload: { name: boolean; email: boolean; location: 'local' | 'global' } };
 
 // Messages from Extension → Webview
 export type ExtensionMessage =
@@ -169,6 +172,7 @@ export type ExtensionMessage =
   | { type: 'avatarData'; payload: { email: string; size: number; dataUri: string | null } }
   | { type: 'conflictData'; payload: { operation: string; files: Array<{ path: string; resolved: boolean }> } }
   | { type: 'flowStatus'; payload: { installed: boolean; initialized: boolean; config: { productionBranch: string; developBranch: string; featurePrefix: string; releasePrefix: string; hotfixPrefix: string; versionTagPrefix: string } | null } }
+  | { type: 'userDetailsData'; payload: UserDetails }
   | { type: 'flowBranches'; payload: { features: string[]; releases: string[]; hotfixes: string[] } }
   | { type: 'defaultBranch'; payload: { name: string | null } }
   | { type: 'showModal'; payload:
