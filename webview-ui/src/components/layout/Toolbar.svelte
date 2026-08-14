@@ -6,11 +6,12 @@
   import { t } from '../../lib/i18n/index.svelte';
   import AddRemoteModal from '../modals/AddRemoteModal.svelte';
   import NoRemotesErrorModal from '../modals/NoRemotesErrorModal.svelte';
+  import UserDetailsModal from '../modals/UserDetailsModal.svelte';
   import { tooltip } from '../../lib/actions/tooltip';
   import { modalStore } from '../../lib/stores/modals.svelte';
   import { commitStore } from '../../lib/stores/commits.svelte';
   import { samePath } from '../../lib/utils/path';
-  import type { FlowStatus, FlowBranches } from '../../lib/types';
+  import type { FlowStatus, FlowBranches, UserDetails } from '../../lib/types';
 
   const vscode = getVsCodeApi();
 
@@ -26,6 +27,8 @@
   let flowStatus = $state<FlowStatus | null>(null);
   let flowBranches = $state<FlowBranches>({ features: [], releases: [], hotfixes: [] });
   let showNoRemotesError = $state(false);
+  let showUserDetails = $state(false);
+  let userDetails = $state<UserDetails | null>(null);
 
   function refresh() {
     uiStore.operating = 'refresh';
@@ -69,6 +72,42 @@
     vscode.postMessage({ type: 'switchRepo', payload: { path: repoPath } });
   }
 
+  function openUserDetails() {
+    userDetails = null;
+    showUserDetails = true;
+    vscode.postMessage({ type: 'getUserDetails' });
+  }
+
+  function saveUserDetails(name: string, email: string, useGlobally: boolean) {
+    const ud = userDetails;
+    showUserDetails = false;
+    vscode.postMessage({
+      type: 'editUserDetails',
+      payload: {
+        name,
+        email,
+        location: useGlobally ? 'global' : 'local',
+        deleteLocalName: useGlobally && ud !== null && ud.name.local !== null,
+        deleteLocalEmail: useGlobally && ud !== null && ud.email.local !== null,
+      },
+    });
+  }
+
+  function removeUserDetails() {
+    const ud = userDetails;
+    showUserDetails = false;
+    if (ud === null) return;
+    const isGlobal = ud.name.local === null && ud.email.local === null;
+    vscode.postMessage({
+      type: 'deleteUserDetails',
+      payload: {
+        name: (isGlobal ? ud.name.global : ud.name.local) !== null,
+        email: (isGlobal ? ud.email.global : ud.email.local) !== null,
+        location: isGlobal ? 'global' : 'local',
+      },
+    });
+  }
+
   onMount(() => {
     // Note: App.svelte also listens for `message` events. The two handlers write to
     // disjoint state (App: rebasePaused/conflict, this: uiStore.operating) and read
@@ -86,6 +125,7 @@
       if (msg.type === 'flowStatus') flowStatus = msg.payload;
       if (msg.type === 'flowBranches') flowBranches = msg.payload;
       if (msg.type === 'defaultBranch') defaultBranch = msg.payload.name;
+      if (msg.type === 'userDetailsData') userDetails = msg.payload;
     }
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
@@ -396,6 +436,14 @@
     </button>
     <button
       class="toolbar-btn"
+      onclick={openUserDetails}
+      aria-label={t('toolbar.userDetails')}
+      use:tooltip={t('toolbar.userDetails')}
+    >
+      <i class="codicon codicon-account"></i>
+    </button>
+    <button
+      class="toolbar-btn"
       onclick={() => { vscode.postMessage({ type: 'openExtensionSettings' }); }}
       aria-label={t('toolbar.settings')}
       use:tooltip={t('toolbar.settings')}
@@ -416,6 +464,15 @@
   <NoRemotesErrorModal
     onClose={() => { showNoRemotesError = false; }}
     onAddRemote={() => { showNoRemotesError = false; showAddRemote = true; }}
+  />
+{/if}
+
+{#if showUserDetails}
+  <UserDetailsModal
+    userDetails={userDetails}
+    onClose={() => { showUserDetails = false; }}
+    onSave={saveUserDetails}
+    onRemove={removeUserDetails}
   />
 {/if}
 
