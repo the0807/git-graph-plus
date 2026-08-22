@@ -29,6 +29,16 @@ export function parseRemoteHost(url: string): RemoteInfo | null {
 }
 
 /**
+ * Convert a git remote URL to the repository page that can be opened in a browser.
+ */
+export function remoteUrlToRepositoryWebUrl(remoteUrl: string | null): string | null {
+  if (!remoteUrl) return null;
+  const info = parseRemoteHost(remoteUrl);
+  if (!info) return null;
+  return `https://${info.host}/${info.owner}/${info.repo}`;
+}
+
+/**
  * Built-in auto-link rules derived from the repo's remote.
  *
  * `!N` (merge request) is GitLab-only syntax, so an `!N` rule is generated for
@@ -41,7 +51,8 @@ export function buildBuiltinRules(remoteUrl: string | null): LinkRule[] {
   if (!remoteUrl) return [];
   const info = parseRemoteHost(remoteUrl);
   if (!info) return [];
-  const base = `https://${info.host}/${info.owner}/${info.repo}`;
+  const base = remoteUrlToRepositoryWebUrl(remoteUrl);
+  if (!base) return [];
   const rules: LinkRule[] = [
     // `!N` is GitLab-only — safe to link on any host.
     { pattern: '!(\\d+)', url: `${base}/-/merge_requests/$1` },

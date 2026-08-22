@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseRemoteHost,
+  remoteUrlToRepositoryWebUrl,
   buildBuiltinRules,
   resolveCommitLinkRules,
   type LinkRule,
@@ -30,6 +31,25 @@ describe('parseRemoteHost', () => {
   it('returns null for malformed url', () => {
     expect(parseRemoteHost('not a url')).toBeNull();
     expect(parseRemoteHost('')).toBeNull();
+  });
+});
+
+describe('remoteUrlToRepositoryWebUrl', () => {
+  it('converts ssh shorthand to an https repository URL', () => {
+    expect(remoteUrlToRepositoryWebUrl('git@github.com:owner/repo.git')).toBe('https://github.com/owner/repo');
+  });
+
+  it('converts https remote URLs and strips the trailing .git suffix', () => {
+    expect(remoteUrlToRepositoryWebUrl('https://github.com/owner/repo.git')).toBe('https://github.com/owner/repo');
+  });
+
+  it('keeps nested owner/group paths', () => {
+    expect(remoteUrlToRepositoryWebUrl('ssh://git@gitlab.com/group/subgroup/repo.git')).toBe('https://gitlab.com/group/subgroup/repo');
+  });
+
+  it('returns null for an unparseable remote URL', () => {
+    expect(remoteUrlToRepositoryWebUrl('not a url')).toBeNull();
+    expect(remoteUrlToRepositoryWebUrl(null)).toBeNull();
   });
 });
 

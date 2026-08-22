@@ -27,7 +27,9 @@ function joinCapped(parts: string[]): string {
 export function formatGitError(stderr: string): string {
   // git pads `remote:` lines with trailing spaces; strip them so joined
   // messages stay clean.
-  const rawLines = stderr.split('\n').map(l => l.replace(/\s+$/, ''));
+  let rawLines = stderr.split('\n').map(l => l.replace(/\s+$/, ''));
+  const actionableLines = rawLines.filter(l => l.trim() !== 'Using default branch names.');
+  if (actionableLines.length > 0) rawLines = actionableLines;
   if (rawLines.every(l => l.length === 0)) return stderr.trim();
 
   // 1. Remote server error/fatal lines are most specific (e.g. GitHub rule

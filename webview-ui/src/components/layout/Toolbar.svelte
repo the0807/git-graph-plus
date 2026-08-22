@@ -56,6 +56,12 @@
     modalStore.openPush(branchStore.remotes[0].name);
   }
 
+  function openRemoteRepository() {
+    if (branchStore.remotes.length === 0) { showNoRemotesError = true; return; }
+    const remote = branchStore.remotes.find(r => r.name === 'origin') ?? branchStore.remotes[0];
+    vscode.postMessage({ type: 'openRemoteRepository', payload: { remote: remote.name } });
+  }
+
   function openFlowDropdown() {
     showFlowDropdown = !showFlowDropdown;
     if (showFlowDropdown) {
@@ -230,6 +236,15 @@
   </div>
 
   <div class="toolbar-right">
+    <button
+      class="toolbar-btn"
+      onclick={openRemoteRepository}
+      disabled={uiStore.operating !== null}
+      aria-label={t('toolbar.openRemoteRepository')}
+      use:tooltip={t('toolbar.openRemoteRepository')}
+    >
+      <i class="codicon codicon-globe"></i>
+    </button>
     <button
       class="toolbar-btn"
       onclick={doFetch}

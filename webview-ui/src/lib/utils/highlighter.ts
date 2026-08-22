@@ -61,6 +61,16 @@ const LANG_LOADERS: Record<string, () => Promise<unknown>> = {
   make: () => import('shiki/langs/make.mjs'),
 };
 
+// Single-file component grammars delegate parts of the document to embedded
+// languages. Load those eagerly with the container grammar so `<script lang="ts">`
+// and `<style lang="scss">` blocks don't depend on a previous standalone TS/CSS
+// diff having warmed the Shiki language cache.
+const EMBEDDED_LANGS: Record<string, string[]> = {
+  vue: ['html', 'css', 'scss', 'javascript', 'typescript', 'json'],
+  svelte: ['html', 'css', 'scss', 'javascript', 'typescript'],
+  astro: ['html', 'css', 'scss', 'javascript', 'typescript'],
+};
+
 export function detectLanguage(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase() ?? '';
   const base = filename.split('/').pop()?.toLowerCase() ?? '';
@@ -116,7 +126,8 @@ export async function ensureLanguage(h: HighlighterCore, lang: string): Promise<
 
   let p = langLoadPromises.get(lang);
   if (!p) {
-    p = loader()
+    p = Promise.all((EMBEDDED_LANGS[lang] ?? []).map(dep => ensureLanguage(h, dep)))
+      .then(() => loader())
       .then(mod => {
         const grammar = (mod as { default: LanguageRegistration[] }).default;
         return h.loadLanguage(grammar);
@@ -132,6 +143,12 @@ export async function ensureLanguage(h: HighlighterCore, lang: string): Promise<
     langLoadPromises.delete(lang);
     return false;
   }
+}
+
+export function warmHighlighterLanguages(langs: string[] = ['vue', 'svelte', 'astro']): void {
+  void getHighlighter()
+    .then(h => Promise.all(langs.map(lang => ensureLanguage(h, lang))))
+    .catch(() => {});
 }
 
 /** Theme that matches the current VS Code color theme, so highlighted tokens
@@ -150,6 +167,23 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
+function tokensToHtml(tokens: ThemedToken[] | undefined, fallback: string): string {
+  if (!tokens) return escapeHtml(fallback);
+  return tokens
+    .map((token: ThemedToken) => {
+      const color = token.color;
+      const escaped = escapeHtml(token.content);
+      return color ? `<span style="color:${color}">${escaped}</span>` : escaped;
+    })
+    .join('');
+}
+
+function sourceLines(text: string): string[] {
+  if (!text) return [];
+  const lines = text.split(/\r\n|\r|\n/);
+  return /(?:\r\n|\r|\n)$/.test(text) ? lines.slice(0, -1) : lines;
+}
+
 export function highlightLineSync(
   h: HighlighterCore,
   content: string,
@@ -164,15 +198,28 @@ export function highlightLineSync(
     const tokens = h.codeToTokens(content, { lang: lang as never, theme });
     if (!tokens.tokens[0]) return escapeHtml(content);
 
-    return tokens.tokens[0]
-      .map((token: ThemedToken) => {
-        const color = token.color;
-        const escaped = escapeHtml(token.content);
-        return color ? `<span style="color:${color}">${escaped}</span>` : escaped;
-      })
-      .join('');
+    return tokensToHtml(tokens.tokens[0], content);
   } catch {
     return escapeHtml(content);
+  }
+}
+
+export function highlightCodeLinesSync(
+  h: HighlighterCore,
+  content: string,
+  lang: string,
+  theme: 'dark-plus' | 'light-plus' = activeShikiTheme(),
+): string[] {
+  const lines = sourceLines(content);
+  if (!lang || lines.length === 0) return lines.map(escapeHtml);
+  try {
+    const loadedLangs = h.getLoadedLanguages();
+    if (!loadedLangs.includes(lang as never)) return lines.map(escapeHtml);
+
+    const tokens = h.codeToTokens(content, { lang: lang as never, theme }).tokens;
+    return lines.map((line, index) => tokensToHtml(tokens[index], line));
+  } catch {
+    return lines.map(escapeHtml);
   }
 }
 

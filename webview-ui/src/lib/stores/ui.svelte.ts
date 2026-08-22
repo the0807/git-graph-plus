@@ -1,6 +1,6 @@
 import type { InteractiveRebaseMode } from '../types';
 
-export const BOTTOM_PANEL_DEFAULT_RATIO = 0.35;
+export const BOTTOM_PANEL_DEFAULT_RATIO = 0.5;
 export const BOTTOM_PANEL_MIN_RATIO = 0.2;
 export const BOTTOM_PANEL_MAX_RATIO = 0.7;
 
@@ -14,7 +14,7 @@ class UiStore {
   compareRef1 = $state<string | null>(null);
   compareRef2 = $state<string | null>(null);
   viewMode = $state<'graph' | 'log' | 'stats'>('graph');
-  bottomPanelHeight = $state(250);
+  bottomPanelRatio = $state(BOTTOM_PANEL_DEFAULT_RATIO);
   showBottomPanel = $state(true);
   sidebarWidth = $state(220);
   errorMessage = $state<string | null>(null);

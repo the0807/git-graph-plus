@@ -229,7 +229,10 @@ export function parseDiff(raw: string, file?: string): DiffData[] {
     // Prefer the +++/--- header lines: they each carry the full path on their
     // own line, so they stay unambiguous even when the path contains spaces or
     // a literal " b/" substring that would mis-split the "diff --git" header.
-    let filePath = resolveDiffPathFromBody(lines) ?? '';
+    const bodyPaths = resolveDiffPathsFromBody(lines);
+    let oldFile = bodyPaths.oldPath;
+    let newFile = bodyPaths.newPath;
+    let filePath = newFile ?? oldFile ?? '';
     if (!filePath) {
       // Fallback for diffs without +++/--- lines (e.g. pure mode/rename headers):
       // parse "a/path b/path" or quoted paths like "\"a/path\" \"b/path\"".
@@ -237,10 +240,20 @@ export function parseDiff(raw: string, file?: string): DiffData[] {
       const quotedMatch = header.match(/^"?a\/(.+?)"?\s+"?b\/(.+?)"?\s*$/);
       if (quotedMatch) {
         // Unescape git's quoted path encoding (e.g. \t, \n, octal \NNN)
-        filePath = unescapeGitPath(quotedMatch[2]);
+        oldFile = unescapeGitPath(quotedMatch[1]);
+        newFile = unescapeGitPath(quotedMatch[2]);
+        filePath = newFile;
       } else {
         const headerMatch = header.match(/a\/(.+?) b\/(.+)/);
-        filePath = headerMatch ? headerMatch[2] : file ?? 'unknown';
+        if (headerMatch) {
+          oldFile = headerMatch[1];
+          newFile = headerMatch[2];
+          filePath = newFile;
+        } else {
+          filePath = file ?? 'unknown';
+          oldFile = filePath;
+          newFile = filePath;
+        }
       }
     }
 
@@ -249,7 +262,10 @@ export function parseDiff(raw: string, file?: string): DiffData[] {
     const isImage = /\.(png|jpg|jpeg|gif|bmp|svg|webp|ico)$/i.test(filePath);
 
     if (isBinary) {
-      results.push({ file: filePath, hunks: [], isBinary: true, isImage });
+      const diff: DiffData = { file: filePath, hunks: [], isBinary: true, isImage };
+      if (oldFile && oldFile !== filePath) diff.oldFile = oldFile;
+      if (newFile && newFile !== filePath) diff.newFile = newFile;
+      results.push(diff);
       continue;
     }
 
@@ -316,7 +332,10 @@ export function parseDiff(raw: string, file?: string): DiffData[] {
       }
     }
 
-    results.push({ file: filePath, hunks, isBinary: false, isImage });
+    const diff: DiffData = { file: filePath, hunks, isBinary: false, isImage };
+    if (oldFile && oldFile !== filePath) diff.oldFile = oldFile;
+    if (newFile && newFile !== filePath) diff.newFile = newFile;
+    results.push(diff);
   }
 
   return results;
@@ -414,11 +433,10 @@ export function parseLfsLocks(raw: string): Array<{ path: string; owner: string;
   });
 }
 
-/** Resolve a file path from the +++/--- header lines of a single file diff.
- *  Prefers the post-image (+++) path; falls back to the pre-image (---) path
- *  for deletions where +++ is /dev/null. Returns null when neither is usable
- *  (e.g. a rename/mode-only diff with no +++/--- lines). */
-function resolveDiffPathFromBody(lines: string[]): string | null {
+/** Resolve pre/post image paths from the +++/--- header lines of a single file
+ *  diff. /dev/null is omitted so additions/deletions naturally have only one
+ *  populated side. */
+function resolveDiffPathsFromBody(lines: string[]): { oldPath?: string; newPath?: string } {
   let plusPath: string | null = null;
   let minusPath: string | null = null;
   for (let i = 1; i < lines.length; i++) {
@@ -429,7 +447,10 @@ function resolveDiffPathFromBody(lines: string[]): string | null {
     if (line.startsWith('+++ ')) plusPath = stripDiffPathPrefix(line.slice(4));
     else if (line.startsWith('--- ')) minusPath = stripDiffPathPrefix(line.slice(4));
   }
-  return plusPath ?? minusPath;
+  return {
+    oldPath: minusPath ?? undefined,
+    newPath: plusPath ?? undefined,
+  };
 }
 
 /** Strip the leading `a/` or `b/` from a +++/--- path, unescape git quoting,

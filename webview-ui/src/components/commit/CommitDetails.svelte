@@ -178,12 +178,12 @@
   // passed to FileDiffView and the tree's "Reverse File" action.
   const canReverseInThisView = $derived(!!commit && stashIndex === null);
 
-  let filesPanelWidth = $state(240);
+  let filesPanelWidth = $state(300);
   let isResizing = $state(false);
   let resizeStartX = 0;
   let resizeStartWidth = 0;
   // svelte-ignore state_referenced_locally
-  let activeTab = $state<'commit' | 'changes'>(commit ? 'commit' : 'changes');
+  let activeTab = $state<'commit' | 'changes'>('changes');
   let uncommittedTab = $state<'staged' | 'unstaged'>('staged');
 
   let activeHash = $state('');
@@ -264,6 +264,7 @@
         activeTab = 'changes';
         vscode.postMessage({ type: 'getUncommittedDiff' });
       } else if (hash) {
+        activeTab = 'changes';
         vscode.postMessage({ type: 'getCommitDiff', payload: { hash } });
         vscode.postMessage({ type: 'getLfsFiles' });
         vscode.postMessage({ type: 'getCommitSignature', payload: { hash } });
@@ -460,7 +461,28 @@
       return nodes;
     }
 
-    return sortTree(root.children);
+    function compactDirectoryChains(nodes: FileTreeNode[]): FileTreeNode[] {
+      return nodes.map((node) => {
+        if (node.isFile) return node;
+
+        const names = [node.name];
+        let current = node;
+        while (true) {
+          const onlyChild = current.children.length === 1 ? current.children[0] : undefined;
+          if (!onlyChild || onlyChild.isFile) break;
+          current = onlyChild;
+          names.push(current.name);
+        }
+
+        return {
+          ...current,
+          name: names.join('/'),
+          children: compactDirectoryChains(current.children),
+        };
+      });
+    }
+
+    return compactDirectoryChains(sortTree(root.children));
   }
 
   // All changed-file paths under a tree node (the node itself if it's a file).

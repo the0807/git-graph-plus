@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GitService, GitError, binCommitTime, buildAmendCommandStr } from '../git-service';
+import type { BranchInfo } from '../types';
 
 // Access private exec method via prototype for mocking
 function mockExec(service: GitService, fn: (args: string[]) => Promise<string>) {
   (service as any).exec = fn;
+}
+
+function branch(name: string, over: Partial<BranchInfo> = {}): BranchInfo {
+  return { name, current: false, ahead: 0, behind: 0, hash: 'abc1234', ...over };
 }
 
 describe('GitService', () => {
@@ -968,8 +973,43 @@ describe('GitService', () => {
     });
 
     it('isFlowInitialized returns false when gitflow.branch.master is unset', async () => {
-      mockExec(service, async () => { throw new GitError('', 1, ['config', '--get', 'gitflow.branch.master']); });
+      mockExec(service, async () => { throw new GitError('', 1, ['config', '--local', '--get', 'gitflow.branch.master']); });
       expect(await service.isFlowInitialized()).toBe(false);
+    });
+
+    it('isFlowInitialized returns false when saved flow config points to a missing develop branch', async () => {
+      const responses: Record<string, string> = {
+        'config --local --get gitflow.branch.master': 'main',
+        'config --local --get gitflow.branch.develop': 'develop',
+        'config --local --get gitflow.prefix.feature': 'feature/',
+        'config --local --get gitflow.prefix.release': 'release/',
+        'config --local --get gitflow.prefix.hotfix': 'hotfix/',
+        'config --local --get gitflow.prefix.versiontag': 'v',
+        'show-ref --verify --quiet refs/heads/main': '',
+      };
+      mockExec(service, async (args) => {
+        const key = args.join(' ');
+        if (key in responses) return responses[key];
+        throw new GitError('', 1, args);
+      });
+
+      expect(await service.isFlowInitialized()).toBe(false);
+    });
+
+    it('isFlowInitialized returns true only when config and required branches exist', async () => {
+      const responses: Record<string, string> = {
+        'config --local --get gitflow.branch.master': 'main',
+        'config --local --get gitflow.branch.develop': 'develop',
+        'config --local --get gitflow.prefix.feature': 'feature/',
+        'config --local --get gitflow.prefix.release': 'release/',
+        'config --local --get gitflow.prefix.hotfix': 'hotfix/',
+        'config --local --get gitflow.prefix.versiontag': 'v',
+        'show-ref --verify --quiet refs/heads/main': '',
+        'show-ref --verify --quiet refs/heads/develop': '',
+      };
+      mockExec(service, async (args) => responses[args.join(' ')] ?? '');
+
+      expect(await service.isFlowInitialized()).toBe(true);
     });
 
     it('getFlowConfig returns null when any required key is missing', async () => {
@@ -978,7 +1018,7 @@ describe('GitService', () => {
       mockExec(service, async () => {
         calls++;
         if (calls === 1) return 'main\n';
-        throw new GitError('', 1, ['config', '--get', 'gitflow.branch.develop']);
+        throw new GitError('', 1, ['config', '--local', '--get', 'gitflow.branch.develop']);
       });
       expect(await service.getFlowConfig()).toBeNull();
     });
@@ -1293,32 +1333,83 @@ describe('GitService', () => {
       hotfixPrefix: 'hotfix/',
       versionTagPrefix: 'v',
     };
+    const flowConfigResponses: Record<string, string> = {
+      'config --local --get gitflow.branch.master': 'main',
+      'config --local --get gitflow.branch.develop': 'develop',
+      'config --local --get gitflow.prefix.feature': 'feature/',
+      'config --local --get gitflow.prefix.release': 'release/',
+      'config --local --get gitflow.prefix.hotfix': 'hotfix/',
+      'config --local --get gitflow.prefix.versiontag': 'v',
+    };
+    beforeEach(() => {
+      (service as unknown as { branches: () => Promise<BranchInfo[]> }).branches = async () => [
+        branch('main', { upstream: 'origin/main' }),
+        branch('develop', { upstream: 'origin/develop' }),
+      ];
+    });
 
     it('creates develop branch from production when develop is missing', async () => {
       const calls: string[][] = [];
-      let revParseCount = 0;
+      let developCreated = false;
       mockExec(service, async (args) => {
         calls.push(args);
-        if (args[0] === 'rev-parse') {
-          revParseCount++;
-          // 1st: verify production (succeeds). 2nd: verify develop (fails).
-          if (revParseCount === 1) return 'abc123';
+        const key = args.join(' ');
+        if (key in flowConfigResponses) return flowConfigResponses[key];
+        if (key === 'show-ref --verify --quiet refs/heads/main') return '';
+        if (key === 'show-ref --verify --quiet refs/heads/develop') {
+          if (developCreated) return '';
           throw new GitError("unknown revision 'develop'", 1, args);
+        }
+        if (args[0] === 'branch') {
+          developCreated = true;
+          return '';
         }
         return '';
       });
 
       await service.flowInit(flowOpts);
 
+      expect(calls).toContainEqual(['flow', 'init', '-f', '-d']);
       const branchCreate = calls.find(c => c[0] === 'branch');
       expect(branchCreate).toEqual(['branch', 'develop', 'main']);
+    });
+
+    it('clears stale flow branch config before forced git-flow init', async () => {
+      const calls: string[][] = [];
+      mockExec(service, async (args) => {
+        calls.push(args);
+        const key = args.join(' ');
+        if (key in flowConfigResponses) return flowConfigResponses[key];
+        if (key === 'show-ref --verify --quiet refs/heads/main') return '';
+        if (key === 'show-ref --verify --quiet refs/heads/develop') return '';
+        return '';
+      });
+
+      await service.flowInit(flowOpts);
+
+      const unsetMaster = calls.findIndex(c => c.join(' ') === 'config --local --unset-all gitflow.branch.master');
+      const unsetDevelop = calls.findIndex(c => c.join(' ') === 'config --local --unset-all gitflow.branch.develop');
+      const setMaster = calls.findIndex(c => c.join(' ') === 'config --local --replace-all gitflow.branch.master main');
+      const setDevelop = calls.findIndex(c => c.join(' ') === 'config --local --replace-all gitflow.branch.develop develop');
+      const init = calls.findIndex(c => c.join(' ') === 'flow init -f -d');
+      expect(unsetMaster).toBeGreaterThanOrEqual(0);
+      expect(unsetDevelop).toBeGreaterThanOrEqual(0);
+      expect(setMaster).toBeGreaterThanOrEqual(0);
+      expect(setDevelop).toBeGreaterThanOrEqual(0);
+      expect(init).toBeGreaterThan(unsetMaster);
+      expect(init).toBeGreaterThan(unsetDevelop);
+      expect(init).toBeGreaterThan(setMaster);
+      expect(init).toBeGreaterThan(setDevelop);
     });
 
     it('skips develop creation when develop already exists', async () => {
       const calls: string[][] = [];
       mockExec(service, async (args) => {
         calls.push(args);
-        if (args[0] === 'rev-parse') return 'abc123';
+        const key = args.join(' ');
+        if (key in flowConfigResponses) return flowConfigResponses[key];
+        if (key === 'show-ref --verify --quiet refs/heads/main') return '';
+        if (key === 'show-ref --verify --quiet refs/heads/develop') return '';
         return '';
       });
 
@@ -1330,12 +1421,39 @@ describe('GitService', () => {
 
     it('throws a helpful error when production branch is missing', async () => {
       mockExec(service, async (args) => {
-        if (args[0] === 'rev-parse') throw new GitError('not found', 1, args);
+        if (args.join(' ') === 'show-ref --verify --quiet refs/heads/main') {
+          throw new GitError('not found', 1, args);
+        }
         return '';
       });
 
       await expect(service.flowInit(flowOpts))
         .rejects.toThrow("Branch 'main' does not exist");
+    });
+
+    it('pulls with rebase before init when production branch is behind upstream', async () => {
+      (service as unknown as { branches: () => Promise<BranchInfo[]> }).branches = async () => [
+        branch('main', { current: true, upstream: 'origin/main', behind: 1 }),
+      ];
+      const calls: string[][] = [];
+      mockExec(service, async (args) => {
+        calls.push(args);
+        if (args.join(' ') === 'show-ref --verify --quiet refs/heads/main') return '';
+        const key = args.join(' ');
+        if (key in flowConfigResponses) return flowConfigResponses[key];
+        if (key === 'show-ref --verify --quiet refs/heads/develop') return '';
+        return '';
+      });
+
+      await service.flowInit(flowOpts);
+
+      expect(calls).toContainEqual(['pull', '--rebase']);
+      expect(calls).toContainEqual(['flow', 'init', '-f', '-d']);
+    });
+
+    it('rejects using the same production and develop branch', async () => {
+      await expect(service.flowInit({ ...flowOpts, developBranch: 'main' }))
+        .rejects.toThrow('production and develop branches must be different');
     });
   });
 });

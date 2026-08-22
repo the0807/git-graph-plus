@@ -13,6 +13,7 @@ export const en: Record<string, string> = {
   'toolbar.pushDesc': 'Push (upload local commits)',
   'toolbar.refreshDesc': 'Refresh (Ctrl+R)',
   'toolbar.settings': 'Open Extension Settings',
+  'toolbar.openRemoteRepository': 'Open Remote Repository in Browser',
   'toolbar.noRemotes': 'No remotes configured. Add a remote first.',
   'toolbar.addRemote': 'Add Remote',
   'toolbar.detachedHead': '(Detached HEAD)',

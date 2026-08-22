@@ -135,6 +135,32 @@ describe('Reflog — loading & data flow', () => {
       )).toBe(true);
     });
   });
+
+  it('repo switch resets the selected ref and clears stale entries before reloading', async () => {
+    branchStore.branches = [
+      { name: 'main', current: true, remote: undefined, upstream: undefined, ahead: 0, behind: 0, hash: 'h1' },
+      { name: 'feat', current: false, remote: undefined, upstream: undefined, ahead: 0, behind: 0, hash: 'h2' },
+    ];
+    const { container } = render(Reflog, { active: true });
+    deliverReflog([entry({ message: 'commit: old repo' })]);
+
+    const filterBtns = container.querySelectorAll<HTMLButtonElement>('.filter-btn');
+    await fireEvent.click(filterBtns[0]);
+    const items = container.querySelectorAll<HTMLButtonElement>('.dropdown .dd-item');
+    await fireEvent.click(Array.from(items).find(b => b.textContent?.includes('feat'))!);
+    globalThis.__postedMessages = [];
+
+    window.dispatchEvent(new MessageEvent('message', { data: { type: 'repoChanged', payload: { what: 'repo' } } }));
+
+    await waitFor(() => {
+      expect(container.querySelector('.spinner')).not.toBeNull();
+      expect(container.textContent).not.toContain('old repo');
+      const req = globalThis.__postedMessages.find(
+        (m) => (m.data as { type?: string }).type === 'getReflog'
+      )!;
+      expect((req.data as { payload: { ref: string; limit: number } }).payload).toEqual({ ref: 'HEAD', limit: 200 });
+    });
+  });
 });
 
 describe('Reflog — search and filter', () => {

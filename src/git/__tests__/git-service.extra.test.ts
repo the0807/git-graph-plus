@@ -1,8 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GitService, GitError } from '../git-service';
+import type { BranchInfo } from '../types';
 
 function mockExec(service: GitService, fn: (args: string[]) => Promise<string>) {
   (service as unknown as { exec: (args: string[]) => Promise<string> }).exec = fn;
+}
+
+function branch(name: string, over: Partial<BranchInfo> = {}): BranchInfo {
+  return { name, current: false, ahead: 0, behind: 0, hash: 'abc1234', ...over };
 }
 
 describe('GitService — rootPath', () => {
@@ -183,38 +188,153 @@ describe('GitService — LFS', () => {
 
 describe('GitService — git-flow shortcuts', () => {
   let service: GitService;
-  beforeEach(() => { service = new GitService('/tmp/repo'); });
+  beforeEach(() => {
+    service = new GitService('/tmp/repo');
+    (service as unknown as { branches: () => Promise<BranchInfo[]> }).branches = async () => [
+      branch('main', { upstream: 'origin/main' }),
+      branch('develop', { upstream: 'origin/develop' }),
+      branch('feature/login', { upstream: 'origin/feature/login' }),
+      branch('release/1.0', { upstream: 'origin/release/1.0' }),
+      branch('hotfix/1.0.1', { upstream: 'origin/hotfix/1.0.1' }),
+    ];
+  });
+
+  const flowConfigResponses: Record<string, string> = {
+    'config --local --get gitflow.branch.master': 'main',
+    'config --local --get gitflow.branch.develop': 'develop',
+    'config --local --get gitflow.prefix.feature': 'feature/',
+    'config --local --get gitflow.prefix.release': 'release/',
+    'config --local --get gitflow.prefix.hotfix': 'hotfix/',
+    'config --local --get gitflow.prefix.versiontag': 'v',
+  };
 
   it('flowFeatureStart runs git flow feature start <name>', async () => {
     const calls: string[][] = [];
-    mockExec(service, async (args) => { calls.push(args); return 'ok'; });
+    mockExec(service, async (args) => {
+      calls.push(args);
+      const key = args.join(' ');
+      if (key in flowConfigResponses) return flowConfigResponses[key];
+      if (key === 'show-ref --verify --quiet refs/heads/feature/login') return '';
+      return 'ok';
+    });
     await service.flowFeatureStart('login');
-    expect(calls[0]).toEqual(['flow', 'feature', 'start', 'login']);
+    expect(calls).toContainEqual(['flow', 'feature', 'start', 'login']);
   });
 
   it('flowFeatureFinish runs git flow feature finish <name>', async () => {
     const calls: string[][] = [];
-    mockExec(service, async (args) => { calls.push(args); return ''; });
+    mockExec(service, async (args) => {
+      calls.push(args);
+      const key = args.join(' ');
+      if (key in flowConfigResponses) return flowConfigResponses[key];
+      return '';
+    });
     await service.flowFeatureFinish('login');
-    expect(calls[0]).toEqual(['flow', 'feature', 'finish', 'login']);
+    expect(calls).toContainEqual(['flow', 'feature', 'finish', 'login']);
   });
 
   it('flowReleaseStart and flowReleaseFinish include -m message for finish', async () => {
     const calls: string[][] = [];
-    mockExec(service, async (args) => { calls.push(args); return ''; });
+    mockExec(service, async (args) => {
+      calls.push(args);
+      const key = args.join(' ');
+      if (key in flowConfigResponses) return flowConfigResponses[key];
+      return '';
+    });
     await service.flowReleaseStart('1.0');
     await service.flowReleaseFinish('1.0');
-    expect(calls[0]).toEqual(['flow', 'release', 'start', '1.0']);
-    expect(calls[1]).toEqual(['flow', 'release', 'finish', '-m', '1.0', '1.0']);
+    expect(calls).toContainEqual(['flow', 'release', 'start', '1.0']);
+    expect(calls).toContainEqual(['flow', 'release', 'finish', '-m', '1.0', '1.0']);
   });
 
   it('flowHotfixStart and flowHotfixFinish behave the same way', async () => {
     const calls: string[][] = [];
-    mockExec(service, async (args) => { calls.push(args); return ''; });
+    mockExec(service, async (args) => {
+      calls.push(args);
+      const key = args.join(' ');
+      if (key in flowConfigResponses) return flowConfigResponses[key];
+      return '';
+    });
     await service.flowHotfixStart('1.0.1');
     await service.flowHotfixFinish('1.0.1');
-    expect(calls[0]).toEqual(['flow', 'hotfix', 'start', '1.0.1']);
-    expect(calls[1]).toEqual(['flow', 'hotfix', 'finish', '-m', '1.0.1', '1.0.1']);
+    expect(calls).toContainEqual(['flow', 'hotfix', 'start', '1.0.1']);
+    expect(calls).toContainEqual(['flow', 'hotfix', 'finish', '-m', '1.0.1', '1.0.1']);
+  });
+
+  it('flowFeatureStart rejects when git-flow reports success but the branch is missing', async () => {
+    mockExec(service, async (args) => {
+      const key = args.join(' ');
+      if (key in flowConfigResponses) return flowConfigResponses[key];
+      if (key === 'flow feature start login') return 'ok';
+      if (key === 'show-ref --verify --quiet refs/heads/feature/login') {
+        throw new GitError('', 1, args);
+      }
+      return '';
+    });
+
+    await expect(service.flowFeatureStart('login'))
+      .rejects.toThrow("branch 'feature/login' was not created");
+  });
+
+  it('flowHotfixStart pulls with rebase when the production branch is behind upstream', async () => {
+    (service as unknown as { branches: () => Promise<BranchInfo[]> }).branches = async () => [
+      branch('main', { upstream: 'origin/main', behind: 2 }),
+      branch('develop', { current: true, upstream: 'origin/develop' }),
+    ];
+    const calls: string[][] = [];
+    mockExec(service, async (args) => {
+      calls.push(args);
+      const key = args.join(' ');
+      if (key in flowConfigResponses) return flowConfigResponses[key];
+      if (key === 'show-ref --verify --quiet refs/heads/hotfix/1.0.1') return '';
+      return '';
+    });
+
+    await service.flowHotfixStart('1.0.1');
+
+    expect(calls).toContainEqual(['checkout', 'main']);
+    expect(calls).toContainEqual(['pull', '--rebase']);
+    expect(calls).toContainEqual(['checkout', 'develop']);
+    expect(calls).toContainEqual(['flow', 'hotfix', 'start', '1.0.1']);
+  });
+
+  it('flowReleaseFinish pulls with rebase when a related branch is behind upstream', async () => {
+    (service as unknown as { branches: () => Promise<BranchInfo[]> }).branches = async () => [
+      branch('main', { current: true, upstream: 'origin/main' }),
+      branch('develop', { upstream: 'origin/develop', behind: 1 }),
+      branch('release/1.0', { upstream: 'origin/release/1.0' }),
+    ];
+    const calls: string[][] = [];
+    mockExec(service, async (args) => {
+      calls.push(args);
+      const key = args.join(' ');
+      if (key in flowConfigResponses) return flowConfigResponses[key];
+      return '';
+    });
+
+    await service.flowReleaseFinish('1.0');
+
+    expect(calls).toContainEqual(['checkout', 'develop']);
+    expect(calls).toContainEqual(['pull', '--rebase']);
+    expect(calls).toContainEqual(['checkout', 'main']);
+    expect(calls).toContainEqual(['flow', 'release', 'finish', '-m', '1.0', '1.0']);
+  });
+
+  it('flowHotfixStart stops before git-flow when pull --rebase fails', async () => {
+    (service as unknown as { branches: () => Promise<BranchInfo[]> }).branches = async () => [
+      branch('main', { current: true, upstream: 'origin/main', behind: 1 }),
+    ];
+    const calls: string[][] = [];
+    mockExec(service, async (args) => {
+      calls.push(args);
+      const key = args.join(' ');
+      if (key in flowConfigResponses) return flowConfigResponses[key];
+      if (key === 'pull --rebase') throw new GitError('rebase conflict', 1, args);
+      return '';
+    });
+
+    await expect(service.flowHotfixStart('1.0.1')).rejects.toThrow('rebase conflict');
+    expect(calls).not.toContainEqual(['flow', 'hotfix', 'start', '1.0.1']);
   });
 
   it('rejects flow names that start with "-" (CLI option injection)', async () => {
@@ -251,12 +371,12 @@ describe('GitService — getFlowBranches', () => {
 
   it('groups branches by configured prefixes', async () => {
     const responses: Record<string, string> = {
-      'config --get gitflow.branch.master': 'main',
-      'config --get gitflow.branch.develop': 'develop',
-      'config --get gitflow.prefix.feature': 'feature/',
-      'config --get gitflow.prefix.release': 'release/',
-      'config --get gitflow.prefix.hotfix': 'hotfix/',
-      'config --get gitflow.prefix.versiontag': 'v',
+      'config --local --get gitflow.branch.master': 'main',
+      'config --local --get gitflow.branch.develop': 'develop',
+      'config --local --get gitflow.prefix.feature': 'feature/',
+      'config --local --get gitflow.prefix.release': 'release/',
+      'config --local --get gitflow.prefix.hotfix': 'hotfix/',
+      'config --local --get gitflow.prefix.versiontag': 'v',
       'branch --list': [
         '* develop',
         '  feature/login',

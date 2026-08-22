@@ -113,5 +113,6 @@
   "remoteBranchDeleted": "리모트 브랜치 '{0}/{1}'이(가) 삭제되었습니다",
   "remoteAdded": "리모트 '{0}'이(가) 추가되었습니다",
   "remoteRemoved": "리모트 '{0}'이(가) 제거되었습니다",
+  "openRemoteRepositoryFailed": "URL에서 원격 저장소를 열 수 없습니다: {0}",
   "worktreeRemoved": "Worktree가 제거되었습니다"
 }

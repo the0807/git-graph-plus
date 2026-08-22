@@ -62,4 +62,23 @@ describe('StatsView', () => {
     await waitFor(() => container.querySelector('.heatmap-legend'));
     expect(container.querySelectorAll('.heatmap-legend-cell').length).toBe(5);
   });
+
+  it('repoChanged clears stale stats and requests fresh data', async () => {
+    const { container } = render(StatsView);
+    deliverStats([{ author: 'Old Repo', email: 'old@example.com', count: 3 }]);
+    await waitFor(() => {
+      expect(container.textContent).toContain('Old Repo');
+    });
+    globalThis.__postedMessages = [];
+
+    window.dispatchEvent(new MessageEvent('message', { data: { type: 'repoChanged', payload: { what: 'repo' } } }));
+
+    await waitFor(() => {
+      expect(container.querySelector('.spinner')).not.toBeNull();
+      expect(container.textContent).not.toContain('Old Repo');
+      expect(globalThis.__postedMessages.some(
+        (m) => (m.data as { type?: string }).type === 'getStats'
+      )).toBe(true);
+    });
+  });
 });

@@ -68,7 +68,7 @@
       <div class="flow-step">
         <span class="flow-step-num">{i + 1}</span>
         <i class="codicon {step.icon}"></i>
-        <span>{@html step.text}</span>
+        <span class="flow-step-content">{@html step.text}</span>
       </div>
     {/each}
   </div>
@@ -88,6 +88,10 @@
     border-radius: 5px;
     padding: 4px 0;
     margin: 12px 0;
+  }
+
+  .modal-context-card {
+    flex-wrap: wrap;
   }
 
   .flow-step {
@@ -116,6 +120,21 @@
   .flow-step i {
     color: var(--text-secondary);
     font-size: inherit;
+    flex-shrink: 0;
+  }
+
+  .flow-step-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .modal-context-card :global(.modal-pill),
+  .flow-step :global(.modal-pill) {
+    max-width: 100%;
     flex-shrink: 0;
   }
 

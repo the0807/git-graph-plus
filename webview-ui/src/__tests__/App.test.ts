@@ -4,7 +4,7 @@ import App from '../App.svelte';
 import { i18n } from '../lib/i18n/index.svelte';
 import { commitStore } from '../lib/stores/commits.svelte';
 import { branchStore } from '../lib/stores/branches.svelte';
-import { uiStore } from '../lib/stores/ui.svelte';
+import { uiStore, BOTTOM_PANEL_DEFAULT_RATIO } from '../lib/stores/ui.svelte';
 import { modalStore } from '../lib/stores/modals.svelte';
 
 function postMsg(type: string, payload?: unknown) {
@@ -25,6 +25,7 @@ function resetStores() {
   uiStore.comparing = false;
   uiStore.commitDetailFullscreen = false;
   uiStore.showBottomPanel = true;
+  uiStore.bottomPanelRatio = BOTTOM_PANEL_DEFAULT_RATIO;
   uiStore.commitFileSelected = false;
   uiStore.repos = [];
   uiStore.activeRepo = '';
@@ -51,12 +52,13 @@ afterEach(() => {
 });
 
 describe('App — initial requests', () => {
-  it('posts getLog, getBranches, and checkFlowStatus on mount', async () => {
+  it('posts getLog, getBranches, getRepoList, and checkFlowStatus on mount', async () => {
     render(App);
     await waitFor(() => {
       const types = globalThis.__postedMessages.map(m => (m.data as { type?: string }).type);
       expect(types).toContain('getLog');
       expect(types).toContain('getBranches');
+      expect(types).toContain('getRepoList');
       expect(types).toContain('checkFlowStatus');
     });
   });
@@ -1076,11 +1078,11 @@ describe('App — bottom panel resize handle', () => {
     const { container } = render(App);
     await waitFor(() => container.querySelector('.resize-handle-h'));
     const handle = container.querySelector<HTMLDivElement>('.resize-handle-h')!;
-    const startHeight = uiStore.bottomPanelHeight;
+    const startRatio = uiStore.bottomPanelRatio;
     await fireEvent.mouseDown(handle, { clientY: 500 });
-    // Move up → height increases (deltaY negative from window.innerHeight - clientY)
+    // Move up → bottom panel ratio increases.
     await fireEvent.mouseMove(window, { clientY: 400 });
-    expect(uiStore.bottomPanelHeight).not.toBe(startHeight);
+    expect(uiStore.bottomPanelRatio).toBeGreaterThan(startRatio);
     await fireEvent.mouseUp(window);
   });
 });

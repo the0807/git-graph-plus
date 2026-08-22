@@ -113,5 +113,6 @@
   "remoteBranchDeleted": "Remote branch '{0}/{1}' deleted",
   "remoteAdded": "Remote '{0}' added",
   "remoteRemoved": "Remote '{0}' removed",
+  "openRemoteRepositoryFailed": "Unable to open remote repository from URL: {0}",
   "worktreeRemoved": "Worktree removed"
 }

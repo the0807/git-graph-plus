@@ -51,6 +51,14 @@ function deliverSignature(hash: string, signature: { status: 'good' | 'none' | '
   }));
 }
 
+async function openCommitTab(container: HTMLElement): Promise<HTMLButtonElement> {
+  const commitTab = Array.from(container.querySelectorAll<HTMLButtonElement>('.top-tab'))
+    .find(tab => /commit/i.test(tab.textContent ?? ''));
+  expect(commitTab).toBeTruthy();
+  await fireEvent.click(commitTab!);
+  return commitTab!;
+}
+
 beforeEach(() => {
   i18n.setLocale('en');
   globalThis.__postedMessages = [];
@@ -116,6 +124,7 @@ describe('CommitDetails — request flow', () => {
 describe('CommitDetails — signature', () => {
   it('shows the verified signer (enriched with the committer name) and key ID', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.person-name'));
     deliverSignature('h1', { status: 'good', signer: 'Alice', keyId: 'ABCD1234' });
     await waitFor(() => expect(container.querySelector('.sig-detail')).toBeTruthy());
@@ -128,6 +137,7 @@ describe('CommitDetails — signature', () => {
 
   it('labels an SSH key fingerprint as "SSH Key" instead of "GPG Key ID"', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.person-name'));
     deliverSignature('h1', { status: 'good', signer: 'a@x.com', keyId: 'SHA256:AbCdEf' });
     await waitFor(() => expect(container.querySelector('.sig-detail')).toBeTruthy());
@@ -138,6 +148,7 @@ describe('CommitDetails — signature', () => {
 
   it('does not fabricate a signer from the committer for an unverified signature', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.person-name'));
     // git returns no %GS for an untrusted key — must not claim "Signed by <committer>".
     deliverSignature('h1', { status: 'unverified', keyId: 'SHA256:UnTrust' });
@@ -150,6 +161,7 @@ describe('CommitDetails — signature', () => {
 
   it('shows no signature row or glyph for an unsigned commit', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.person-name'));
     deliverSignature('h1', { status: 'none' });
     await Promise.resolve();
@@ -159,6 +171,7 @@ describe('CommitDetails — signature', () => {
 
   it('ignores a stale signature response for a different commit', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.person-name'));
     deliverSignature('other-hash', { status: 'good', signer: 'Mallory' });
     await Promise.resolve();
@@ -170,6 +183,7 @@ describe('CommitDetails — signature', () => {
 describe('CommitDetails — commit info rendering', () => {
   it('renders author name, email, and short hash', async () => {
     const { container } = render(CommitDetails, { commit: commit() });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.person-name'));
     const text = container.textContent ?? '';
     expect(text).toContain('Alice');
@@ -177,19 +191,21 @@ describe('CommitDetails — commit info rendering', () => {
     expect(text).toContain('abcdef1'); // short hash
   });
 
-  it('omits the committer column when committer matches author', () => {
+  it('omits the committer column when committer matches author', async () => {
     const { container } = render(CommitDetails, { commit: commit() });
+    await openCommitTab(container);
     const labels = Array.from(container.querySelectorAll('.info-label')).map(el => el.textContent?.trim());
     expect(labels).toContain('Author');
     expect(labels).not.toContain('Committer');
   });
 
-  it('shows the committer column when committer differs from author', () => {
+  it('shows the committer column when committer differs from author', async () => {
     const { container } = render(CommitDetails, {
       commit: commit({
         committer: { name: 'Bob', email: 'b@x.com', date: '2024-01-15T11:00:00Z' },
       }),
     });
+    await openCommitTab(container);
     const labels = Array.from(container.querySelectorAll('.info-label')).map(el => el.textContent?.trim());
     expect(labels).toContain('Committer');
   });
@@ -219,14 +235,15 @@ describe('CommitDetails — files list', () => {
 });
 
 describe('CommitDetails — tabs', () => {
-  it('default tab is "commit" when a real commit is selected', () => {
+  it('default tab is "changes" when a real commit is selected', () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
     const activeTab = container.querySelector('.top-tab.active')?.textContent ?? '';
-    expect(activeTab.toLowerCase()).toContain('commit');
+    expect(activeTab.toLowerCase()).toContain('changes');
   });
 
   it('clicking Changes tab activates it', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    await openCommitTab(container);
     const tabs = container.querySelectorAll<HTMLButtonElement>('.top-tab');
     const changesTab = Array.from(tabs).find(t => /change/i.test(t.textContent ?? ''))!;
     await fireEvent.click(changesTab);
@@ -305,6 +322,7 @@ describe('CommitDetails — empty / compare', () => {
 describe('CommitDetails — SHA copy buttons', () => {
   it('full SHA copy button posts copyToClipboard with the full hash', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'abcdef1234567890', abbreviatedHash: 'abcdef1' }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.copy-btns'));
     const btns = container.querySelectorAll<HTMLButtonElement>('.copy-btn');
     globalThis.__postedMessages = [];
@@ -317,6 +335,7 @@ describe('CommitDetails — SHA copy buttons', () => {
 
   it('short SHA copy button posts copyToClipboard with the abbreviated hash', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'abcdef1234567890', abbreviatedHash: 'abcdef1' }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.copy-btns'));
     const btns = container.querySelectorAll<HTMLButtonElement>('.copy-btn');
     globalThis.__postedMessages = [];
@@ -331,12 +350,14 @@ describe('CommitDetails — SHA copy buttons', () => {
 describe('CommitDetails — parent links', () => {
   it('renders one parent-link button per parent', async () => {
     const { container } = render(CommitDetails, { commit: commit({ parents: ['p1', 'p2'] }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelectorAll('.parent-link').length === 2);
     expect(container.querySelectorAll('.parent-link').length).toBe(2);
   });
 
   it('clicking a parent updates uiStore.selectedCommitHash and posts searchByHash', async () => {
     const { container } = render(CommitDetails, { commit: commit({ parents: ['parentHash1', 'parentHash2'] }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.parent-link'));
     globalThis.__postedMessages = [];
     await fireEvent.click(container.querySelector<HTMLButtonElement>('.parent-link')!);
@@ -346,15 +367,16 @@ describe('CommitDetails — parent links', () => {
     )).toBe(true);
   });
 
-  it('omits the PARENTS row when commit has no parents', () => {
+  it('omits the PARENTS row when commit has no parents', async () => {
     const { container } = render(CommitDetails, { commit: commit({ parents: [] }) });
+    await openCommitTab(container);
     const labels = Array.from(container.querySelectorAll('.meta-label')).map(el => el.textContent?.trim());
     expect(labels).not.toContain('Parents');
   });
 });
 
 describe('CommitDetails — refs rendering', () => {
-  it('renders REFS row with branch and tag badges', () => {
+  it('renders REFS row with branch and tag badges', async () => {
     const { container } = render(CommitDetails, {
       commit: commit({
         refs: [
@@ -363,12 +385,13 @@ describe('CommitDetails — refs rendering', () => {
         ],
       }),
     });
+    await openCommitTab(container);
     const text = container.querySelector('.meta-value')?.textContent ?? '';
     expect(text).toMatch(/main/);
     expect(text).toMatch(/v1\.0/);
   });
 
-  it('applies badge-head to the current branch and badge-fixed to tags', () => {
+  it('applies badge-head to the current branch and badge-fixed to tags', async () => {
     const { container } = render(CommitDetails, {
       commit: commit({
         refs: [
@@ -378,6 +401,7 @@ describe('CommitDetails — refs rendering', () => {
         ],
       }),
     });
+    await openCommitTab(container);
     const badges = Array.from(container.querySelectorAll('.ref-badge'));
     const byText = (txt: string) => badges.find(b => (b.textContent ?? '').includes(txt))!;
     expect(byText('main').classList.contains('badge-head')).toBe(true);
@@ -388,7 +412,7 @@ describe('CommitDetails — refs rendering', () => {
     expect(byText('v1.0').classList.contains('badge-head')).toBe(false);
   });
 
-  it('hides REFS row when only stash or remote HEAD refs exist', () => {
+  it('hides REFS row when only stash or remote HEAD refs exist', async () => {
     const { container } = render(CommitDetails, {
       commit: commit({
         refs: [
@@ -397,6 +421,7 @@ describe('CommitDetails — refs rendering', () => {
         ],
       }),
     });
+    await openCommitTab(container);
     const labels = Array.from(container.querySelectorAll('.meta-label')).map(el => el.textContent?.trim());
     expect(labels).not.toContain('REFS');
   });
@@ -715,6 +740,7 @@ describe('CommitDetails — parent hover preview', () => {
   it('mouseenter on a parent posts getCommitData when not cached', async () => {
     vi.useFakeTimers();
     const { container } = render(CommitDetails, { commit: commit({ parents: ['parent1'] }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.parent-link'));
     globalThis.__postedMessages = [];
     await fireEvent.mouseEnter(container.querySelector('.parent-link')!, { clientX: 100, clientY: 100 });
@@ -731,6 +757,7 @@ describe('CommitDetails — parent hover preview', () => {
     vi.useFakeTimers();
     commitStore.commits = [commit({ hash: 'parent1', subject: 'parent commit' })];
     const { container } = render(CommitDetails, { commit: commit({ parents: ['parent1'] }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.parent-link'));
     globalThis.__postedMessages = [];
     await fireEvent.mouseEnter(container.querySelector('.parent-link')!, { clientX: 50, clientY: 50 });
@@ -745,6 +772,7 @@ describe('CommitDetails — parent hover preview', () => {
   it('mouseleave before delay cancels the preview', async () => {
     vi.useFakeTimers();
     const { container } = render(CommitDetails, { commit: commit({ parents: ['parent1'] }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.parent-link'));
     const link = container.querySelector('.parent-link')!;
     await fireEvent.mouseEnter(link, { clientX: 100, clientY: 100 });
@@ -764,6 +792,7 @@ describe('CommitDetails — hover preview cache & navigate', () => {
   it('commitData message stores the commit in the preview cache and shows preview if hovering', async () => {
     vi.useFakeTimers();
     const { container } = render(CommitDetails, { commit: commit({ parents: ['parent1'] }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.parent-link'));
     // Hover to set hoveredHash + previewPos
     await fireEvent.mouseEnter(container.querySelector('.parent-link')!, { clientX: 100, clientY: 100 });
@@ -784,6 +813,7 @@ describe('CommitDetails — hover preview cache & navigate', () => {
     vi.useFakeTimers();
     commitStore.commits = [commit({ hash: 'parent1', subject: 'parent commit' })];
     const { container } = render(CommitDetails, { commit: commit({ parents: ['parent1'] }) });
+    await openCommitTab(container);
     await waitFor(() => container.querySelector('.parent-link'));
     // Cached commit → preview shows directly after delay
     await fireEvent.mouseEnter(container.querySelector('.parent-link')!, { clientX: 100, clientY: 100 });
@@ -1329,10 +1359,11 @@ describe('CommitDetails — markdown toggle', () => {
     i18n.setLocale('en');
   });
 
-  it('renders markdown by default when the message has markdown (bold subject becomes <strong>)', () => {
+  it('renders markdown by default when the message has markdown (bold subject becomes <strong>)', async () => {
     const { container } = render(CommitDetails, {
       commit: commit({ subject: '**bold** subject', body: '- one\n- two', parents: [] }),
     });
+    await openCommitTab(container);
     expect(container.querySelector('.message-section strong')?.textContent).toBe('bold');
   });
 
@@ -1340,6 +1371,7 @@ describe('CommitDetails — markdown toggle', () => {
     const { container, getByText } = render(CommitDetails, {
       commit: commit({ subject: '**bold** subject', body: '- one\n- two', parents: [] }),
     });
+    await openCommitTab(container);
     await fireEvent.click(getByText('Plain Text'));
     expect(container.querySelector('.message-section strong')).toBeNull();
     expect(container.querySelector('.message-section')?.textContent).toContain('**bold**');
@@ -1349,15 +1381,17 @@ describe('CommitDetails — markdown toggle', () => {
     const { container, getByText } = render(CommitDetails, {
       commit: commit({ subject: '**bold** subject', body: '- one\n- two', parents: [] }),
     });
+    await openCommitTab(container);
     await fireEvent.click(getByText('Plain Text'));
     await fireEvent.click(getByText('Markdown'));
     expect(container.querySelector('.message-section strong')?.textContent).toBe('bold');
   });
 
-  it('hides the toggle and shows plain text when the message has no markdown', () => {
+  it('hides the toggle and shows plain text when the message has no markdown', async () => {
     const { container, queryByText } = render(CommitDetails, {
       commit: commit({ subject: 'Fix crash on startup', body: 'No markdown here.', parents: [] }),
     });
+    await openCommitTab(container);
     expect(container.querySelector('.message-view-toggle')).toBeNull();
     expect(queryByText('Markdown')).toBeNull();
     expect(container.querySelector('.message-subject')?.textContent).toContain('Fix crash on startup');

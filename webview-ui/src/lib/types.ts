@@ -125,9 +125,19 @@ export interface BranchData {
 
 export interface DiffData {
   file: string;
+  oldFile?: string;
+  newFile?: string;
+  content?: DiffFileContent;
   hunks: DiffHunk[];
   isBinary: boolean;
   isImage: boolean;
+}
+
+export interface DiffFileContent {
+  oldText: string;
+  newText: string;
+  oldPath: string;
+  newPath: string;
 }
 
 export interface DiffHunk {

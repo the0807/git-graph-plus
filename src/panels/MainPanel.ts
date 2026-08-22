@@ -16,7 +16,7 @@ import { AvatarCache } from '../services/avatar-cache';
 import { resolveGitDirs, shouldRefreshGraph } from '../services/file-watcher-helpers';
 import { RepoDiscoveryService, RepoInfo } from '../services/repo-discovery';
 import type { WebviewMessage, ModalDefaults } from '../utils/message-bus';
-import { resolveCommitLinkRules, type LinkRule } from '../git/commit-link-rules';
+import { remoteUrlToRepositoryWebUrl, resolveCommitLinkRules, type LinkRule } from '../git/commit-link-rules';
 import {
   resolveRepoRelativePath as resolveRepoRelativePathUtil,
   assertSafeArgPath as assertSafeArgPathUtil,
@@ -49,6 +49,9 @@ export class MainPanel {
   private isFirstGetLog = true;
   private logSequence = 0;
   private searchSequence = 0;
+  private reflogSequence = 0;
+  private statsSequence = 0;
+  private repoGeneration = 0;
   // Two independent guards: selecting a commit (loads its file list) and
   // selecting a file (loads that file's diff) are different axes, so a file
   // request must not invalidate a pending commit-files request and vice versa.
@@ -142,6 +145,34 @@ export class MainPanel {
       deleteTag: { deleteRemote: g('deleteTag.deleteRemote', false) },
       removeWorktree: { deleteBranch: g('removeWorktree.deleteBranch', false) },
     } as ModalDefaults;
+  }
+
+  /**
+   * Use VS Code's built-in Git extension as an authoritative source for repos
+   * already discovered by the editor. The filesystem scanner below is still
+   * useful as a fallback/supplement, but it intentionally has depth/ignore
+   * limits and can miss repos that VS Code's SCM view already knows about.
+   */
+  private async getVsCodeGitRepoPaths(): Promise<string[]> {
+    try {
+      const gitExtension = vscode.extensions.getExtension('vscode.git');
+      if (!gitExtension) return [];
+
+      const extensionExports = gitExtension.isActive
+        ? gitExtension.exports
+        : await gitExtension.activate();
+      const api = (extensionExports as {
+        getAPI?: (version: number) => {
+          repositories?: Array<{ rootUri?: vscode.Uri }>;
+        };
+      } | undefined)?.getAPI?.(1);
+
+      return (api?.repositories ?? [])
+        .map(repo => repo.rootUri?.fsPath)
+        .filter((repoPath): repoPath is string => typeof repoPath === 'string' && repoPath.length > 0);
+    } catch {
+      return [];
+    }
   }
 
   // Width (px) of the colored branch-badge bar, mapped from the user setting.
@@ -332,16 +363,25 @@ export class MainPanel {
 
   /**
    * Point the panel at a different repo: rebuild the GitService, reset
-   * repo-specific state, swap the file watcher, and notify the sidebar. Callers
-   * still own posting the repo list and triggering the refresh.
+   * repo-specific state, swap the file watcher, notify repo-bound webview
+   * widgets, and notify the sidebar. Callers still own posting the repo list
+   * and triggering the refresh.
    *
    * NOTE: the sequence guards (logSequence/searchSequence/*Sequence) are
-   * intentionally NOT reset. They stay monotonic for the panel's lifetime so a
-   * request still in flight against the old repo can never share a seq with a
-   * fresh request against the new one — resetting reuses numbers and lets a
-   * stale response paint the previous repo's graph over the current one.
+   * intentionally NOT reset. They stay monotonic for the panel's lifetime and
+   * are advanced on repo switches so any request still in flight against the old
+   * repo cannot paint stale data over the current repo.
    */
   private swapRepo(newPath: string): void {
+    this.repoGeneration++;
+    this.logSequence++;
+    this.searchSequence++;
+    this.reflogSequence++;
+    this.statsSequence++;
+    this.commitFilesSequence.issue();
+    this.fileDiffSequence.issue();
+    this.multiCommitSectionsSequence.issue();
+
     this.repoPath = newPath;
     this.gitService = this.createGitService(newPath);
 
@@ -359,6 +399,7 @@ export class MainPanel {
     this.disposables.push(this.fileWatcher);
 
     MainPanel.onRepoChange?.(newPath);
+    this.post({ type: 'repoChanged', payload: { what: 'repo' } });
   }
 
   public async switchRepo(newPath: string): Promise<void> {
@@ -768,6 +809,28 @@ export class MainPanel {
           if (typeof url === 'string' && /^https?:\/\//i.test(url)) {
             await vscode.env.openExternal(vscode.Uri.parse(url));
           }
+          break;
+        }
+        case 'openRemoteRepository': {
+          const remoteName = message.payload?.remote?.trim();
+          let remoteUrl: string | undefined;
+
+          if (remoteName) {
+            remoteUrl = await this.gitService.getRemoteUrl(remoteName);
+          } else {
+            const remotes = await this.gitService.remotes();
+            const remote = remotes.find(r => r.name === 'origin') ?? remotes[0];
+            if (!remote) {
+              throw new Error(vscode.l10n.t('noRemotes'));
+            }
+            remoteUrl = remote.fetchUrl || remote.pushUrl || await this.gitService.getRemoteUrl(remote.name);
+          }
+
+          const url = remoteUrlToRepositoryWebUrl(remoteUrl);
+          if (!url) {
+            throw new Error(vscode.l10n.t('openRemoteRepositoryFailed', remoteUrl));
+          }
+          await vscode.env.openExternal(vscode.Uri.parse(url));
           break;
         }
         case 'openExtensionSettings': {
@@ -1200,7 +1263,9 @@ export class MainPanel {
           break;
         }
         case 'getReflog': {
+          const seq = ++this.reflogSequence;
           const result = await this.gitService.getReflog(message.payload?.limit ?? 200, message.payload?.ref ?? 'HEAD');
+          if (seq !== this.reflogSequence) break;
           this.post({ type: 'reflogData', payload: result });
           break;
         }
@@ -1238,10 +1303,12 @@ export class MainPanel {
         }
         // --- Statistics ---
         case 'getStats': {
+          const seq = ++this.statsSequence;
           const [byAuthor, byWeekdayHour] = await Promise.all([
             this.gitService.statsCommitsByAuthor(),
             this.gitService.statsCommitsByWeekdayHour(),
           ]);
+          if (seq !== this.statsSequence) break;
           this.post({
             type: 'statsData',
             payload: { byAuthor, byWeekdayHour },
@@ -1773,6 +1840,7 @@ export class MainPanel {
     }
     this.refreshing = true;
     this.refreshQueued = false;
+    const repoGeneration = this.repoGeneration;
     // Watcher events caused by the same git operation that triggered this refresh
     // would arrive ~immediately after; absorb them so they don't fire a second pass.
     this.fileWatcher.suppress();
@@ -1808,6 +1876,7 @@ export class MainPanel {
           this.gitService.log(logArgs),
           this.gitService.branches(),
         ]);
+        if (repoGeneration !== this.repoGeneration) return;
         this.post({ type: 'logData', payload: buildLogData(allFetched, branches) });
       } else {
         const [allFetched, branches, tags, remotes, stashes, worktrees] = await Promise.all([
@@ -1818,6 +1887,7 @@ export class MainPanel {
           this.gitService.stashList(),
           this.gitService.worktreeList(),
         ]);
+        if (repoGeneration !== this.repoGeneration) return;
         // Send as single combined message to ensure atomic update
         this.post({
           type: 'fullRefresh',
@@ -1830,7 +1900,7 @@ export class MainPanel {
       }
     } catch (err) {
       console.warn('Git Graph+: refresh failed:', err instanceof Error ? err.message : err);
-      if (err instanceof GitError && /not a git repository/.test(err.stderr)) {
+      if (repoGeneration === this.repoGeneration && err instanceof GitError && /not a git repository/.test(err.stderr)) {
         try { this.post({ type: 'notGitRepo' }); } catch { /* panel disposed */ }
       }
     } finally {
@@ -1845,12 +1915,23 @@ export class MainPanel {
   }
 
   private repoListPending: Promise<void> | null = null;
+  private repoListForceQueued = false;
 
   public sendRepoList(forceDiscovery = false): Promise<void> {
     // Deduplicate concurrent calls
-    if (!this.repoListPending) {
-      this.repoListPending = this.doSendRepoList(forceDiscovery).finally(() => { this.repoListPending = null; });
+    if (this.repoListPending) {
+      if (!forceDiscovery) {
+        return this.repoListPending;
+      }
+      this.repoListForceQueued = true;
+      return this.repoListPending.then(() => {
+        if (!this.repoListForceQueued) return;
+        this.repoListForceQueued = false;
+        return this.sendRepoList(true);
+      });
     }
+
+    this.repoListPending = this.doSendRepoList(forceDiscovery).finally(() => { this.repoListPending = null; });
     return this.repoListPending;
   }
 
@@ -1862,6 +1943,9 @@ export class MainPanel {
       const workspacePaths = new Set<string>();
       for (const f of vscode.workspace.workspaceFolders ?? []) {
         workspacePaths.add(f.uri.fsPath);
+      }
+      for (const repoPath of await this.getVsCodeGitRepoPaths()) {
+        workspacePaths.add(repoPath);
       }
       workspacePaths.add(this.repoPath);
       const discovered = await RepoDiscoveryService.discoverRepos([...workspacePaths]);
@@ -1876,7 +1960,7 @@ export class MainPanel {
 
       let active = vscode.Uri.file(this.repoPath).fsPath;
       this.repoPath = active;
-      if (repos.length > 0 && !repos.some(r => r.path === active)) {
+      if (repos.length > 0 && !repos.some(r => samePath(r.path, active))) {
         // Current path is not a repo, switch to the first discovered one
         active = repos[0].path;
         this.swapRepo(active);

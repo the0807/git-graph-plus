@@ -126,6 +126,7 @@ export type WebviewMessage =
   | { type: 'getUncommittedFileDiff'; payload: { file: string; staged: boolean } }
   | { type: 'getMultiCommitSections'; payload: { hashes: string[] } }
   | { type: 'getAvatar'; payload: { email: string; size: number } }
+  | { type: 'openRemoteRepository'; payload?: { remote?: string } }
   | { type: 'openExternalUrl'; payload: { url: string } }
   | { type: 'openExtensionSettings' };
 
@@ -135,6 +136,7 @@ export type ExtensionMessage =
   | { type: 'branchData'; payload: BranchData }
   | { type: 'fullRefresh'; payload: { logData: CommitGraphData; branchData: BranchData } }
   | { type: 'commitDiffData'; payload: { hash?: string; diffs?: DiffData[]; files: Array<{ path: string; status: string }> } }
+  | { type: 'fileDiffData'; payload: { hash: string; file: string; key?: string; diff: DiffData | null } }
   | { type: 'commitSignatureData'; payload: { hash: string; signature: CommitSignature } }
   | { type: 'rebaseCommitsData'; payload: { base: string; commits: Commit[] } }
   | { type: 'searchResults'; payload: CommitGraphData }

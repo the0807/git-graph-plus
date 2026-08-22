@@ -2,7 +2,15 @@
   import type { DiffData } from '../../lib/types';
   import { onMount } from 'svelte';
   import { t } from '../../lib/i18n/index.svelte';
-  import { detectLanguage, highlightLineSync, getHighlighter, ensureLanguage, activeShikiTheme, escapeHtml } from '../../lib/utils/highlighter';
+  import {
+    detectLanguage,
+    highlightLineSync,
+    highlightCodeLinesSync,
+    getHighlighter,
+    ensureLanguage,
+    activeShikiTheme,
+    escapeHtml,
+  } from '../../lib/utils/highlighter';
   import ImageDiff from '../common/ImageDiff.svelte';
 
   // Right-click target on a diff line. The parent owns the context menu (it
@@ -261,6 +269,7 @@
   });
 
   const MAX_HIGHLIGHT_LINES = 5000;
+  const MAX_FULL_FILE_HIGHLIGHT_LINES = 8000;
 
   // Tracks the VS Code color theme so highlighting re-runs (with the matching
   // light/dark token colours) when the user switches themes mid-session.
@@ -280,8 +289,9 @@
 
   $effect(() => {
     if (!diff || diff.isBinary) return;
-    const lang = detectLanguage(diff.file);
-    if (!lang) {
+    const newLang = detectLanguage(diff.content?.newPath ?? diff.newFile ?? diff.file);
+    const oldLang = detectLanguage(diff.content?.oldPath ?? diff.oldFile ?? diff.file);
+    if (!newLang && !oldLang) {
       highlightedLines = new Map();
       return;
     }
@@ -296,6 +306,9 @@
     // shown. Toggling showFullDiff changes renderHunks and re-runs this effect,
     // so the revealed lines get highlighted then.
     const visibleHunks = renderHunks;
+    const mode = diffMode;
+    const needsOldSide = needsHighlightedSide(visibleHunks, 'old', mode);
+    const needsNewSide = needsHighlightedSide(visibleHunks, 'new', mode);
     const theme = shikiTheme; // capture so a theme switch invalidates the pass
     // Yield to the event loop between chunks so a multi-thousand-line diff
     // doesn't freeze the panel. Each batch processes CHUNK_SIZE lines then
@@ -305,6 +318,30 @@
     getHighlighter()
       .then(async h => {
         if (cancelled || diff !== target) return;
+        if (target.content) {
+          const oldLines = countSourceLines(target.content.oldText);
+          const newLines = countSourceLines(target.content.newText);
+          const linesToHighlight = (needsOldSide ? oldLines : 0) + (needsNewSide ? newLines : 0);
+          if (linesToHighlight <= MAX_FULL_FILE_HIGHLIGHT_LINES) {
+            const [oldReady, newReady] = await Promise.all([
+              needsOldSide && oldLang ? ensureLanguage(h, oldLang) : Promise.resolve(false),
+              needsNewSide && newLang ? ensureLanguage(h, newLang) : Promise.resolve(false),
+            ]);
+            if (cancelled || diff !== target) return;
+            const newMap = new Map<string, string>();
+            if (needsOldSide && oldReady) {
+              highlightCodeLinesSync(h, target.content.oldText, oldLang, theme)
+                .forEach((html, idx) => newMap.set(`old:${idx + 1}`, html));
+            }
+            if (needsNewSide && newReady) {
+              highlightCodeLinesSync(h, target.content.newText, newLang, theme)
+                .forEach((html, idx) => newMap.set(`new:${idx + 1}`, html));
+            }
+            highlightedLines = newMap;
+            return;
+          }
+        }
+        const lang = newLang || oldLang;
         // Grammars load on demand; bail out to plain escaping if this language
         // has no Shiki grammar (highlightLineSync would fall back anyway, but
         // skipping the loop avoids a pointless full pass over the diff).
@@ -337,7 +374,44 @@
     return () => { cancelled = true; };
   });
 
-  function getHighlighted(hunkStart: number, lineIdx: number, content: string): string {
+  function needsHighlightedSide(
+    hunks: DiffData['hunks'],
+    side: 'old' | 'new',
+    mode: 'inline' | 'side-by-side',
+  ): boolean {
+    for (const hunk of hunks) {
+      for (const line of hunk.lines) {
+        if (side === 'old') {
+          if (line.type === 'delete') return true;
+          if (mode === 'side-by-side' && line.type === 'context') return true;
+        } else if (line.type === 'add' || line.type === 'context') {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function countSourceLines(text: string): number {
+    if (!text) return 0;
+    const lines = text.split(/\r\n|\r|\n/);
+    return /(?:\r\n|\r|\n)$/.test(text) ? lines.length - 1 : lines.length;
+  }
+
+  function getHighlighted(
+    hunkStart: number,
+    lineIdx: number,
+    content: string,
+    line?: DiffData['hunks'][number]['lines'][number],
+    sideHint: 'old' | 'new' = 'new',
+  ): string {
+    if (line && diff.content) {
+      const side = line.type === 'delete' ? 'old' : line.type === 'add' ? 'new' : sideHint;
+      const lineNumber = side === 'old' ? line.oldLineNumber : line.newLineNumber;
+      if (lineNumber !== undefined) {
+        return highlightedLines.get(`${side}:${lineNumber}`) ?? escapeHtml(content);
+      }
+    }
     const key = `${hunkStart}-${lineIdx}`;
     return highlightedLines.get(key) ?? escapeHtml(content);
   }
@@ -420,7 +494,7 @@
                   <span class="line-prefix">{line.type === 'add' ? '+' : line.type === 'delete' ? '-' : ' '}</span>
                 </span>
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <span class="line-content" onmousedown={(e) => { if (e.button === 0) lineSel = null; }}>{@html getHighlighted(hunk.oldStart, lineIndex, line.content)}</span>
+                <span class="line-content" onmousedown={(e) => { if (e.button === 0) lineSel = null; }}>{@html getHighlighted(hunk.oldStart, lineIndex, line.content, line, line.type === 'delete' ? 'old' : 'new')}</span>
               </div>
             {/each}
           </div>
@@ -448,7 +522,7 @@
                   {#if line.type === 'context' || line.type === 'delete'}
                     <div class="diff-line diff-{line.type}">
                       <span class="line-num">{line.oldLineNumber ?? ''}</span>
-                      <span class="line-content">{@html getHighlighted(hunk.oldStart, lineIndex, line.content)}</span>
+                      <span class="line-content">{@html getHighlighted(hunk.oldStart, lineIndex, line.content, line, 'old')}</span>
                     </div>
                   {:else}
                     <div class="diff-line diff-empty-line">
@@ -477,7 +551,7 @@
                   {#if line.type === 'context' || line.type === 'add'}
                     <div class="diff-line diff-{line.type}">
                       <span class="line-num">{line.newLineNumber ?? ''}</span>
-                      <span class="line-content">{@html getHighlighted(hunk.oldStart, lineIndex, line.content)}</span>
+                      <span class="line-content">{@html getHighlighted(hunk.oldStart, lineIndex, line.content, line, 'new')}</span>
                     </div>
                   {:else}
                     <div class="diff-line diff-empty-line">

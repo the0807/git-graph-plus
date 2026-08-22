@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import { existsSync } from 'fs';
-import { writeFile, unlink } from 'fs/promises';
+import { readFile, writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
 import { bufferStream, BufferOverflowError } from '../utils/buffer-stream';
@@ -16,6 +16,28 @@ const DEFAULT_MAX_BUFFER_BYTES = 256 * 1024 * 1024;
 import { parseLog, parseBranches, parseTags, parseRemotes, parseStashList, parseDiff, parseWorktreeList, parseLfsFiles, parseLfsLocks, mapSignatureStatus } from './git-parser';
 import { buildReversePatch } from './patch-builder';
 import type { Commit, BranchInfo, TagInfo, RemoteInfo, StashEntry, LogOptions, DiffData, WorktreeInfo, CommitSignature } from './types';
+
+type GitFlowConfig = {
+  productionBranch: string;
+  developBranch: string;
+  featurePrefix: string;
+  releasePrefix: string;
+  hotfixPrefix: string;
+  versionTagPrefix: string;
+};
+
+type FileContentSource =
+  | { kind: 'empty' }
+  | { kind: 'ref'; ref: string }
+  | { kind: 'index' }
+  | { kind: 'working' };
+
+type CommitFileDiffResult = {
+  raw: string;
+  parsed: DiffData[];
+  oldSource: FileContentSource;
+  newSource: FileContentSource;
+};
 
 export class GitError extends Error {
   constructor(
@@ -764,7 +786,14 @@ export class GitService {
     }
 
     const raw = await this.exec(args);
-    return parseDiff(raw, options?.file);
+    const parsed = parseDiff(raw, options?.file);
+    if (options?.ref1 && options?.ref2) {
+      return this.attachDiffContent(parsed, { kind: 'ref', ref: options.ref1 }, { kind: 'ref', ref: options.ref2 });
+    }
+    if (options?.ref1) {
+      return this.attachDiffContent(parsed, { kind: 'ref', ref: options.ref1 }, { kind: 'working' });
+    }
+    return this.attachDiffContent(parsed, { kind: 'index' }, { kind: 'working' });
   }
 
   // --- Branch Management ---
@@ -804,17 +833,59 @@ export class GitService {
     this.assertSafePath(file, 'diff');
     if (staged) {
       const raw = await this.exec(['diff', '--no-color', '--cached', '--', file]).catch(() => '');
-      return parseDiff(raw, file)[0] ?? null;
+      const parsed = await this.attachDiffContent(parseDiff(raw, file), { kind: 'ref', ref: 'HEAD' }, { kind: 'index' });
+      return parsed[0] ?? null;
     }
     const isTracked = await this.exec(['ls-files', '--error-unmatch', '--', file]).then(() => true).catch(() => false);
     if (!isTracked) {
       // --no-index exits with code 1 when differences found (normal); stdout has the diff
       const raw = await this.exec(['diff', '--no-color', '--no-index', '--', '/dev/null', file])
         .catch(err => (err instanceof GitError && err.exitCode === 1) ? err.stdout : '');
-      return parseDiff(raw, file)[0] ?? null;
+      const parsed = await this.attachDiffContent(parseDiff(raw, file), { kind: 'empty' }, { kind: 'working' });
+      return parsed[0] ?? null;
     }
     const raw = await this.exec(['diff', '--no-color', '--', file]).catch(() => '');
-    return parseDiff(raw, file)[0] ?? null;
+    const parsed = await this.attachDiffContent(parseDiff(raw, file), { kind: 'index' }, { kind: 'working' });
+    return parsed[0] ?? null;
+  }
+
+  private async readFileContent(source: FileContentSource, file: string): Promise<string> {
+    this.assertSafePath(file, 'read file content');
+    try {
+      if (source.kind === 'empty') return '';
+      if (source.kind === 'working') {
+        return await readFile(join(this.repoPath, file), 'utf8');
+      }
+      if (source.kind === 'index') {
+        return await this.exec(['show', `:${file}`], { silent: true });
+      }
+      this.assertSafeRef(source.ref, 'read file content');
+      return await this.exec(['show', `${source.ref}:${file}`], { silent: true });
+    } catch {
+      // Added/deleted/renamed files may be absent on one side. Treat that side as
+      // empty so full-file tokenization can still map the present side accurately.
+      return '';
+    }
+  }
+
+  private async attachDiffContent(
+    diffs: DiffData[],
+    oldSource: FileContentSource,
+    newSource: FileContentSource,
+  ): Promise<DiffData[]> {
+    return Promise.all(diffs.map(async diff => {
+      if (diff.isBinary) return diff;
+      const oldPath = diff.oldFile ?? diff.file;
+      const newPath = diff.newFile ?? diff.file;
+      const [oldText, newText] = await Promise.all([
+        this.readFileContent(oldSource, oldPath),
+        this.readFileContent(newSource, newPath),
+      ]);
+      return {
+        ...diff,
+        content: { oldText, newText, oldPath, newPath },
+      };
+    }));
   }
 
   private parseNameStatus(raw: string): Array<{ path: string; status: string; oldPath?: string }> {
@@ -1110,7 +1181,7 @@ export class GitService {
     this.assertSafeRef(ref1, 'diff');
     this.assertSafeRef(ref2, 'diff');
     const raw = await this.exec(['diff', '--no-color', ref1, ref2]);
-    return parseDiff(raw);
+    return this.attachDiffContent(parseDiff(raw), { kind: 'ref', ref: ref1 }, { kind: 'ref', ref: ref2 });
   }
 
   async diffFiles(ref1: string, ref2?: string): Promise<Array<{ path: string; status: string; oldPath?: string }>> {
@@ -1238,17 +1309,20 @@ export class GitService {
     }
 
     if (file) {
-      return (await this.commitFileDiff(hash, file)).parsed;
+      const result = await this.commitFileDiff(hash, file);
+      return this.attachDiffContent(result.parsed, result.oldSource, result.newSource);
     }
 
     // Overview (no specific file).
     const parents = await this.commitParents(hash);
     if (parents.length === 0) {
       // Root commit: diff against empty tree.
-      return parseDiff(await this.exec(['show', '--no-color', '--format=', hash]));
+      const parsed = parseDiff(await this.exec(['show', '--no-color', '--format=', hash]));
+      return this.attachDiffContent(parsed, { kind: 'empty' }, { kind: 'ref', ref: hash });
     }
     // Single-parent commit, or merge overview (first-parent diff).
-    return parseDiff(await this.exec(['diff', '--no-color', `${hash}^..${hash}`]));
+    const parsed = parseDiff(await this.exec(['diff', '--no-color', `${hash}^..${hash}`]));
+    return this.attachDiffContent(parsed, { kind: 'ref', ref: parents[0] }, { kind: 'ref', ref: hash });
   }
 
   /**
@@ -1258,7 +1332,7 @@ export class GitService {
    * patch we reverse ({@link reverseCommitChanges}) can never pick different
    * parents — see the merge-commit case below.
    */
-  private async commitFileDiff(hash: string, file: string): Promise<{ raw: string; parsed: DiffData[] }> {
+  private async commitFileDiff(hash: string, file: string): Promise<CommitFileDiffResult> {
     this.assertSafeRef(hash, 'diff');
     this.assertSafePath(file, 'diff');
     const parents = await this.commitParents(hash);
@@ -1266,7 +1340,7 @@ export class GitService {
     if (parents.length === 0) {
       // Root commit: diff against the empty tree.
       const raw = await this.exec(['show', '--no-color', '--format=', hash, '--', file]);
-      return { raw, parsed: parseDiff(raw) };
+      return { raw, parsed: parseDiff(raw), oldSource: { kind: 'empty' }, newSource: { kind: 'ref', ref: hash } };
     }
 
     if (parents.length > 1) {
@@ -1280,14 +1354,14 @@ export class GitService {
         const raw = await this.exec(['diff', '--no-color', `${parent}..${hash}`, '--', file]);
         const parsed = parseDiff(raw);
         if (parsed.length > 0 && parsed[0].hunks.length > 0) {
-          return { raw, parsed };
+          return { raw, parsed, oldSource: { kind: 'ref', ref: parent }, newSource: { kind: 'ref', ref: hash } };
         }
       }
-      return { raw: '', parsed: [] };
+      return { raw: '', parsed: [], oldSource: { kind: 'ref', ref: parents[0] }, newSource: { kind: 'ref', ref: hash } };
     }
 
     const raw = await this.exec(['diff', '--no-color', `${hash}^..${hash}`, '--', file]);
-    return { raw, parsed: parseDiff(raw) };
+    return { raw, parsed: parseDiff(raw), oldSource: { kind: 'ref', ref: parents[0] }, newSource: { kind: 'ref', ref: hash } };
   }
 
   /**
@@ -1331,7 +1405,11 @@ export class GitService {
     this.assertSafeRef(parents[0], 'diff');
     const trackedArgs = ['diff', '--no-color', `${parents[0]}..${hash}`];
     if (file) trackedArgs.push('--', file);
-    const tracked = parseDiff(await this.exec(trackedArgs));
+    const tracked = await this.attachDiffContent(
+      parseDiff(await this.exec(trackedArgs)),
+      { kind: 'ref', ref: parents[0] },
+      { kind: 'ref', ref: hash },
+    );
 
     // A requested file that lives in the tracked diff needs no untracked lookup.
     if (file && tracked.length > 0) return tracked;
@@ -1341,7 +1419,11 @@ export class GitService {
       this.assertSafeRef(parents[2], 'diff');
       const untrackedArgs = ['show', '--no-color', '--format=', parents[2]];
       if (file) untrackedArgs.push('--', file);
-      untracked = parseDiff(await this.exec(untrackedArgs));
+      untracked = await this.attachDiffContent(
+        parseDiff(await this.exec(untrackedArgs)),
+        { kind: 'empty' },
+        { kind: 'ref', ref: parents[2] },
+      );
     }
 
     if (file) return untracked;
@@ -2180,10 +2262,85 @@ export class GitService {
   async diffCommitToWorking(hash: string): Promise<DiffData[]> {
     this.assertSafeRef(hash, 'diff');
     const raw = await this.exec(['diff', hash]);
-    return parseDiff(raw);
+    return this.attachDiffContent(parseDiff(raw), { kind: 'ref', ref: hash }, { kind: 'working' });
   }
 
   // --- Git Flow ---
+
+  private async localBranchExists(name: string): Promise<boolean> {
+    this.assertSafeRef(name, 'branch exists');
+    try {
+      await this.exec(['show-ref', '--verify', '--quiet', `refs/heads/${name}`], { silent: true });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async assertLocalBranchExists(name: string, operation: string): Promise<void> {
+    if (await this.localBranchExists(name)) return;
+    throw new GitError(`${operation} reported success, but branch '${name}' was not created.`, 1, []);
+  }
+
+  private async pullRebaseBranchesBehindUpstream(branchNames: string[]): Promise<void> {
+    const names = Array.from(new Set(branchNames.filter(Boolean)));
+    if (names.length === 0) return;
+    const nameSet = new Set(names);
+    const branches = await this.branches();
+    const behindBranches = branches
+      .filter(branch => !branch.remote && nameSet.has(branch.name) && !!branch.upstream && !branch.upstreamGone && branch.behind > 0);
+    if (behindBranches.length === 0) return;
+
+    const currentBranch = branches.find(branch => branch.current && !branch.remote)?.name;
+    const originalRef = currentBranch
+      ?? await this.exec(['rev-parse', '--verify', 'HEAD'], { silent: true }).then(s => s.trim()).catch(() => undefined);
+    let checkedOutBranch = currentBranch;
+
+    for (const branch of behindBranches) {
+      if (checkedOutBranch !== branch.name) {
+        await this.checkout(branch.name);
+        checkedOutBranch = branch.name;
+      }
+      await this.pull(undefined, undefined, { rebase: true });
+    }
+
+    if (originalRef && checkedOutBranch !== originalRef) {
+      await this.checkout(originalRef);
+    }
+  }
+
+  private async requireFlowConfig(): Promise<GitFlowConfig> {
+    const config = await this.getFlowConfig();
+    if (!config) {
+      throw new GitError('Git Flow is not initialized for this repository.', 1, ['flow']);
+    }
+    return config;
+  }
+
+  private flowConfigMatches(config: GitFlowConfig, options: GitFlowConfig): boolean {
+    return config.productionBranch === options.productionBranch
+      && config.developBranch === options.developBranch
+      && config.featurePrefix === options.featurePrefix
+      && config.releasePrefix === options.releasePrefix
+      && config.hotfixPrefix === options.hotfixPrefix
+      && config.versionTagPrefix === options.versionTagPrefix;
+  }
+
+  private async clearFlowBranchConfig(): Promise<void> {
+    await Promise.all([
+      this.exec(['config', '--local', '--unset-all', 'gitflow.branch.master'], { silent: true }).catch(() => undefined),
+      this.exec(['config', '--local', '--unset-all', 'gitflow.branch.develop'], { silent: true }).catch(() => undefined),
+    ]);
+  }
+
+  private async writeFlowConfig(options: GitFlowConfig): Promise<void> {
+    await this.exec(['config', '--local', '--replace-all', 'gitflow.branch.master', options.productionBranch]);
+    await this.exec(['config', '--local', '--replace-all', 'gitflow.branch.develop', options.developBranch]);
+    await this.exec(['config', '--local', '--replace-all', 'gitflow.prefix.feature', options.featurePrefix]);
+    await this.exec(['config', '--local', '--replace-all', 'gitflow.prefix.release', options.releasePrefix]);
+    await this.exec(['config', '--local', '--replace-all', 'gitflow.prefix.hotfix', options.hotfixPrefix]);
+    await this.exec(['config', '--local', '--replace-all', 'gitflow.prefix.versiontag', options.versionTagPrefix]);
+  }
 
   async flowInit(options: {
     productionBranch: string;
@@ -2193,31 +2350,34 @@ export class GitService {
     hotfixPrefix: string;
     versionTagPrefix: string;
   }): Promise<string> {
-    // production 브랜치 존재 여부 검증
-    try {
-      await this.exec(['rev-parse', '--verify', options.productionBranch]);
-    } catch {
+    if (options.productionBranch === options.developBranch) {
+      throw new GitError('Git Flow production and develop branches must be different.', 1, ['flow', 'init']);
+    }
+
+    if (!(await this.localBranchExists(options.productionBranch))) {
       throw new GitError(
         `Branch '${options.productionBranch}' does not exist. Create the production branch first or ensure at least one commit exists.`,
         1,
         ['flow', 'init']
       );
     }
+    await this.pullRebaseBranchesBehindUpstream([options.productionBranch]);
 
-    // git flow init -d로 기본 초기화 후 커스텀 설정 덮어쓰기
-    await this.exec(['flow', 'init', '-d']);
-    await this.exec(['config', 'gitflow.branch.master', options.productionBranch]);
-    await this.exec(['config', 'gitflow.branch.develop', options.developBranch]);
-    await this.exec(['config', 'gitflow.prefix.feature', options.featurePrefix]);
-    await this.exec(['config', 'gitflow.prefix.release', options.releasePrefix]);
-    await this.exec(['config', 'gitflow.prefix.hotfix', options.hotfixPrefix]);
-    await this.exec(['config', 'gitflow.prefix.versiontag', options.versionTagPrefix]);
+    await this.clearFlowBranchConfig();
+    await this.exec(['config', '--local', '--replace-all', 'gitflow.branch.master', options.productionBranch]);
+    await this.exec(['config', '--local', '--replace-all', 'gitflow.branch.develop', options.developBranch]);
+    await this.exec(['flow', 'init', '-f', '-d']);
 
-    // develop 브랜치가 없으면 생성
-    try {
-      await this.exec(['rev-parse', '--verify', options.developBranch]);
-    } catch {
+    if (!(await this.localBranchExists(options.developBranch))) {
       await this.exec(['branch', options.developBranch, options.productionBranch]);
+    }
+    await this.assertLocalBranchExists(options.developBranch, 'Git Flow initialization');
+
+    await this.writeFlowConfig(options);
+
+    const persistedConfig = await this.getFlowConfig();
+    if (!persistedConfig || !this.flowConfigMatches(persistedConfig, options)) {
+      throw new GitError('Git Flow initialization did not persist the requested configuration.', 1, ['flow', 'init']);
     }
 
     return 'Git Flow initialized';
@@ -2225,50 +2385,72 @@ export class GitService {
 
   async flowFeatureStart(name: string): Promise<string> {
     this.assertSafeRef(name, 'flow feature start');
-    return this.exec(['flow', 'feature', 'start', name]);
+    const config = await this.requireFlowConfig();
+    await this.pullRebaseBranchesBehindUpstream([config.developBranch]);
+    const result = await this.exec(['flow', 'feature', 'start', name]);
+    await this.assertLocalBranchExists(`${config.featurePrefix}${name}`, 'Git Flow feature start');
+    return result;
   }
 
   async flowFeatureFinish(name: string): Promise<string> {
     this.assertSafeRef(name, 'flow feature finish');
+    const config = await this.requireFlowConfig();
+    await this.pullRebaseBranchesBehindUpstream([
+      config.developBranch,
+      `${config.featurePrefix}${name}`,
+    ]);
     return this.exec(['flow', 'feature', 'finish', name]);
   }
 
   async flowReleaseStart(version: string): Promise<string> {
     this.assertSafeRef(version, 'flow release start');
-    return this.exec(['flow', 'release', 'start', version]);
+    const config = await this.requireFlowConfig();
+    await this.pullRebaseBranchesBehindUpstream([config.developBranch]);
+    const result = await this.exec(['flow', 'release', 'start', version]);
+    await this.assertLocalBranchExists(`${config.releasePrefix}${version}`, 'Git Flow release start');
+    return result;
   }
 
   async flowReleaseFinish(version: string): Promise<string> {
     this.assertSafeRef(version, 'flow release finish');
+    const config = await this.requireFlowConfig();
+    await this.pullRebaseBranchesBehindUpstream([
+      config.productionBranch,
+      config.developBranch,
+      `${config.releasePrefix}${version}`,
+    ]);
     return this.exec(['flow', 'release', 'finish', '-m', version, version]);
   }
 
   async flowHotfixStart(version: string): Promise<string> {
     this.assertSafeRef(version, 'flow hotfix start');
-    return this.exec(['flow', 'hotfix', 'start', version]);
+    const config = await this.requireFlowConfig();
+    await this.pullRebaseBranchesBehindUpstream([config.productionBranch]);
+    const result = await this.exec(['flow', 'hotfix', 'start', version]);
+    await this.assertLocalBranchExists(`${config.hotfixPrefix}${version}`, 'Git Flow hotfix start');
+    return result;
   }
 
   async flowHotfixFinish(version: string): Promise<string> {
     this.assertSafeRef(version, 'flow hotfix finish');
+    const config = await this.requireFlowConfig();
+    await this.pullRebaseBranchesBehindUpstream([
+      config.productionBranch,
+      config.developBranch,
+      `${config.hotfixPrefix}${version}`,
+    ]);
     return this.exec(['flow', 'hotfix', 'finish', '-m', version, version]);
   }
 
-  async getFlowConfig(): Promise<{
-    productionBranch: string;
-    developBranch: string;
-    featurePrefix: string;
-    releasePrefix: string;
-    hotfixPrefix: string;
-    versionTagPrefix: string;
-  } | null> {
+  async getFlowConfig(): Promise<GitFlowConfig | null> {
     try {
       const [production, develop, feature, release, hotfix, versionTag] = await Promise.all([
-        this.exec(['config', '--get', 'gitflow.branch.master']).then(s => s.trim()),
-        this.exec(['config', '--get', 'gitflow.branch.develop']).then(s => s.trim()),
-        this.exec(['config', '--get', 'gitflow.prefix.feature']).then(s => s.trim()),
-        this.exec(['config', '--get', 'gitflow.prefix.release']).then(s => s.trim()),
-        this.exec(['config', '--get', 'gitflow.prefix.hotfix']).then(s => s.trim()),
-        this.exec(['config', '--get', 'gitflow.prefix.versiontag']).then(s => s.trim()).catch(() => ''),
+        this.exec(['config', '--local', '--get', 'gitflow.branch.master']).then(s => s.trim()),
+        this.exec(['config', '--local', '--get', 'gitflow.branch.develop']).then(s => s.trim()),
+        this.exec(['config', '--local', '--get', 'gitflow.prefix.feature']).then(s => s.trim()),
+        this.exec(['config', '--local', '--get', 'gitflow.prefix.release']).then(s => s.trim()),
+        this.exec(['config', '--local', '--get', 'gitflow.prefix.hotfix']).then(s => s.trim()),
+        this.exec(['config', '--local', '--get', 'gitflow.prefix.versiontag']).then(s => s.trim()).catch(() => ''),
       ]);
       return {
         productionBranch: production,
@@ -2278,7 +2460,11 @@ export class GitService {
         hotfixPrefix: hotfix,
         versionTagPrefix: versionTag,
       };
-    } catch (err) { console.warn('Git Graph+: failed to get flow config:', err instanceof Error ? err.message : err); return null; }
+    } catch (err) {
+      if (err instanceof GitError && err.exitCode === 1) return null;
+      console.warn('Git Graph+: failed to get flow config:', err instanceof Error ? err.message : err);
+      return null;
+    }
   }
 
   async getFlowBranches(): Promise<{ features: string[]; releases: string[]; hotfixes: string[] }> {
@@ -2452,9 +2638,18 @@ export class GitService {
 
   async isFlowInitialized(): Promise<boolean> {
     try {
-      await this.exec(['config', '--get', 'gitflow.branch.master']);
-      return true;
-    } catch (err) { console.warn('Git Graph+: flow init check failed:', err instanceof Error ? err.message : err); return false; }
+      const config = await this.getFlowConfig();
+      if (!config) return false;
+      const [productionExists, developExists] = await Promise.all([
+        this.localBranchExists(config.productionBranch),
+        this.localBranchExists(config.developBranch),
+      ]);
+      return productionExists && developExists;
+    } catch (err) {
+      if (err instanceof GitError && err.exitCode === 1) return false;
+      console.warn('Git Graph+: flow init check failed:', err instanceof Error ? err.message : err);
+      return false;
+    }
   }
 
 }

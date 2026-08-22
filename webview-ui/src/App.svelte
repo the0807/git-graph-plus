@@ -4,7 +4,7 @@
   import { getVsCodeApi } from './lib/vscode-api';
   import { commitStore } from './lib/stores/commits.svelte';
   import { branchStore } from './lib/stores/branches.svelte';
-  import { uiStore, BOTTOM_PANEL_DEFAULT_RATIO, BOTTOM_PANEL_MIN_RATIO, BOTTOM_PANEL_MAX_RATIO } from './lib/stores/ui.svelte';
+  import { uiStore, BOTTOM_PANEL_MIN_RATIO, BOTTOM_PANEL_MAX_RATIO } from './lib/stores/ui.svelte';
   import { i18n, t } from './lib/i18n/index.svelte';
   import CommitGraph from './components/graph/CommitGraph.svelte';
   import BottomPanel from './components/layout/BottomPanel.svelte';
@@ -49,6 +49,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
   import { tooltip } from './lib/actions/tooltip';
   import DirtyActionModal from './components/modals/DirtyActionModal.svelte';
   import { dragRebaseMessage, dragMergeMessage } from './lib/utils/dragDrop';
+  import { warmHighlighterLanguages } from './lib/utils/highlighter';
 
   const vscode = getVsCodeApi();
 
@@ -64,6 +65,20 @@ import AmendModal from './components/modals/AmendModal.svelte';
   let conflict = $state<{ operation: string; files: Array<{ path: string; resolved: boolean }> } | null>(null);
   let rebasePaused = $state(false);
   let showAbortConfirmModal = $state(false);
+
+  function scheduleHighlighterWarmup(): () => void {
+    const run = () => warmHighlighterLanguages(['vue', 'svelte', 'astro']);
+    const win = window as Window & {
+      requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    if (win.requestIdleCallback) {
+      const handle = win.requestIdleCallback(run, { timeout: 2500 });
+      return () => win.cancelIdleCallback?.(handle);
+    }
+    const handle = window.setTimeout(run, 1000);
+    return () => window.clearTimeout(handle);
+  }
 
   // Non-shared modals (unique to Activity Bar)
   let showStashDropModal = $state(false);
@@ -83,8 +98,6 @@ import AmendModal from './components/modals/AmendModal.svelte';
   });
 
   onMount(() => {
-    uiStore.bottomPanelHeight = Math.round(window.innerHeight * BOTTOM_PANEL_DEFAULT_RATIO);
-
     function handleMessage(event: MessageEvent) {
       const msg = event.data;
       switch (msg.type) {
@@ -216,11 +229,13 @@ import AmendModal from './components/modals/AmendModal.svelte';
     }
 
     window.addEventListener('message', handleMessage);
+    const cancelHighlighterWarmup = scheduleHighlighterWarmup();
 
     // Request initial data
     commitStore.setLoading(true);
     vscode.postMessage({ type: 'getLog', payload: {} });
     vscode.postMessage({ type: 'getBranches' });
+    vscode.postMessage({ type: 'getRepoList' });
     vscode.postMessage({ type: 'checkFlowStatus' });
 
     // Refresh conflict status when webview becomes visible
@@ -239,6 +254,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
       window.removeEventListener('keydown', handleGlobalKeydown);
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('focus', handleVisibility);
+      cancelHighlighterWarmup();
     };
   });
 
@@ -341,11 +357,14 @@ import AmendModal from './components/modals/AmendModal.svelte';
     e.preventDefault();
     resizing = true;
     const startY = e.clientY;
-    const startHeight = uiStore.bottomPanelHeight;
+    const startRatio = uiStore.bottomPanelRatio;
+    const container = (e.currentTarget as HTMLElement).parentElement;
+    const containerHeight = container?.clientHeight || window.innerHeight;
 
     function onMouseMove(e: MouseEvent) {
       const delta = startY - e.clientY;
-      uiStore.bottomPanelHeight = Math.max(window.innerHeight * BOTTOM_PANEL_MIN_RATIO, Math.min(window.innerHeight * BOTTOM_PANEL_MAX_RATIO, startHeight + delta));
+      const nextRatio = startRatio + delta / containerHeight;
+      uiStore.bottomPanelRatio = Math.max(BOTTOM_PANEL_MIN_RATIO, Math.min(BOTTOM_PANEL_MAX_RATIO, nextRatio));
     }
 
     function onMouseUp() {
@@ -498,7 +517,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
             <div class="resize-handle-line"></div>
           </div>
         {/if}
-        <div class="bottom-area" class:fullscreen={uiStore.commitDetailFullscreen} style={uiStore.commitDetailFullscreen ? '' : `height: ${uiStore.bottomPanelHeight}px;`}>
+        <div class="bottom-area" class:fullscreen={uiStore.commitDetailFullscreen} style={uiStore.commitDetailFullscreen ? '' : `height: ${uiStore.bottomPanelRatio * 100}%;`}>
           <BottomPanel />
         </div>
       {/if}
@@ -1119,11 +1138,6 @@ import AmendModal from './components/modals/AmendModal.svelte';
   .bottom-area {
     overflow: hidden;
     flex-shrink: 0;
-    /* bottomPanelHeight is a fixed px value that isn't recomputed when the
-       viewport shrinks (e.g. opening the terminal). Cap the panel to the
-       available area so it can never overflow .content-area and get clipped;
-       BottomPanel then scrolls internally instead of becoming unreachable. */
-    max-height: 80%;
     border-top: 1px solid var(--border-color);
   }
 

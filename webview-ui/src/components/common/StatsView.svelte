@@ -16,16 +16,25 @@
   let loading = $state(true);
   let maxHeatCount = $derived(Math.max(1, ...byWeekdayHour.map(s => s.count)));
 
+  function load() {
+    byAuthor = [];
+    byWeekdayHour = [];
+    loading = true;
+    vscode.postMessage({ type: 'getStats' });
+  }
+
   onMount(() => {
     function handleMessage(event: MessageEvent) {
       if (event.data.type === 'statsData') {
         byAuthor = event.data.payload.byAuthor;
         byWeekdayHour = event.data.payload.byWeekdayHour;
         loading = false;
+      } else if (event.data.type === 'repoChanged') {
+        load();
       }
     }
     window.addEventListener('message', handleMessage);
-    vscode.postMessage({ type: 'getStats' });
+    load();
     return () => window.removeEventListener('message', handleMessage);
   });
 

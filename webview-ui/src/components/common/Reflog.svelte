@@ -144,6 +144,21 @@
     vscode.postMessage({ type: 'getReflog', payload: { ref: selectedRef, limit: currentLimit } });
   }
 
+  function reloadForRepoSwitch() {
+    selectedRef = 'HEAD';
+    currentLimit = 200;
+    entries = [];
+    hasMore = false;
+    loading = true;
+    loadingMore = false;
+    query = '';
+    refOpen = false;
+    actionOpen = false;
+    activeActions = new Set();
+    danglingOnly = false;
+    vscode.postMessage({ type: 'getReflog', payload: { ref: selectedRef, limit: currentLimit } });
+  }
+
   function changeRef(ref: string) {
     selectedRef = ref;
     currentLimit = 200;
@@ -172,7 +187,12 @@
         hasMore = msg.payload.hasMore;
         loading = false;
         loadingMore = false;
-      } else if (msg.type === 'repoChanged' || msg.type === 'operationComplete') {
+      } else if (msg.type === 'repoChanged') {
+        if (active) {
+          if (msg.payload?.what === 'repo') reloadForRepoSwitch();
+          else load();
+        }
+      } else if (msg.type === 'operationComplete') {
         if (active) load();
       }
     }

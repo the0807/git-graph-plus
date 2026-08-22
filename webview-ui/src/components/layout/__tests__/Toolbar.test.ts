@@ -15,6 +15,7 @@ const iconBtn = (c: HTMLElement, icon: string) =>
 const getFetch = (c: HTMLElement) => iconBtn(c, 'cloud-download');
 const getPull = (c: HTMLElement) => iconBtn(c, 'arrow-down');
 const getPush = (c: HTMLElement) => iconBtn(c, 'arrow-up');
+const getOpenRemote = (c: HTMLElement) => iconBtn(c, 'globe');
 const getRefresh = (c: HTMLElement) => iconBtn(c, 'refresh');
 const getStash = (c: HTMLElement) => iconBtn(c, 'archive');
 const getFlow = (c: HTMLElement) =>
@@ -119,6 +120,50 @@ describe('Toolbar — fetch / pull / push', () => {
     const { container } = render(Toolbar);
     await fireEvent.click(getPush(container));
     expect(openPush).toHaveBeenCalledWith('origin');
+  });
+});
+
+describe('Toolbar — open remote repository', () => {
+  it('open remote button with no remotes opens NoRemotesErrorModal', async () => {
+    const { container } = render(Toolbar);
+    await fireEvent.click(getOpenRemote(container));
+    await waitFor(() => {
+      expect(document.body.textContent ?? '').toMatch(/no remotes|add remote/i);
+    });
+  });
+
+  it('open remote button prefers origin when available', async () => {
+    branchStore.remotes = [
+      { name: 'upstream', fetchUrl: '', pushUrl: '' },
+      { name: 'origin', fetchUrl: '', pushUrl: '' },
+    ];
+    const { container } = render(Toolbar);
+    globalThis.__postedMessages = [];
+    await fireEvent.click(getOpenRemote(container));
+    const req = globalThis.__postedMessages.find(
+      (m) => (m.data as { type?: string }).type === 'openRemoteRepository'
+    );
+    expect(req).toBeDefined();
+    expect((req!.data as { payload: { remote: string } }).payload).toEqual({
+      remote: 'origin',
+    });
+  });
+
+  it('open remote button falls back to the first remote', async () => {
+    branchStore.remotes = [
+      { name: 'upstream', fetchUrl: '', pushUrl: '' },
+      { name: 'fork', fetchUrl: '', pushUrl: '' },
+    ];
+    const { container } = render(Toolbar);
+    globalThis.__postedMessages = [];
+    await fireEvent.click(getOpenRemote(container));
+    const req = globalThis.__postedMessages.find(
+      (m) => (m.data as { type?: string }).type === 'openRemoteRepository'
+    );
+    expect(req).toBeDefined();
+    expect((req!.data as { payload: { remote: string } }).payload).toEqual({
+      remote: 'upstream',
+    });
   });
 });
 

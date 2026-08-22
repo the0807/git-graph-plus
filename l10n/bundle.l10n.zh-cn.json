@@ -113,5 +113,6 @@
   "remoteBranchDeleted": "远程分支 '{0}/{1}' 已删除",
   "remoteAdded": "远程 '{0}' 已添加",
   "remoteRemoved": "远程 '{0}' 已移除",
+  "openRemoteRepositoryFailed": "无法从 URL 打开远程仓库：{0}",
   "worktreeRemoved": "工作树已移除"
 }

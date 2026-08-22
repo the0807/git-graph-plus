@@ -28,6 +28,14 @@ describe('formatGitError', () => {
       ].join('\n');
       expect(formatGitError(stderr)).toBe("failed to push some refs to 'origin'");
     });
+
+    it('drops git-flow default-branch notice when a real error follows', () => {
+      const stderr = [
+        'Using default branch names.',
+        'fatal: Not a gitflow-enabled repo yet. Please run "git flow init" first.',
+      ].join('\n');
+      expect(formatGitError(stderr)).toBe('Not a gitflow-enabled repo yet. Please run "git flow init" first.');
+    });
   });
 
   describe('file list after error', () => {

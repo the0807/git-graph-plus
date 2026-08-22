@@ -13,6 +13,7 @@ export const zh: Record<string, string> = {
   'toolbar.pushDesc': '推送（上传本地提交）',
   'toolbar.refreshDesc': '刷新（Ctrl+R）',
   'toolbar.settings': '打开扩展设置',
+  'toolbar.openRemoteRepository': '在浏览器打开远程仓库',
   'toolbar.noRemotes': '未配置远程仓库。请先添加一个远程仓库。',
   'toolbar.addRemote': '添加远程仓库',
   'toolbar.detachedHead': '（分离头指针）',
