@@ -91,6 +91,17 @@ describe('FileWatcher debounce / cooldown / suppress state machine', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('watches the worktree registry, not each worktree\'s private state', () => {
+    // `worktrees/**` also matched every worktree's runtime files (index.lock,
+    // FETCH_HEAD, COMMIT_EDITMSG, logs/**). In a linked worktree that set is
+    // our OWN gitdir, so the panel's git commands fed its own watcher — an
+    // endless refresh that restarted any in-flight history search. Only the
+    // registry entries `worktree list` actually reports are worth watching.
+    const patterns = h.watchers.map(w => w.pattern.pattern);
+    expect(patterns).toContain('worktrees/*/{HEAD,gitdir,locked}');
+    expect(patterns).not.toContain('worktrees/**');
+  });
+
   it('does not fire when disabled', () => {
     fw.enabled = false;
     fireOn('**', `${REPO}/src/a.ts`);

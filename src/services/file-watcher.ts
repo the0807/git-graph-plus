@@ -36,7 +36,15 @@ export class FileWatcher implements vscode.Disposable {
     this.addWatcher(new vscode.RelativePattern(this.commonDir, 'refs/stash'));
     this.addWatcher(new vscode.RelativePattern(this.commonDir, 'packed-refs'));
     this.addWatcher(new vscode.RelativePattern(this.commonDir, 'config'));
-    this.addWatcher(new vscode.RelativePattern(this.commonDir, 'worktrees/**'));
+    // Only the registry entries `git worktree list` reports: the admin dir
+    // appearing/disappearing (gitdir), where each worktree points (HEAD), and
+    // its lock state. NOT `worktrees/**` — that also matched every worktree's
+    // private runtime state (index, index.lock, FETCH_HEAD, COMMIT_EDITMSG,
+    // logs/**). For a linked worktree that state IS our own gitdir, so the
+    // panel's own `git status` retriggered its own watcher: a refresh loop
+    // that also restarted any in-flight history search. For a main repo it
+    // meant every git command in a sibling worktree forced a full refresh.
+    this.addWatcher(new vscode.RelativePattern(this.commonDir, 'worktrees/*/{HEAD,gitdir,locked}'));
 
     // Watch working tree for file changes (exclude heavy dirs via specific patterns)
     // Using {src,lib,app,...}/** would be too restrictive, so we watch ** but filter
