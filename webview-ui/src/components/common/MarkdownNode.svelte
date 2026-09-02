@@ -24,6 +24,22 @@
   function safeHref(href: string): string | undefined {
     return /^https?:\/\//i.test(href) ? href : undefined;
   }
+
+  function decodeMarkedText(text: string): string {
+    // Marked escapes display text for insertion into an HTML string. This
+    // renderer uses Svelte text nodes instead, so reverse exactly that one
+    // escaping pass; Svelte still keeps the resulting text inert in the DOM.
+    return text.replace(/&(?:amp|lt|gt|quot|#39);/g, (entity) => {
+      switch (entity) {
+        case '&amp;': return '&';
+        case '&lt;': return '<';
+        case '&gt;': return '>';
+        case '&quot;': return '"';
+        case '&#39;': return "'";
+        default: return entity;
+      }
+    });
+  }
 </script>
 
 {#each tokens as tok}
@@ -89,7 +105,7 @@
     <del><Self tokens={d.tokens} /></del>
   {:else if tok.type === 'codespan'}
     {@const cs = tok as Tokens.Codespan}
-    <code class="md-codespan">{cs.text}</code>
+    <code class="md-codespan">{decodeMarkedText(cs.text)}</code>
   {:else if tok.type === 'br'}
     <br />
   {:else if tok.type === 'link'}
@@ -97,16 +113,16 @@
     <a class="commit-link" href={safeHref(l.href)} use:tooltip={t('graph.openLink')} onclick={(e) => open(e, l.href)}><Self tokens={l.tokens} /></a>
   {:else if tok.type === 'image'}
     {@const img = tok as Tokens.Image}
-    <a class="commit-link" href={safeHref(img.href)} use:tooltip={t('graph.openLink')} onclick={(e) => open(e, img.href)}>{img.text || img.href}</a>
+    <a class="commit-link" href={safeHref(img.href)} use:tooltip={t('graph.openLink')} onclick={(e) => open(e, img.href)}>{img.text ? decodeMarkedText(img.text) : img.href}</a>
   {:else if tok.type === 'text'}
     {@const txt = tok as Tokens.Text}
     {#if txt.tokens && txt.tokens.length > 0}
       <Self tokens={txt.tokens} />
     {:else}
-      <LinkifiedText text={txt.text} />
+      <LinkifiedText text={decodeMarkedText(txt.text)} />
     {/if}
   {:else if tok.type === 'escape'}
-    {(tok as Tokens.Escape).text}
+    {decodeMarkedText((tok as Tokens.Escape).text)}
   {:else}
     <LinkifiedText text={(tok as { raw: string }).raw} />
   {/if}

@@ -30,6 +30,48 @@ describe('Markdown', () => {
     expect(container.querySelector('pre code')?.textContent).toContain('code');
   });
 
+  it('renders markup characters in inline code instead of visible HTML entities', () => {
+    const snippet = '<if test="onlyHasVideo==true">';
+    const { container } = render(Markdown, { props: { text: `- \`${snippet}\`` } });
+
+    expect(container.querySelector('.md-codespan')?.textContent).toBe(snippet);
+    expect(container.querySelector('if')).toBeNull();
+  });
+
+  it('decodes marked inline-code entities exactly once', () => {
+    const { container } = render(Markdown, {
+      props: { text: '`&lt;script&gt;alert(1)&lt;/script&gt;`' },
+    });
+
+    expect(container.querySelector('.md-codespan')?.textContent)
+      .toBe('&lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(container.querySelector('script')).toBeNull();
+  });
+
+  it('renders quotes in Markdown text instead of visible HTML entities', () => {
+    const { container } = render(Markdown, {
+      props: { text: '- getEnumByCode("250")' },
+    });
+
+    expect(container.querySelector('.md-li')?.textContent?.trim()).toBe('getEnumByCode("250")');
+  });
+
+  it('decodes marked text entities exactly once', () => {
+    const { container } = render(Markdown, {
+      props: { text: '- &amp;lt;script&amp;gt;' },
+    });
+
+    expect(container.querySelector('.md-li')?.textContent?.trim()).toBe('&lt;script&gt;');
+    expect(container.querySelector('script')).toBeNull();
+  });
+
+  it('renders escaped markup characters as inert text', () => {
+    const { container } = render(Markdown, { props: { text: '- \\<tag\\>' } });
+
+    expect(container.querySelector('.md-li')?.textContent?.trim()).toBe('<tag>');
+    expect(container.querySelector('tag')).toBeNull();
+  });
+
   it('renders nested unordered lists', () => {
     const { container } = render(Markdown, { props: { text: '- a\n  - b' } });
     const outer = container.querySelector('ul');
@@ -60,10 +102,21 @@ describe('Markdown', () => {
     });
   });
 
+  it('renders quotes in markdown link labels without changing the href', () => {
+    const { container } = render(Markdown, {
+      props: { text: '[getEnumByCode("250")](https://example.com)' },
+    });
+    const link = container.querySelector('a') as HTMLAnchorElement;
+
+    expect(link.textContent).toBe('getEnumByCode("250")');
+    expect(link.getAttribute('href')).toBe('https://example.com');
+  });
+
   it('renders an image as a link (CSP blocks external images)', () => {
-    const { container } = render(Markdown, { props: { text: '![alt](https://example.com/x.png)' } });
+    const { container } = render(Markdown, { props: { text: '![alt "x"](https://example.com/x.png)' } });
     const link = container.querySelector('a') as HTMLAnchorElement;
     expect(link.getAttribute('href')).toBe('https://example.com/x.png');
+    expect(link.textContent).toBe('alt "x"');
     expect(container.querySelector('img')).toBeNull();
   });
 

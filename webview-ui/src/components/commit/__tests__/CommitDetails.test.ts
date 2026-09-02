@@ -1336,6 +1336,25 @@ describe('CommitDetails — markdown toggle', () => {
     expect(container.querySelector('.message-section strong')?.textContent).toBe('bold');
   });
 
+  it('renders inline code with markup characters without exposing HTML entities', () => {
+    const snippet = '<if test="onlyHasVideo==true">';
+    const { container } = render(CommitDetails, {
+      commit: commit({ body: `- \`${snippet}\``, parents: [] }),
+    });
+
+    expect(container.querySelector('.message-section .md-codespan')?.textContent).toBe(snippet);
+    expect(container.querySelector('.message-section if')).toBeNull();
+  });
+
+  it('renders quotes in plain Markdown text without exposing HTML entities', () => {
+    const { container } = render(CommitDetails, {
+      commit: commit({ body: '- getEnumByCode("250")', parents: [] }),
+    });
+
+    expect(container.querySelector('.message-section .md-li')?.textContent?.trim())
+      .toBe('getEnumByCode("250")');
+  });
+
   it('switches to plain text when the Plain toggle is clicked', async () => {
     const { container, getByText } = render(CommitDetails, {
       commit: commit({ subject: '**bold** subject', body: '- one\n- two', parents: [] }),
