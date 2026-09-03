@@ -21,6 +21,10 @@ describe('hasAutosquashTargets', () => {
   it('is true when a squash! commit is present', () => {
     expect(hasAutosquashTargets([pick('a', 'Add feature'), pick('b', 'squash! Add feature')])).toBe(true);
   });
+
+  it('is true when an amend! commit is present', () => {
+    expect(hasAutosquashTargets([pick('a', 'Add feature'), pick('b', 'amend! Add feature')])).toBe(true);
+  });
 });
 
 describe('applyAutosquash', () => {
@@ -86,5 +90,27 @@ describe('applyAutosquash', () => {
     ];
     const result = applyAutosquash(todos);
     expect(result[0].action).toBe('pick');
+  });
+
+  it('folds an amend! commit in as fixup and rewords the target with its body', () => {
+    const todos = [
+      pick('a', 'Add feature'),
+      pick('b', 'amend! Add feature', 'Rewritten feature message'),
+    ];
+    const result = applyAutosquash(todos);
+
+    expect(view(result)).toEqual(['reword:a', 'fixup:b']);
+    expect(result[0].newMessage).toBe('Rewritten feature message');
+  });
+
+  it('folds an amend! commit with an empty body in as a plain fixup (no reword)', () => {
+    const todos = [
+      pick('a', 'Add feature'),
+      pick('b', 'amend! Add feature'),
+    ];
+    const result = applyAutosquash(todos);
+
+    expect(view(result)).toEqual(['pick:a', 'fixup:b']);
+    expect(result[0].newMessage).toBeUndefined();
   });
 });
