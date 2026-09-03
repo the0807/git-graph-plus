@@ -150,7 +150,7 @@ describe('parseBranches', () => {
   });
 
   it('should parse current branch', () => {
-    const raw = '*main\x00abc1234\x00origin/main\x00ahead 2, behind 1';
+    const raw = '*main\x00abc1234\x00origin/main\x00ahead 2, behind 1\x00refs/heads/main';
     const result = parseBranches(raw);
 
     expect(result).toHaveLength(1);
@@ -179,7 +179,7 @@ describe('parseBranches', () => {
   });
 
   it('should parse non-current branch', () => {
-    const raw = ' feature\x00def5678\x00\x00';
+    const raw = ' feature\x00def5678\x00\x00\x00refs/heads/feature';
     const result = parseBranches(raw);
 
     expect(result).toHaveLength(1);
@@ -187,6 +187,16 @@ describe('parseBranches', () => {
     expect(result[0].current).toBe(false);
     expect(result[0].ahead).toBe(0);
     expect(result[0].behind).toBe(0);
+  });
+
+  it('drops the detached-HEAD pseudo-branch', () => {
+    // git reports the detached state as a pseudo-branch whose %(refname) is
+    // "(HEAD detached at <hash>)"; it must not surface as a branch (issue #65).
+    const raw = '*(HEAD detached at 6f6a34c)\x006f6a34c\x00\x00\x00(HEAD detached at 6f6a34c)\n master\x00a2f05b3\x00\x00\x00refs/heads/master';
+    const result = parseBranches(raw);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('master');
   });
 
   it('flags upstreamGone when the tracked remote branch was deleted', () => {

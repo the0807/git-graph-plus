@@ -131,7 +131,7 @@ export function parseBranches(raw: string): BranchInfo[] {
     return [];
   }
 
-  return raw.trim().split('\n').filter(Boolean).map((line) => {
+  return raw.trim().split('\n').filter(Boolean).flatMap((line) => {
     const current = line.startsWith('*');
     const rest = current ? line.substring(1) : line;
     const fields = rest.split(FIELD_SEP);
@@ -153,12 +153,20 @@ export function parseBranches(raw: string): BranchInfo[] {
 
     // Use full refname to distinguish local from remote branches
     const fullRefname = fields[4]?.trim() ?? '';
+    // In a detached HEAD git lists a pseudo-branch whose %(refname) is
+    // "(HEAD detached at <hash>)" instead of a refs/... path. It is not a real
+    // branch and must not surface as one (it produced an invalid "(HEAD
+    // detached ...)" entry in the reflog ref filter, issue #65). A missing
+    // (empty) refname is kept as a defensive fallback for older git formats.
+    if (fullRefname && !fullRefname.startsWith('refs/')) {
+      return [];
+    }
     const isRemote = fullRefname.startsWith('refs/remotes/');
     const remote = isRemote ? rawName.split('/')[0] : undefined;
     // Strip heads/ prefix added by git when tag and branch names collide
     const name = !isRemote && rawName.startsWith('heads/') ? rawName.substring(6) : rawName;
 
-    return { name, current, remote, upstream, upstreamGone, ahead, behind, hash };
+    return [{ name, current, remote, upstream, upstreamGone, ahead, behind, hash }];
   }).filter(b => b.name.length > 0);
 }
 
