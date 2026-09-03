@@ -5,7 +5,7 @@ import { GitService, GitError } from '../git/git-service';
 import { formatGitError, isAuthFailure, transportFromRemoteUrl } from '../git/git-error-formatter';
 import { splitUpstreamRef } from '../git/git-parser';
 import { samePath } from '../utils/path';
-import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readInteractiveRebaseMode } from '../utils/config';
+import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readInteractiveRebaseMode, readAvatarOverrides } from '../utils/config';
 import { buildClassicRebaseCommand } from '../git/classic-rebase';
 import { buildFullGraph } from '../git/git-graph-builder';
 import { compileBranchColorRules, makeBranchColorResolver } from '../git/branch-color-resolver';
@@ -90,7 +90,9 @@ export class MainPanel {
 
   private static getAvatarCache(): AvatarCache {
     if (!this.avatarCache) {
-      this.avatarCache = new AvatarCache(this.avatarCacheDir ?? null);
+      this.avatarCache = new AvatarCache(this.avatarCacheDir ?? null, undefined, {
+        avatarOverrides: readAvatarOverrides(),
+      });
     }
     return this.avatarCache;
   }

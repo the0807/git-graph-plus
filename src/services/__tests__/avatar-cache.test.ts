@@ -39,6 +39,85 @@ describe('AvatarCache', () => {
     expect(calls[0]).toContain('s=32');
   });
 
+  it('resolves a GitHub <id>+<login> noreply email to avatars.githubusercontent.com', async () => {
+    const { fetcher, calls } = makeFetcher();
+    const cache = new AvatarCache(null, fetcher);
+
+    await cache.get('73097985+the0807@users.noreply.github.com', 32);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toBe('https://avatars.githubusercontent.com/u/73097985?s=32');
+  });
+
+  it('resolves a bare GitHub <login> noreply email to avatars.githubusercontent.com', async () => {
+    const { fetcher, calls } = makeFetcher();
+    const cache = new AvatarCache(null, fetcher);
+
+    await cache.get('the0807@users.noreply.github.com', 48);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toBe('https://avatars.githubusercontent.com/the0807?s=48');
+  });
+
+  it('resolves noreply emails case-insensitively after normalization', async () => {
+    const { fetcher, calls } = makeFetcher();
+    const cache = new AvatarCache(null, fetcher);
+
+    await cache.get(' 73097985+The0807@Users.Noreply.GitHub.com ', 32);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toBe('https://avatars.githubusercontent.com/u/73097985?s=32');
+  });
+
+  it('falls back to Gravatar for a non-noreply email', async () => {
+    const { fetcher, calls } = makeFetcher();
+    const cache = new AvatarCache(null, fetcher);
+
+    await cache.get('alice@example.com', 32);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toContain('https://www.gravatar.com/avatar/');
+    expect(calls[0]).toContain('s=32');
+  });
+
+  it('uses an explicit override URL for a matching email', async () => {
+    const { fetcher, calls } = makeFetcher();
+    const cache = new AvatarCache(null, fetcher, {
+      avatarOverrides: { 'alice@example.com': 'https://example.com/alice.png' },
+    });
+
+    await cache.get('alice@example.com', 32);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toBe('https://example.com/alice.png');
+  });
+
+  it('matches override keys case-insensitively after email normalization', async () => {
+    const { fetcher, calls } = makeFetcher();
+    const cache = new AvatarCache(null, fetcher, {
+      avatarOverrides: { 'alice@example.com': 'https://example.com/alice.png' },
+    });
+
+    await cache.get(' Alice@Example.com ', 32);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toBe('https://example.com/alice.png');
+  });
+
+  it('lets an override take priority over a GitHub noreply email', async () => {
+    const { fetcher, calls } = makeFetcher();
+    const cache = new AvatarCache(null, fetcher, {
+      avatarOverrides: {
+        '73097985+the0807@users.noreply.github.com': 'https://example.com/custom.png',
+      },
+    });
+
+    await cache.get('73097985+the0807@users.noreply.github.com', 32);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toBe('https://example.com/custom.png');
+  });
+
   it('serves repeat requests from memory without re-fetching', async () => {
     const { fetcher, calls } = makeFetcher();
     const cache = new AvatarCache(null, fetcher);

@@ -27,23 +27,52 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-/** Caches Gravatar avatars in the extension host (memory + disk) and serves
- *  them to the webview as base64 data URIs. This keeps the webview renderer
- *  from opening a fresh connection to gravatar.com on every render/scroll/
- *  window — the root cause of the socket exhaustion in issue #38. */
+/** Matches GitHub's private "noreply" emails: either `<id>+<login>` or a bare
+ *  `<login>`, both at users.noreply.github.com. Authors committing through
+ *  GitHub's "keep my email private" option get exactly these addresses. */
+const GITHUB_NOREPLY_RE = /^(?:(\d+)\+)?([^@]+)@users\.noreply\.github\.com$/i;
+
+/** Returns the avatar URL for a normalized commit-author email. An explicit
+ *  override wins first; then GitHub noreply emails resolve to
+ *  avatars.githubusercontent.com (where the real avatar lives); everything
+ *  else falls back to Gravatar, whose `d=retro` parameter generates a
+ *  placeholder for emails without a Gravatar account. */
+function avatarUrlForEmail(normEmail: string, size: number, overrides: Record<string, string>): string {
+  const override = overrides[normEmail];
+  if (override) return override;
+
+  const m = GITHUB_NOREPLY_RE.exec(normEmail);
+  if (m) {
+    const [, id, login] = m;
+    return id !== undefined
+      ? `https://avatars.githubusercontent.com/u/${id}?s=${size}`
+      : `https://avatars.githubusercontent.com/${login}?s=${size}`;
+  }
+  const hash = md5(normEmail);
+  return `https://www.gravatar.com/avatar/${hash}?s=${size}&d=retro`;
+}
+
+/** Caches commit-author avatars in the extension host (memory + disk) and
+ *  serves them to the webview as base64 data URIs. GitHub "noreply" emails
+ *  resolve to avatars.githubusercontent.com; everything else uses Gravatar.
+ *  Caching keeps the webview renderer from opening a fresh connection on
+ *  every render/scroll/window — the root cause of the socket exhaustion in
+ *  issue #38. */
 export class AvatarCache {
   private memory = new Map<string, string>(); // key -> data URI
   private inflight = new Map<string, Promise<string | null>>();
   private maxDiskEntries: number;
   private ttlMs: number;
+  private overrides: Record<string, string>;
 
   constructor(
     private cacheDir: string | null = null,
     private fetcher: AvatarFetcher = defaultFetcher,
-    opts?: { maxDiskEntries?: number; ttlMs?: number },
+    opts?: { maxDiskEntries?: number; ttlMs?: number; avatarOverrides?: Record<string, string> },
   ) {
     this.maxDiskEntries = opts?.maxDiskEntries ?? DEFAULT_MAX_DISK_ENTRIES;
     this.ttlMs = opts?.ttlMs ?? DEFAULT_TTL_MS;
+    this.overrides = opts?.avatarOverrides ?? {};
   }
 
   /** Returns a base64 data URI for the avatar, or null if it cannot be loaded. */
@@ -88,7 +117,7 @@ export class AvatarCache {
       }
     }
 
-    const url = `https://www.gravatar.com/avatar/${hash}?s=${size}&d=retro`;
+    const url = avatarUrlForEmail(normEmail, size, this.overrides);
     const res = await this.fetcher(url);
     if (!res) {
       // Refresh failed (e.g. offline). Fall back to the stale copy if we have
