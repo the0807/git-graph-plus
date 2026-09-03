@@ -71,6 +71,19 @@ describe('App — message handling', () => {
     });
   });
 
+  it('clears a selection whose commit disappears from a refreshed log (issue #74)', async () => {
+    render(App);
+    uiStore.selectCommit('deadbeef');
+    await waitFor(() => expect(uiStore.selectedCommitHash).toBe('deadbeef'));
+
+    // A refresh that no longer contains the selected commit (e.g. after a
+    // rebase/amend) must clear the selection rather than leaving the bottom
+    // panel open and empty.
+    postMsg('logData', { commits: [], graph: [], hasMore: false, currentLimit: 100 });
+
+    await waitFor(() => expect(uiStore.selectedCommitHash).toBeNull());
+  });
+
   it('branchData updates branchStore', async () => {
     render(App);
     postMsg('branchData', {
