@@ -160,6 +160,19 @@ describe('App — message handling', () => {
     });
   });
 
+  it('conflict keeps the search bar visible (issue #69)', async () => {
+    const { container } = render(App);
+    await waitFor(() => expect(container.querySelector('.search-input')).not.toBeNull());
+    postMsg('conflictData', {
+      operation: 'rebase',
+      files: [{ path: 'a.ts', resolved: false }],
+    });
+    await waitFor(() => {
+      expect(container.querySelector('.conflict-banner')).not.toBeNull();
+      expect(container.querySelector('.search-input')).not.toBeNull();
+    });
+  });
+
   it('operationPaused with rebase shows the rebase pause banner', async () => {
     const { container } = render(App);
     postMsg('operationPaused', { operation: 'rebase' });

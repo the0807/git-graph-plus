@@ -460,7 +460,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
 
   <div class="content-area">
     {#if uiStore.viewMode === 'graph'}
-      {#if !bisectMessage && !conflict && !rebasePaused}
+      {#if !bisectMessage}
         <SearchBar
           onResults={handleSearchResults}
           onNavigate={handleSearchNavigate}
