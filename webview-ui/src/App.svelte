@@ -82,6 +82,24 @@ import AmendModal from './components/modals/AmendModal.svelte';
     document.documentElement.style.setProperty('--badge-bar-width', `${uiStore.badgeBarWidth}px`);
   });
 
+  // After the graph is replaced (refresh, rebase, amend, filter change), the
+  // previously selected commit may no longer exist in the new list. Clear such
+  // stale selections so the bottom panel closes instead of staying open, empty,
+  // and without a way to dismiss it (issue #74).
+  function pruneInvalidSelection() {
+    if (uiStore.multiSelectArmed) {
+      const valid = uiStore.selectedCommitHashes.filter((h) => commitStore.getCommit(h));
+      if (valid.length !== uiStore.selectedCommitHashes.length) {
+        if (valid.length === 0) uiStore.exitMultiSelect();
+        else uiStore.selectedCommitHashes = valid;
+      }
+      return;
+    }
+    if (uiStore.selectedCommitHash && !commitStore.getCommit(uiStore.selectedCommitHash)) {
+      uiStore.selectCommit(null);
+    }
+  }
+
   onMount(() => {
     uiStore.bottomPanelHeight = Math.round(window.innerHeight * BOTTOM_PANEL_DEFAULT_RATIO);
 
@@ -92,6 +110,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
           if (msg.payload.remoteFilter !== undefined) remoteFilter = msg.payload.remoteFilter;
           if (msg.payload.branches !== undefined) branchFilter = msg.payload.branches;
           commitStore.setData(msg.payload);
+          pruneInvalidSelection();
           break;
         case 'branchData':
           branchStore.setData(msg.payload);
@@ -101,6 +120,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
           branchFilter = msg.payload.logData.branches ?? [];
           branchStore.setData(msg.payload.branchData);
           commitStore.setData(msg.payload.logData);
+          pruneInvalidSelection();
           break;
         case 'setLocale':
           i18n.setLocale(msg.payload.locale);
