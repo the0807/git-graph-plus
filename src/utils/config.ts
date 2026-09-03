@@ -47,3 +47,25 @@ export function readInteractiveRebaseMode(): InteractiveRebaseMode {
     vscode.workspace.getConfiguration('gitGraphPlus').get<string>('interactiveRebase.mode', 'ui'),
   );
 }
+
+/**
+ * Reads `gitGraphPlus.avatarOverrides` — an object mapping commit-author emails
+ * to explicit https avatar URLs. It lets an author whose email has neither a
+ * Gravatar account nor a GitHub noreply address still show a real avatar.
+ * Keys are normalized (trimmed + lowercased); entries whose value is empty or
+ * not an https URL are ignored (the fetch is https-only).
+ */
+export function readAvatarOverrides(): Record<string, string> {
+  const raw = vscode.workspace
+    .getConfiguration('gitGraphPlus')
+    .get<Record<string, unknown>>('avatarOverrides', {});
+  const out: Record<string, string> = {};
+  if (raw && typeof raw === 'object') {
+    for (const [email, url] of Object.entries(raw)) {
+      if (typeof url === 'string' && url.trim().startsWith('https://')) {
+        out[email.trim().toLowerCase()] = url.trim();
+      }
+    }
+  }
+  return out;
+}

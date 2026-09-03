@@ -13,7 +13,7 @@ vi.mock('vscode', () => ({
   },
 }));
 
-import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount } from '../config';
+import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readAvatarOverrides } from '../config';
 
 describe('readTimeoutMs', () => {
   // Back-compat alias so the existing timeout cases below read naturally.
@@ -99,5 +99,39 @@ describe('readLoadMoreCommitCount', () => {
     expect(readLoadMoreCommitCount()).toBe(50);
     h.values.loadMoreCommitCount = Infinity;
     expect(readLoadMoreCommitCount()).toBe(50);
+  });
+});
+
+describe('readAvatarOverrides', () => {
+  beforeEach(() => { h.values = {}; });
+
+  it('returns an empty map when the setting is unset', () => {
+    expect(readAvatarOverrides()).toEqual({});
+  });
+
+  it('returns https URL entries with normalized keys', () => {
+    h.values.avatarOverrides = {
+      ' Alice@Example.com ': ' https://example.com/a.png ',
+      'bob@example.com': 'https://example.com/b.png',
+    };
+    expect(readAvatarOverrides()).toEqual({
+      'alice@example.com': 'https://example.com/a.png',
+      'bob@example.com': 'https://example.com/b.png',
+    });
+  });
+
+  it('ignores non-string, empty, and non-https values', () => {
+    h.values.avatarOverrides = {
+      'a@example.com': 'http://example.com/a.png', // wrong protocol
+      'b@example.com': '',
+      'c@example.com': 42,
+      'd@example.com': null,
+    };
+    expect(readAvatarOverrides()).toEqual({});
+  });
+
+  it('ignores a non-object setting', () => {
+    h.values.avatarOverrides = 'not-an-object';
+    expect(readAvatarOverrides()).toEqual({});
   });
 });

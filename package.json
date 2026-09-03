@@ -518,6 +518,14 @@
           "default": true,
           "markdownDescription": "Automatically link references based on the `origin` remote. `!123` (GitLab merge requests) is linked for **any** host, including self-hosted GitLab. `#123` (issues) is linked for **github.com** and **gitlab.com** only — on a self-hosted host the issue path can't be determined, so add a `gitGraphPlus.commitMessageLinks` rule for those."
         },
+        "gitGraphPlus.avatarOverrides": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "string"
+          },
+          "markdownDescription": "Map commit-author emails to explicit avatar image URLs. Used when an email has neither a Gravatar account nor a GitHub `noreply` address, so the author still shows a real avatar. Keys are matched case-insensitively. Example: `{ \"you@example.com\": \"https://avatars.githubusercontent.com/u/12345\" }`. Entries whose value is not an `https://` URL are ignored."
+        },
         "gitGraphPlus.defaults.push.force": { "type": "string", "enum": ["none", "with-lease", "force"], "default": "none", "markdownDescription": "⚠️ `with-lease`/`force` pre-checks a force push, which can overwrite remote history." },
         "gitGraphPlus.defaults.push.setUpstream": { "type": "boolean", "default": true, "markdownDescription": "Set the upstream tracking reference with `-u` when pushing." },
         "gitGraphPlus.defaults.push.allTags": { "type": "boolean", "default": false, "markdownDescription": "Also push all tags (`--tags`)." },
