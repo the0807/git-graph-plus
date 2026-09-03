@@ -491,7 +491,10 @@ export class GitService {
         args.push(branch);
       }
     } else if (!options?.remoteFilter || options.remoteFilter.length === 0) {
-      args.push('--glob=refs/heads', '--glob=refs/remotes', '--glob=refs/tags');
+      // Include HEAD itself as a start point: in a detached HEAD the current
+      // commit is reachable from no branch/tag, so the globs alone would omit
+      // it entirely (issue #63).
+      args.push('--glob=refs/heads', '--glob=refs/remotes', '--glob=refs/tags', 'HEAD');
     } else {
       for (const source of options.remoteFilter) {
         if (source === 'local') {

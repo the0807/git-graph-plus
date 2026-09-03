@@ -83,6 +83,15 @@ describe('GitService integration — basic queries', () => {
       expect(subjects).toContain('init');
       expect(subjects).not.toContain('m2');
     });
+
+    it('includes a commit reachable only from a detached HEAD', async () => {
+      const base = commit(repo.path, 'base', { 'a.txt': '1\n' });
+      runGit(repo.path, ['checkout', '--detach', base]);
+      const detached = commit(repo.path, 'detached', { 'a.txt': '2\n' });
+
+      const commits = await svc.log();
+      expect(commits.map((c) => c.hash)).toContain(detached);
+    });
   });
 
   describe('branches', () => {
