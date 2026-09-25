@@ -1532,6 +1532,10 @@
                   {@const isWtBranch = (ref.type === 'branch' || ref.type === 'head') && worktreeBranches.has(ref.name)}
                   {@const badgeColor = ref.type === 'tag' ? '#f0c040' : ref.type === 'stash' ? 'var(--text-secondary, #888)' : isWtBranch ? '#4caf50' : nodeColor}
                   {@const showCloudOnly = hasRemote && trackedUpstream && (remoteFilter.length === 0 || (remoteFilter.includes('local') && remoteFilter.includes(trackedUpstream.split('/')[0])))}
+                  <!-- Ref badge clicks are label actions, not commit selection:
+                       stop propagation so a single click does not open the bottom
+                       panel (and a slower double-click does not flash it). The
+                       dbl-click checkout behaviour is unchanged. -->
                   {#if showCloudOnly}
                     <span
                       class="ref-badge badge-cloud-only"
@@ -1539,6 +1543,7 @@
                       class:badge-head={ref.type === 'head'}
                       class:badge-fixed={isWtBranch}
                       use:tooltip={trackedUpstream ?? ''}
+                      onclick={(e) => e.stopPropagation()}
                       ondblclick={(e) => {
                         e.stopPropagation();
                         doCheckout(ref.name, false, {}, true);
@@ -1577,6 +1582,7 @@
                     ondrop={(e) => { if (ref.type === 'branch' || ref.type === 'head') onBranchDrop(e, ref.name); }}
                     ondragend={() => { dragSourceBranch = null; dragOverBranch = null; }}
                     use:tooltip={t('graph.dblClickCheckout', { ref: ref.type === 'remote-branch' ? ref.remote + '/' + ref.name : ref.name })}
+                    onclick={(e) => e.stopPropagation()}
                     ondblclick={(e) => {
                       e.stopPropagation();
                       if (ref.type === 'remote-branch') {

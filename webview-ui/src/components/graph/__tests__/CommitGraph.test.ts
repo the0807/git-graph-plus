@@ -418,3 +418,68 @@ describe('CommitGraph signature icon', () => {
     uiStore.exitMultiSelect();
   });
 });
+
+describe('CommitGraph ref badge clicks', () => {
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 220));
+
+  // Earlier tests can leave the row-select debounce timer pending; drain it and
+  // reset the selection so these isolation assertions observe only their own click.
+  beforeEach(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    uiStore.selectedCommitHash = null;
+  });
+
+  function branchData() {
+    const head = makeCommit('h1', 'first');
+    head.refs = [{ type: 'branch', name: 'feature' }];
+    return makeGraphData([
+      makeCommit('UNCOMMITTED', 'Uncommitted changes'),
+      head,
+    ]);
+  }
+
+  it('single click on a ref badge does not select the commit (no bottom panel)', async () => {
+    commitStore.setData(branchData());
+    const { container } = render(CommitGraph, {});
+    await tick();
+    const badge = container.querySelector<HTMLElement>('.ref-badge');
+    expect(badge).toBeTruthy();
+
+    await fireEvent.click(badge!);
+    // Wait past the row's 150 ms single-click debounce: on the old behaviour the
+    // bubbled click selected the commit and opened the bottom panel.
+    await settle();
+
+    expect(uiStore.selectedCommitHash).toBeNull();
+  });
+
+  it('a slower double click on a ref badge does not flash-select the row and still starts checkout', async () => {
+    commitStore.setData(branchData());
+    const { container } = render(CommitGraph, {});
+    await tick();
+    globalThis.__postedMessages = [];
+    const badge = container.querySelector<HTMLElement>('.ref-badge')!;
+
+    // Two clicks further apart than the 150 ms debounce (typical OS double-click
+    // interval) used to make the first click open the panel mid-double-click.
+    await fireEvent.click(badge);
+    await settle();
+    await fireEvent.click(badge);
+    await fireEvent.dblClick(badge);
+
+    expect(uiStore.selectedCommitHash).toBeNull();
+    expect(globalThis.__postedMessages.some((m) => (m.data as { type?: string }).type === 'checkDirty')).toBe(true);
+  });
+
+  it('clicking the commit row still selects it', async () => {
+    commitStore.setData(branchData());
+    const { container } = render(CommitGraph, {});
+    await tick();
+    const rows = container.querySelectorAll<HTMLElement>('.commit-row');
+
+    await fireEvent.click(rows[1]);
+    await settle();
+
+    expect(uiStore.selectedCommitHash).toBe('h1');
+  });
+});
