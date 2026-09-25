@@ -419,6 +419,11 @@
           "default": "ui",
           "markdownDescription": "How **Interactive Rebase** opens: the built-in GUI editor (`ui`), or the classic `git rebase -i` flow in the integrated terminal (`classic`), which uses your configured Git editor (e.g. vim, nano, `code --wait`)."
         },
+        "gitGraphPlus.lfsLocks": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Fetch Git LFS lock status from the origin server when commit details are shown. Disable this on hosts that do not support LFS locking (e.g. some on-premise Git servers) to stop repeated lock requests and their error pop-ups. Local LFS file status is still shown. Lock fetching is also skipped when the repository sets `lfs.locksverify=false`."
+        },
         "gitGraphPlus.graphSortOrder": {
           "type": "string",
           "enum": [

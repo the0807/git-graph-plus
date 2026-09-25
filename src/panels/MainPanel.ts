@@ -5,7 +5,7 @@ import { GitService, GitError } from '../git/git-service';
 import { formatGitError, isAuthFailure, transportFromRemoteUrl } from '../git/git-error-formatter';
 import { splitUpstreamRef } from '../git/git-parser';
 import { samePath } from '../utils/path';
-import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readInteractiveRebaseMode } from '../utils/config';
+import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readInteractiveRebaseMode, readLfsLocksEnabled } from '../utils/config';
 import { buildClassicRebaseCommand } from '../git/classic-rebase';
 import { buildFullGraph } from '../git/git-graph-builder';
 import { compileBranchColorRules, makeBranchColorResolver } from '../git/branch-color-resolver';
@@ -74,6 +74,19 @@ export class MainPanel {
       // Webview was torn down between our check and the call (e.g., user
       // closed the panel mid-flight). Nothing to do.
     }
+  }
+
+  /**
+   * Loads LFS file status (local, always) and lock status (origin server).
+   * Lock polling is skipped — and an empty list posted — when the
+   * `gitGraphPlus.lfsLocks` setting is off or the repository sets
+   * `lfs.locksverify=false` (issue #70).
+   */
+  private async postLfsData(): Promise<void> {
+    const files = await this.gitService.lfsLsFiles();
+    const fetchLocks = readLfsLocksEnabled() && (await this.gitService.isLfsLocksVerifyEnabled());
+    const locks = fetchLocks ? await this.gitService.lfsLocks() : [];
+    this.post({ type: 'lfsData', payload: { files, locks } });
   }
 
   public static setExtraEnv(env: Record<string, string>): void {
@@ -240,6 +253,9 @@ export class MainPanel {
         }
         if (e.affectsConfiguration('gitGraphPlus.timeout')) {
           this.gitService.setDefaultTimeout(readTimeoutMs());
+        }
+        if (e.affectsConfiguration('gitGraphPlus.lfsLocks')) {
+          void this.postLfsData();
         }
       })
     );
@@ -1381,27 +1397,21 @@ export class MainPanel {
         }
         // --- LFS ---
         case 'getLfsFiles': {
-          const lfsFiles = await this.gitService.lfsLsFiles();
-          const lfsLocks = await this.gitService.lfsLocks();
-          this.post({ type: 'lfsData', payload: { files: lfsFiles, locks: lfsLocks } });
+          await this.postLfsData();
           break;
         }
         case 'lfsLock': {
           await this.gitService.lfsLock(message.payload.file);
           this.post({ type: 'operationComplete', payload: { operation: 'lfsLock', success: true } });
           // Refresh LFS data
-          const lfsFiles = await this.gitService.lfsLsFiles();
-          const lfsLocks = await this.gitService.lfsLocks();
-          this.post({ type: 'lfsData', payload: { files: lfsFiles, locks: lfsLocks } });
+          await this.postLfsData();
           break;
         }
         case 'lfsUnlock': {
           await this.gitService.lfsUnlock(message.payload.file, message.payload.force);
           this.post({ type: 'operationComplete', payload: { operation: 'lfsUnlock', success: true } });
           // Refresh LFS data
-          const lfsFiles2 = await this.gitService.lfsLsFiles();
-          const lfsLocks2 = await this.gitService.lfsLocks();
-          this.post({ type: 'lfsData', payload: { files: lfsFiles2, locks: lfsLocks2 } });
+          await this.postLfsData();
           break;
         }
         // --- Worktree ---

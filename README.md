@@ -184,6 +184,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 | Setting                                | Default       | Description                                              |
 | -------------------------------------- | ------------- | -------------------------------------------------------- |
 | `gitGraphPlus.autoRefresh`             | `true`        | Auto-refresh on repository changes                       |
+| `gitGraphPlus.lfsLocks`                | `true`        | Fetch LFS lock status from the origin server (off for hosts without LFS locking) |
 | `gitGraphPlus.timeout`                 | `60`          | Max time (seconds) to wait for a Git command before abort |
 | `gitGraphPlus.initialCommitCount`      | `200`         | Commits loaded on first render / refresh (lower = faster in huge repos) |
 | `gitGraphPlus.loadMoreCommitCount`     | `50`          | Extra commits fetched per **Load more commits** click    |

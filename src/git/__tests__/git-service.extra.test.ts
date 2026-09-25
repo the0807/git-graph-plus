@@ -122,6 +122,23 @@ describe('GitService — LFS', () => {
     expect(calls[0]).toEqual(['lfs', 'unlock', '--force', '--', 'a.bin']);
   });
 
+  it('isLfsLocksVerifyEnabled reads lfs.locksverify as a bool', async () => {
+    const calls: string[][] = [];
+    mockExec(service, async (args) => { calls.push(args); return 'true\n'; });
+    expect(await service.isLfsLocksVerifyEnabled()).toBe(true);
+    expect(calls[0]).toEqual(['config', '--bool', '--get', 'lfs.locksverify']);
+  });
+
+  it('isLfsLocksVerifyEnabled returns false only for an explicit false', async () => {
+    mockExec(service, async () => 'false\n');
+    expect(await service.isLfsLocksVerifyEnabled()).toBe(false);
+  });
+
+  it('isLfsLocksVerifyEnabled defaults to true when the key is unset or unreadable', async () => {
+    mockExec(service, async (args) => { throw new GitError('missing key', 1, args); });
+    expect(await service.isLfsLocksVerifyEnabled()).toBe(true);
+  });
+
   it('lfsLock rejects an option-like file name', async () => {
     await expect(service.lfsLock('-evil')).rejects.toThrow();
   });

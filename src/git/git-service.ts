@@ -2104,6 +2104,20 @@ export class GitService {
     return this.exec(args);
   }
 
+  /**
+   * Reads the repository's `lfs.locksverify` config. Returns false only when
+   * the value parses to false; an unset (exit 1) or unreadable value keeps lock
+   * fetching enabled, matching git-lfs' own default.
+   */
+  async isLfsLocksVerifyEnabled(): Promise<boolean> {
+    try {
+      const raw = (await this.exec(['config', '--bool', '--get', 'lfs.locksverify'], { silent: true })).trim();
+      return raw !== 'false';
+    } catch {
+      return true;
+    }
+  }
+
   async lfsLocks(): Promise<Array<{ path: string; owner: string; id: string }>> {
     try {
       const raw = await this.exec(['lfs', 'locks']);

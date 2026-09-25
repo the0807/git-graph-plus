@@ -13,7 +13,7 @@ vi.mock('vscode', () => ({
   },
 }));
 
-import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount } from '../config';
+import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readLfsLocksEnabled } from '../config';
 
 describe('readTimeoutMs', () => {
   // Back-compat alias so the existing timeout cases below read naturally.
@@ -99,5 +99,27 @@ describe('readLoadMoreCommitCount', () => {
     expect(readLoadMoreCommitCount()).toBe(50);
     h.values.loadMoreCommitCount = Infinity;
     expect(readLoadMoreCommitCount()).toBe(50);
+  });
+});
+
+describe('readLfsLocksEnabled', () => {
+  beforeEach(() => { h.values = {}; });
+
+  it('defaults to true when unset', () => {
+    expect(readLfsLocksEnabled()).toBe(true);
+  });
+
+  it('returns the configured boolean as-is', () => {
+    h.values.lfsLocks = true;
+    expect(readLfsLocksEnabled()).toBe(true);
+    h.values.lfsLocks = false;
+    expect(readLfsLocksEnabled()).toBe(false);
+  });
+
+  it('falls back to true for non-boolean values', () => {
+    h.values.lfsLocks = 'no';
+    expect(readLfsLocksEnabled()).toBe(true);
+    h.values.lfsLocks = 0;
+    expect(readLfsLocksEnabled()).toBe(true);
   });
 });

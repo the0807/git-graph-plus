@@ -38,6 +38,16 @@ export function readLoadMoreCommitCount(): number {
 }
 
 /**
+ * Reads `gitGraphPlus.lfsLocks` — whether to poll the origin server for Git LFS
+ * lock status. Falls back to `true` (the previous behaviour) when unset or
+ * non-boolean.
+ */
+export function readLfsLocksEnabled(): boolean {
+  const enabled = vscode.workspace.getConfiguration('gitGraphPlus').get<boolean>('lfsLocks', true);
+  return typeof enabled === 'boolean' ? enabled : true;
+}
+
+/**
  * Reads `gitGraphPlus.interactiveRebase.mode` — whether interactive rebase
  * opens the GUI editor (`ui`, default) or runs classic `git rebase -i` in the
  * integrated terminal (`classic`).
