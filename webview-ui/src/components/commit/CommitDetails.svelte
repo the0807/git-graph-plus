@@ -1502,10 +1502,14 @@
     color: #000;
   }
 
-  /* High contrast overrides */
+  /* High contrast overrides. HC light themes put both vscode-light and
+     vscode-high-contrast on <body>, so this rule supplies the text color while
+     the light rules above supply pale fills — a hardcoded white was unreadable
+     there (#80). strongForeground is white in HC dark and black in HC light;
+     the foreground fallback covers VS Code builds without strongForeground. */
   :global(body.vscode-high-contrast) .ref-badge {
     background: transparent;
-    color: #fff;
+    color: var(--vscode-strongForeground, var(--vscode-foreground, #fff));
     border: 1px solid var(--badge-color);
   }
 
