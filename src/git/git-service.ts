@@ -1762,8 +1762,26 @@ export class GitService {
 
   async getConflictFiles(): Promise<string[]> {
     try {
-      const raw = await this.exec(['diff', '--name-only', '--diff-filter=U']);
-      return raw.trim().split('\n').filter(Boolean);
+      // Read the unmerged entries straight from the index. A gitlink conflict
+      // (submodule pointer) is three mode-160000 stage entries for one path;
+      // `ls-files --unmerged` always reports them, whereas `git diff
+      // --diff-filter=U` is a working-tree diff and can drop entries based on
+      // diff/submodule configuration (#94). Records are
+      // "<mode> <oid> <stage>\t<path>" (paths are literal: exec runs git with
+      // core.quotePath=false), so collapse the stage entries to one path each.
+      const raw = await this.exec(['ls-files', '--unmerged']);
+      const paths: string[] = [];
+      const seen = new Set<string>();
+      for (const line of raw.split('\n')) {
+        const tab = line.indexOf('\t');
+        if (tab < 0) continue;
+        const path = line.slice(tab + 1);
+        if (path && !seen.has(path)) {
+          seen.add(path);
+          paths.push(path);
+        }
+      }
+      return paths;
     } catch (err) {
       console.warn('Git Graph+: failed to get conflict files:', err instanceof Error ? err.message : err);
       return [];
@@ -1791,8 +1809,19 @@ export class GitService {
   }
 
   async continueOperation(): Promise<void> {
-    // Stage all resolved conflict files before continuing
-    await this.exec(['add', '-A']);
+    // Stage the paths that are still unmerged — the ones the user resolved by
+    // hand — with an explicit `git add -- <path>` instead of a blanket
+    // `add -A`. For a conflicted submodule gitlink that is exactly the manual
+    // `git add <submodule>` that works in the superproject (#94), and it keeps
+    // unrelated working-tree edits out of the rebase/cherry-pick commit.
+    // Nothing unmerged (e.g. an `edit` pause or a squash) keeps the previous
+    // blanket staging so edits made during the pause are still included.
+    const unresolved = await this.getConflictFiles();
+    if (unresolved.length > 0) {
+      await this.exec(['add', '--', ...unresolved]);
+    } else {
+      await this.exec(['add', '-A']);
+    }
     const state = await this.getOperationState();
     switch (state.type) {
       case 'merge': await this.exec(['commit', '--no-edit']); break;

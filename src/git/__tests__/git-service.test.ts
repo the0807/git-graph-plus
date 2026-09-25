@@ -1061,6 +1061,73 @@ describe('GitService', () => {
     });
   });
 
+  // Regression coverage for #94: a rebase that conflicts on a submodule
+  // gitlink leaves three mode-160000 entries for one path in the index. The
+  // conflict must be listed (so the UI can stage it) and resolved with
+  // `git add -- <path>` in the superproject, exactly like the manual command.
+  describe('gitlink (submodule) conflicts (#94)', () => {
+    const GITLINK_STAGES =
+      '160000 aaaa000000000000000000000000000000000000 1\tlibs/lib\n' +
+      '160000 bbbb000000000000000000000000000000000000 2\tlibs/lib\n' +
+      '160000 cccc000000000000000000000000000000000000 3\tlibs/lib\n';
+
+    it('lists a conflicted gitlink from the unmerged index entries', async () => {
+      const calls: string[][] = [];
+      mockExec(service, async (args) => { calls.push(args); return GITLINK_STAGES; });
+
+      expect(await service.getConflictFiles()).toEqual(['libs/lib']);
+      expect(calls[0]).toEqual(['ls-files', '--unmerged']);
+    });
+
+    it('lists mixed file and gitlink conflicts once each', async () => {
+      mockExec(service, async () =>
+        '100644 aaaa000000000000000000000000000000000000 1\tsrc/a.ts\n' +
+        '100644 bbbb000000000000000000000000000000000000 3\tsrc/a.ts\n' +
+        GITLINK_STAGES);
+
+      expect(await service.getConflictFiles()).toEqual(['src/a.ts', 'libs/lib']);
+    });
+
+    it('stageFile stages a gitlink path with git add -- <path>', async () => {
+      const calls: string[][] = [];
+      mockExec(service, async (args) => { calls.push(args); return ''; });
+
+      await service.stageFile('libs/lib');
+      expect(calls[0]).toEqual(['add', '--', 'libs/lib']);
+    });
+
+    it('continueOperation stages only the unmerged gitlink path before continuing', async () => {
+      const calls: string[][] = [];
+      mockExec(service, async (args) => {
+        calls.push(args);
+        return args[0] === 'ls-files' ? GITLINK_STAGES : '';
+      });
+      vi.spyOn(service, 'getOperationState').mockResolvedValue({ type: 'rebase' });
+
+      await service.continueOperation();
+
+      expect(calls).toEqual([
+        ['ls-files', '--unmerged'],
+        ['add', '--', 'libs/lib'],
+        ['rebase', '--continue'],
+      ]);
+    });
+
+    it('continueOperation keeps the blanket stage when nothing is unmerged', async () => {
+      const calls: string[][] = [];
+      mockExec(service, async (args) => { calls.push(args); return ''; });
+      vi.spyOn(service, 'getOperationState').mockResolvedValue({ type: 'rebase' });
+
+      await service.continueOperation();
+
+      expect(calls).toEqual([
+        ['ls-files', '--unmerged'],
+        ['add', '-A'],
+        ['rebase', '--continue'],
+      ]);
+    });
+  });
+
   describe('addRemote URL validation', () => {
     it('accepts https URL', async () => {
       const calls: string[][] = [];
