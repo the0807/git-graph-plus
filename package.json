@@ -439,6 +439,11 @@
           "default": true,
           "markdownDescription": "Show a GPG/SSH signature status icon next to each commit in the graph. ⚠️ This verifies the signature of every commit in the log, which can slow down loading on very large repositories — turn it off if you notice slow graph loading. The Commit Details panel always shows signature status on demand regardless of this setting."
         },
+        "gitGraphPlus.showStashes": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show stash entries in the commit graph and commit search results. Turn this off to hide stashes from the graph and search while keeping them available in the **Stashes** sidebar view."
+        },
         "gitGraphPlus.branchBadgeBarThickness": {
           "type": "string",
           "enum": [

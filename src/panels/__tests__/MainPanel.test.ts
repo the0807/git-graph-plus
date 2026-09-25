@@ -31,9 +31,15 @@ const H = vi.hoisted(() => {
     setAuthRetryHandler: vi.fn(),
     setExtraEnv: vi.fn(),
     setDefaultTimeout: vi.fn(),
+    searchCommits: vi.fn(async () => []),
+    searchByFile: vi.fn(async () => []),
   };
   return {
     git,
+    // Values returned by workspace.getConfiguration('gitGraphPlus').get(key, def);
+    // an absent key falls back to the caller-supplied default.
+    configValues: {} as Record<string, unknown>,
+    configListener: null as null | ((e: { affectsConfiguration: (s: string) => boolean }) => void),
     messageHandler: null as null | ((m: unknown) => unknown),
     panel: null as null | { webview: { postMessage: ReturnType<typeof vi.fn> } },
     repos: [] as Array<{ path: string; name: string; type: string }>,
@@ -70,10 +76,15 @@ vi.mock('vscode', () => {
       showSaveDialog: vi.fn(async () => undefined),
     },
     workspace: {
-      getConfiguration: () => ({ get: (_k: string, d?: unknown) => d }),
+      getConfiguration: () => ({
+        get: (k: string, d?: unknown) => (H.configValues[k] === undefined ? d : H.configValues[k]),
+      }),
       getWorkspaceFolder: () => ({ uri: { fsPath: '/repo' } }),
       workspaceFolders: [{ uri: { fsPath: '/repo' } }],
-      onDidChangeConfiguration: () => ({ dispose() {} }),
+      onDidChangeConfiguration: (cb: (e: { affectsConfiguration: (s: string) => boolean }) => void) => {
+        H.configListener = cb;
+        return { dispose() {} };
+      },
       fs: { writeFile: vi.fn(async () => {}) },
     },
     commands: { executeCommand: vi.fn() },
@@ -127,6 +138,10 @@ beforeEach(() => {
   H.git.showCommitDiff.mockResolvedValue([]);
   H.git.fileExistsAtRef.mockResolvedValue(true);
   H.git.getEmptyTreeRef.mockResolvedValue('4b825dc642cb6eb9a060e54bf8d69288fbee4904');
+  H.git.searchCommits.mockResolvedValue([]);
+  H.git.searchByFile.mockResolvedValue([]);
+  H.configValues = {};
+  H.configListener = null;
   H.repos = [{ path: '/repo', name: 'repo', type: 'root' }];
   (MainPanel as unknown as { currentPanel: unknown }).currentPanel = undefined;
   MainPanel.createOrShow(extUri, '/repo');
@@ -435,5 +450,45 @@ describe('MainPanel orchestration logic', () => {
       M.savedRemoteFilter = prevRemote;
       M.savedBranchFilter = prevBranch;
     }
+  });
+});
+
+describe('MainPanel showStashes setting', () => {
+  const lastLogArgs = () => H.git.log.mock.calls.at(-1)![0] as { includeStashes?: unknown };
+
+  it('getLog keeps stashes by default', async () => {
+    await dispatch({ type: 'getLog', payload: {} });
+    expect(lastLogArgs().includeStashes).toBe(true);
+  });
+
+  it('getLog omits stashes when gitGraphPlus.showStashes is false', async () => {
+    H.configValues.showStashes = false;
+    await dispatch({ type: 'getLog', payload: {} });
+    expect(lastLogArgs().includeStashes).toBe(false);
+  });
+
+  it('refreshAll omits stashes when gitGraphPlus.showStashes is false', async () => {
+    H.configValues.showStashes = false;
+    await (MainPanel.currentPanel as unknown as { refreshAll(): Promise<void> }).refreshAll();
+    expect(lastLogArgs().includeStashes).toBe(false);
+  });
+
+  it('search handlers follow the setting', async () => {
+    H.configValues.showStashes = false;
+    await dispatch({ type: 'searchCommits', payload: { query: 'x' } });
+    expect(H.git.searchCommits).toHaveBeenCalledWith('x', expect.objectContaining({ includeStashes: false }));
+
+    await dispatch({ type: 'searchByFile', payload: { file: 'a.ts' } });
+    const call = H.git.searchByFile.mock.calls.at(-1)!;
+    expect(call[0]).toBe('a.ts');
+    expect(call[2]).toEqual({ includeStashes: false });
+  });
+
+  it('refreshes the graph when gitGraphPlus.showStashes changes', async () => {
+    expect(H.git.log).not.toHaveBeenCalled();
+    H.configValues.showStashes = false;
+    H.configListener!({ affectsConfiguration: (k: string) => k === 'gitGraphPlus.showStashes' });
+    await vi.waitFor(() => expect(H.git.log).toHaveBeenCalled());
+    expect(lastLogArgs().includeStashes).toBe(false);
   });
 });

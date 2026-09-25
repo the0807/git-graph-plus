@@ -47,3 +47,13 @@ export function readInteractiveRebaseMode(): InteractiveRebaseMode {
     vscode.workspace.getConfiguration('gitGraphPlus').get<string>('interactiveRebase.mode', 'ui'),
   );
 }
+
+/**
+ * Reads `gitGraphPlus.showStashes` — whether stashes are rendered in the
+ * commit graph and included in commit search results. Defaults to true
+ * (stashes visible) so existing behaviour is unchanged.
+ */
+export function readShowStashes(): boolean {
+  const raw = vscode.workspace.getConfiguration('gitGraphPlus').get<boolean>('showStashes', true);
+  return typeof raw === 'boolean' ? raw : true;
+}

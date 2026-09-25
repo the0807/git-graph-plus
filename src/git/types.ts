@@ -171,4 +171,8 @@ export interface LogOptions {
    *  signatureStatus. Off by default — it forces GPG verification of every
    *  commit in the log, which is slow on large repos. */
   includeSignature?: boolean;
+  /** When false, skip stash resolution entirely: no `stash list` call, no
+   *  stash rows, and no stash base commits added as extra walk start points.
+   *  Defaults to true (stashes visible) when omitted. */
+  includeStashes?: boolean;
 }

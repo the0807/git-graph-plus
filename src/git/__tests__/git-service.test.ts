@@ -1124,6 +1124,57 @@ describe('GitService', () => {
       expect(args).toContain('--after=2024-01-01');
       expect(args).toContain('--before=2024-12-31');
     });
+
+    it('walks all refs (including refs/stash) by default', async () => {
+      const calls: string[][] = [];
+      (service as any).cachedRemoteNames = [];
+      (service as any).remoteNamesCacheTime = Date.now();
+      mockExec(service, async (args) => { calls.push(args); return ''; });
+
+      await service.searchCommits('fix');
+      const args = calls.find(a => a[0] === 'log')!;
+      expect(args).toContain('--all');
+      expect(args).not.toContain('--exclude=refs/stash');
+    });
+
+    it('excludes refs/stash when includeStashes is false', async () => {
+      const calls: string[][] = [];
+      (service as any).cachedRemoteNames = [];
+      (service as any).remoteNamesCacheTime = Date.now();
+      mockExec(service, async (args) => { calls.push(args); return ''; });
+
+      await service.searchCommits('fix', { includeStashes: false });
+      const args = calls.find(a => a[0] === 'log')!;
+      // --exclude must precede --all, which it scopes.
+      expect(args.indexOf('--exclude=refs/stash')).toBeGreaterThanOrEqual(0);
+      expect(args.indexOf('--exclude=refs/stash')).toBeLessThan(args.indexOf('--all'));
+    });
+  });
+
+  describe('searchByFile includeStashes', () => {
+    it('walks all refs (including refs/stash) by default', async () => {
+      const calls: string[][] = [];
+      (service as any).cachedRemoteNames = [];
+      (service as any).remoteNamesCacheTime = Date.now();
+      mockExec(service, async (args) => { calls.push(args); return ''; });
+
+      await service.searchByFile('src/app.ts');
+      const args = calls.find(a => a[0] === 'log')!;
+      expect(args).toContain('--all');
+      expect(args).not.toContain('--exclude=refs/stash');
+    });
+
+    it('excludes refs/stash when includeStashes is false', async () => {
+      const calls: string[][] = [];
+      (service as any).cachedRemoteNames = [];
+      (service as any).remoteNamesCacheTime = Date.now();
+      mockExec(service, async (args) => { calls.push(args); return ''; });
+
+      await service.searchByFile('src/app.ts', 100, { includeStashes: false });
+      const args = calls.find(a => a[0] === 'log')!;
+      expect(args.indexOf('--exclude=refs/stash')).toBeGreaterThanOrEqual(0);
+      expect(args.indexOf('--exclude=refs/stash')).toBeLessThan(args.indexOf('--all'));
+    });
   });
 
   describe('lsTree', () => {

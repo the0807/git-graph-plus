@@ -526,7 +526,10 @@ export class GitService {
     // Resolve stashes before running the log: their base commits may need to be
     // added as extra walk start points (below). stashList() is deduped/cached,
     // so awaiting it here doesn't add a round-trip versus the old Promise.all.
-    const stashes = await this.stashList();
+    // When includeStashes is false (gitGraphPlus.showStashes), skip the call
+    // and the insertion below so the graph never shows stash rows.
+    const includeStashes = options?.includeStashes !== false;
+    const stashes = includeStashes ? await this.stashList() : [];
 
     // Include each stash's base commit as an extra rev-list start point so git
     // walks the stash's ancestry down to where it rejoins the main history.
@@ -1931,7 +1934,7 @@ export class GitService {
 
   // --- Phase 6: Search, Commit Template ---
 
-  async searchCommits(query: string, options?: { author?: string; after?: string; before?: string; limit?: number }): Promise<Commit[]> {
+  async searchCommits(query: string, options?: { author?: string; after?: string; before?: string; limit?: number; includeStashes?: boolean }): Promise<Commit[]> {
     // Defense-in-depth: reject control characters that could inject extra git
     // arguments. spawn() with explicit argv already prevents shell injection,
     // but a newline inside --grep=... lets a single user value carry multiple
@@ -1949,10 +1952,16 @@ export class GitService {
     const args = [
       'log',
       '--format=%x01%x02%x03%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
-      '--all',
       '--topo-order',
       `--max-count=${options?.limit ?? 200}`,
     ];
+
+    if (options?.includeStashes === false) {
+      // `--exclude` scopes the `--all` below, dropping refs/stash (and the
+      // stash commits only reachable from it) from search results.
+      args.push('--exclude=refs/stash');
+    }
+    args.push('--all');
 
     if (query) {
       args.push(`--grep=${query}`, '-i');
@@ -1972,16 +1981,23 @@ export class GitService {
     return commits;
   }
 
-  async searchByFile(filePath: string, limit: number = 100): Promise<Commit[]> {
+  async searchByFile(filePath: string, limit: number = 100, options?: { includeStashes?: boolean }): Promise<Commit[]> {
     this.assertSafePath(filePath, 'log');
     const args = [
       'log',
       '--format=%x01%x02%x03%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b',
+    ];
+    if (options?.includeStashes === false) {
+      // `--exclude` scopes the `--all` below, dropping refs/stash (and the
+      // stash commits only reachable from it) from search results.
+      args.push('--exclude=refs/stash');
+    }
+    args.push(
       '--all',
       `--max-count=${limit}`,
       '--',
       filePath,
-    ];
+    );
     const [raw, remoteNames] = await Promise.all([this.exec(args), this.getRemoteNames()]);
     const commits = parseLog(raw, remoteNames);
     return commits;

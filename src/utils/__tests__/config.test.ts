@@ -13,7 +13,7 @@ vi.mock('vscode', () => ({
   },
 }));
 
-import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount } from '../config';
+import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readShowStashes } from '../config';
 
 describe('readTimeoutMs', () => {
   // Back-compat alias so the existing timeout cases below read naturally.
@@ -99,5 +99,25 @@ describe('readLoadMoreCommitCount', () => {
     expect(readLoadMoreCommitCount()).toBe(50);
     h.values.loadMoreCommitCount = Infinity;
     expect(readLoadMoreCommitCount()).toBe(50);
+  });
+});
+
+describe('readShowStashes', () => {
+  beforeEach(() => { h.values = {}; });
+
+  it('defaults to true when unset (stashes visible, current behaviour)', () => {
+    expect(readShowStashes()).toBe(true);
+  });
+
+  it('returns the boolean value as-is', () => {
+    h.values.showStashes = false;
+    expect(readShowStashes()).toBe(false);
+    h.values.showStashes = true;
+    expect(readShowStashes()).toBe(true);
+  });
+
+  it('falls back to true for a non-boolean value', () => {
+    h.values.showStashes = 'no';
+    expect(readShowStashes()).toBe(true);
   });
 });

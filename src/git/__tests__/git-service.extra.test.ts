@@ -574,6 +574,53 @@ describe('GitService — log() with stashes', () => {
     expect(commits.some(c => c.hash === 'c1')).toBe(true);
     expect(warn).toHaveBeenCalled();
   });
+
+  it('resolves and inserts stashes by default (includeStashes omitted)', async () => {
+    const stashListSpy = vi.spyOn(service, 'stashList');
+    mockExec(service, async (args) => {
+      if (args[0] === 'log' && !args.includes('--no-walk')) {
+        return logRecord('p1', 'p1', 'parent', '');
+      }
+      if (args[0] === 'stash' && args[1] === 'list') {
+        return stashRecord(0, 'WIP', 'p1', 'sHash');
+      }
+      if (args[0] === 'log' && args.includes('--no-walk')) {
+        return logRecord('sHash', 'sHash', 'wip', 'p1');
+      }
+      if (args[0] === 'status') return '';
+      return '';
+    });
+
+    const commits = await service.log();
+    expect(stashListSpy).toHaveBeenCalled();
+    expect(commits.some(c => c.hash === 'sHash')).toBe(true);
+  });
+
+  it('skips stashList and stash insertion when includeStashes is false', async () => {
+    const calls: string[][] = [];
+    const stashListSpy = vi.spyOn(service, 'stashList');
+    mockExec(service, async (args) => {
+      calls.push(args);
+      if (args[0] === 'log' && !args.includes('--no-walk')) {
+        return logRecord('p1', 'p1', 'parent', '') + logRecord('c1', 'c1', 'child', 'p1');
+      }
+      if (args[0] === 'stash' && args[1] === 'list') {
+        return stashRecord(0, 'WIP', 'p1', 'sHash');
+      }
+      if (args[0] === 'log' && args.includes('--no-walk')) {
+        return logRecord('sHash', 'sHash', 'wip', 'p1');
+      }
+      if (args[0] === 'status') return '';
+      return '';
+    });
+
+    const commits = await service.log({ includeStashes: false });
+    expect(stashListSpy).not.toHaveBeenCalled();
+    expect(calls.some(a => a[0] === 'stash' && a[1] === 'list')).toBe(false);
+    expect(calls.some(a => a[0] === 'log' && a.includes('--no-walk'))).toBe(false);
+    expect(commits.some(c => c.hash === 'sHash')).toBe(false);
+    expect(commits.map(c => c.hash)).toContain('p1');
+  });
 });
 
 describe('GitService — log() uncommitted porcelain branches', () => {
