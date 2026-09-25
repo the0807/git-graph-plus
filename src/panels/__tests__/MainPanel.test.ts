@@ -37,6 +37,7 @@ const H = vi.hoisted(() => {
     messageHandler: null as null | ((m: unknown) => unknown),
     panel: null as null | { webview: { postMessage: ReturnType<typeof vi.fn> } },
     repos: [] as Array<{ path: string; name: string; type: string }>,
+    configValues: {} as Record<string, unknown>,
   };
 });
 
@@ -68,9 +69,15 @@ vi.mock('vscode', () => {
       showWarningMessage: vi.fn(),
       showErrorMessage: vi.fn(async () => undefined),
       showSaveDialog: vi.fn(async () => undefined),
+      showTextDocument: vi.fn(async () => undefined),
     },
     workspace: {
-      getConfiguration: () => ({ get: (_k: string, d?: unknown) => d }),
+      getConfiguration: (section?: string) => ({
+        get: (k: string, d?: unknown) => {
+          const key = section ? `${section}.${k}` : k;
+          return key in H.configValues ? H.configValues[key] : d;
+        },
+      }),
       getWorkspaceFolder: () => ({ uri: { fsPath: '/repo' } }),
       workspaceFolders: [{ uri: { fsPath: '/repo' } }],
       onDidChangeConfiguration: () => ({ dispose() {} }),
@@ -128,6 +135,7 @@ beforeEach(() => {
   H.git.fileExistsAtRef.mockResolvedValue(true);
   H.git.getEmptyTreeRef.mockResolvedValue('4b825dc642cb6eb9a060e54bf8d69288fbee4904');
   H.repos = [{ path: '/repo', name: 'repo', type: 'root' }];
+  H.configValues = {};
   (MainPanel as unknown as { currentPanel: unknown }).currentPanel = undefined;
   MainPanel.createOrShow(extUri, '/repo');
 });
@@ -286,6 +294,53 @@ describe('MainPanel message routing', () => {
     await new Promise(r => setTimeout(r, 0)); // let sendRepoList populate cachedRepos
     await dispatch({ type: 'switchRepo', payload: { path: '/somewhere/else' } });
     expect(postedOfType('error').length).toBeGreaterThan(0);
+  });
+});
+
+describe('MainPanel openConflictFile honours git.mergeEditor', () => {
+  const openConflict = () => dispatch({ type: 'openConflictFile', payload: { file: 'src/conflict.ts' } });
+
+  it('opens a normal text editor (no merge editor) when git.mergeEditor is false', async () => {
+    const vscode = await import('vscode');
+    H.configValues['git.mergeEditor'] = false;
+
+    await openConflict();
+
+    expect(vscode.window.showTextDocument).toHaveBeenCalledWith(
+      expect.objectContaining({ fsPath: expect.stringContaining('conflict.ts') }),
+    );
+    expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('git.openMergeEditor', expect.anything());
+  });
+
+  it('uses the merge editor when git.mergeEditor is true', async () => {
+    const vscode = await import('vscode');
+    H.configValues['git.mergeEditor'] = true;
+
+    await openConflict();
+
+    expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+      'git.openMergeEditor',
+      expect.objectContaining({ fsPath: expect.stringContaining('conflict.ts') }),
+    );
+    expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
+  });
+
+  it('defaults to the merge editor when git.mergeEditor is unset', async () => {
+    const vscode = await import('vscode');
+
+    await openConflict();
+
+    expect(vscode.commands.executeCommand).toHaveBeenCalledWith('git.openMergeEditor', expect.anything());
+    expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
+  });
+
+  it('falls back to a normal editor when the merge editor command fails', async () => {
+    const vscode = await import('vscode');
+    (vscode.commands.executeCommand as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('merge editor unavailable'));
+
+    await openConflict();
+
+    expect(vscode.window.showTextDocument).toHaveBeenCalled();
   });
 });
 

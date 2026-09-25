@@ -1565,10 +1565,17 @@ export class MainPanel {
         case 'openConflictFile': {
           const fullPath = this.resolveRepoRelativePath(message.payload.file, 'openConflictFile');
           const fileUri = vscode.Uri.file(fullPath);
-          // Try to open in VS Code's 3-way merge editor, fallback to normal editor
-          try {
-            await vscode.commands.executeCommand('git.openMergeEditor', fileUri);
-          } catch {
+          // Follow the native git.mergeEditor preference (#67): only try the
+          // 3-way merge editor when it is enabled (the VS Code default).
+          const useMergeEditor = vscode.workspace.getConfiguration('git').get<boolean>('mergeEditor', true);
+          if (useMergeEditor) {
+            // Try to open in VS Code's 3-way merge editor, fallback to normal editor
+            try {
+              await vscode.commands.executeCommand('git.openMergeEditor', fileUri);
+            } catch {
+              await vscode.window.showTextDocument(fileUri);
+            }
+          } else {
             await vscode.window.showTextDocument(fileUri);
           }
           break;
