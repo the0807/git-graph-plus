@@ -409,6 +409,11 @@
           "minimum": 1,
           "markdownDescription": "Number of additional commits fetched each time the **Load more commits** button is clicked."
         },
+        "gitGraphPlus.showAvatars": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show author/committer avatars in the graph, hover cards, commit details, and stats view. When off, only names are shown and avatars are not requested or fetched."
+        },
         "gitGraphPlus.interactiveRebase.mode": {
           "type": "string",
           "enum": ["ui", "classic"],

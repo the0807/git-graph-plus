@@ -54,7 +54,9 @@
 >
   <div class="card-header">
     <div class="author-row">
-      <img class="avatar" src={avatarStore.url(commit.author.email, 32)} alt="" />
+      {#if avatarStore.enabled}
+        <img class="avatar" src={avatarStore.url(commit.author.email, 32)} alt="" />
+      {/if}
       <div class="author-meta">
         <div class="name-line">
           <span class="author-name">{commit.author.name}</span>

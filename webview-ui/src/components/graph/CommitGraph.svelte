@@ -1362,7 +1362,9 @@
       <div class="col-author">
         {#if commit.hash !== 'UNCOMMITTED'}
           <span class="author-id" use:tooltip={commit.author.name}>
-            <img class="avatar-sm" src={avatarStore.url(commit.author.email, 20)} alt="" />
+            {#if avatarStore.enabled}
+              <img class="avatar-sm" src={avatarStore.url(commit.author.email, 20)} alt="" />
+            {/if}
             <span class="author-name truncate">{commit.author.name}</span>
           </span>
           {#if commit.signatureStatus && commit.signatureStatus !== 'none'}

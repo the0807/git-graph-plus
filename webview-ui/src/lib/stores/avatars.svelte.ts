@@ -21,12 +21,20 @@ class AvatarStore {
   // key -> data URI; '' means resolved-but-unavailable (failed fetch).
   private cache = new SvelteMap<string, string>();
   private requested = new Set<string>();
+  /** Mirrors `gitGraphPlus.showAvatars`; when false no avatar is requested
+   *  and `url()` hands back the transparent pixel for every key. */
+  enabled = $state(true);
+
+  setEnabled(value: boolean): void {
+    this.enabled = value;
+  }
 
   private key(email: string, size: number): string {
     return `${email.trim().toLowerCase()}:${size}`;
   }
 
   url(email: string, size: number): string {
+    if (!this.enabled) return TRANSPARENT_PIXEL;
     const key = this.key(email, size);
     const hit = this.cache.get(key);
     if (hit === undefined && !this.requested.has(key)) {

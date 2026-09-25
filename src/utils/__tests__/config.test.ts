@@ -13,7 +13,7 @@ vi.mock('vscode', () => ({
   },
 }));
 
-import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount } from '../config';
+import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readShowAvatars } from '../config';
 
 describe('readTimeoutMs', () => {
   // Back-compat alias so the existing timeout cases below read naturally.
@@ -99,5 +99,28 @@ describe('readLoadMoreCommitCount', () => {
     expect(readLoadMoreCommitCount()).toBe(50);
     h.values.loadMoreCommitCount = Infinity;
     expect(readLoadMoreCommitCount()).toBe(50);
+  });
+});
+
+describe('readShowAvatars', () => {
+  beforeEach(() => { h.values = {}; });
+
+  it('defaults to true when unset', () => {
+    expect(readShowAvatars()).toBe(true);
+  });
+
+  it('returns false when explicitly disabled', () => {
+    h.values.showAvatars = false;
+    expect(readShowAvatars()).toBe(false);
+  });
+
+  it('returns true when explicitly enabled', () => {
+    h.values.showAvatars = true;
+    expect(readShowAvatars()).toBe(true);
+  });
+
+  it('falls back to true for a non-boolean value', () => {
+    h.values.showAvatars = 'no';
+    expect(readShowAvatars()).toBe(true);
   });
 });

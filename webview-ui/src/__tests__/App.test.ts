@@ -6,6 +6,7 @@ import { commitStore } from '../lib/stores/commits.svelte';
 import { branchStore } from '../lib/stores/branches.svelte';
 import { uiStore } from '../lib/stores/ui.svelte';
 import { modalStore } from '../lib/stores/modals.svelte';
+import { avatarStore } from '../lib/stores/avatars.svelte';
 
 function postMsg(type: string, payload?: unknown) {
   window.dispatchEvent(new MessageEvent('message', { data: { type, payload } }));
@@ -101,6 +102,14 @@ describe('App — message handling', () => {
       expect(uiStore.badgeBarWidth).toBe(6);
       expect(document.documentElement.style.getPropertyValue('--badge-bar-width')).toBe('6px');
     });
+  });
+
+  it('setShowAvatars toggles avatarStore.enabled', async () => {
+    render(App);
+    postMsg('setShowAvatars', { enabled: false });
+    await waitFor(() => expect(avatarStore.enabled).toBe(false));
+    postMsg('setShowAvatars', { enabled: true });
+    await waitFor(() => expect(avatarStore.enabled).toBe(true));
   });
 
   it('repoList populates uiStore.repos and activeRepo', async () => {

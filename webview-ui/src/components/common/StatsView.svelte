@@ -65,7 +65,9 @@
         {#each byAuthor as author, i}
           <div class="author-row">
             <span class="author-rank">#{i + 1}</span>
-            <img class="author-avatar" src={avatarStore.url(author.email, 24)} alt="" />
+            {#if avatarStore.enabled}
+              <img class="author-avatar" src={avatarStore.url(author.email, 24)} alt="" />
+            {/if}
             <div class="author-info">
               <span class="author-name truncate">{author.author}</span>
               <div class="author-bar-container">

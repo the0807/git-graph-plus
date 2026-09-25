@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { avatarStore } from '../avatars.svelte';
 
 const TRANSPARENT_PIXEL =
@@ -48,5 +48,33 @@ describe('avatarStore', () => {
   it('normalizes email casing and whitespace into the same cache key', () => {
     avatarStore.receive('Fifth@Example.com', 32, 'data:image/png;base64,BBBB');
     expect(avatarStore.url('  fifth@example.com  ', 32)).toBe('data:image/png;base64,BBBB');
+  });
+});
+
+describe('avatarStore — disabled (showAvatars off)', () => {
+  afterEach(() => {
+    avatarStore.setEnabled(true);
+  });
+
+  it('returns the transparent pixel and posts no getAvatar while disabled', () => {
+    avatarStore.setEnabled(false);
+    globalThis.__postedMessages = [];
+    expect(avatarStore.url('hidden@example.com', 32)).toBe(TRANSPARENT_PIXEL);
+    expect(postedTypes()).not.toContain('getAvatar');
+    expect(globalThis.__postedMessages.length).toBe(0);
+  });
+
+  it('resumes requesting and serving avatars after re-enabling', () => {
+    avatarStore.setEnabled(false);
+    globalThis.__postedMessages = [];
+    expect(avatarStore.url('resume@example.com', 32)).toBe(TRANSPARENT_PIXEL);
+    expect(postedTypes()).not.toContain('getAvatar');
+
+    avatarStore.setEnabled(true);
+    expect(avatarStore.url('resume@example.com', 32)).toBe(TRANSPARENT_PIXEL);
+    expect(postedTypes()).toContain('getAvatar');
+
+    avatarStore.receive('resume@example.com', 32, 'data:image/png;base64,RESUMED');
+    expect(avatarStore.url('resume@example.com', 32)).toBe('data:image/png;base64,RESUMED');
   });
 });

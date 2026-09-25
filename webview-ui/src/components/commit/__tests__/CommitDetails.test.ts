@@ -5,6 +5,7 @@ import { i18n } from '../../../lib/i18n/index.svelte';
 import { commitStore } from '../../../lib/stores/commits.svelte';
 import { uiStore } from '../../../lib/stores/ui.svelte';
 import { modalStore } from '../../../lib/stores/modals.svelte';
+import { avatarStore } from '../../../lib/stores/avatars.svelte';
 import type { Commit, DiffData } from '../../../lib/types';
 
 function commit(over: Partial<Commit> = {}): Commit {
@@ -1459,5 +1460,38 @@ describe('CommitDetails — reverse changes (committed view)', () => {
     await fireEvent.click(item);
     const msg = lastReverse();
     expect(msg!.payload).toMatchObject({ commit: 'h1', file: 'src/a.ts', hunkIndex: 0, lineIndices: [1, 2] });
+  });
+});
+
+describe('CommitDetails — avatars', () => {
+  afterEach(() => {
+    avatarStore.setEnabled(true);
+  });
+
+  it('renders author and committer avatars by default', async () => {
+    const { container } = render(CommitDetails, {
+      commit: commit({
+        committer: { name: 'Bob', email: 'b@x.com', date: '2024-01-15T11:00:00Z' },
+      }),
+    });
+    await waitFor(() => container.querySelector('.person-name'));
+    expect(container.querySelectorAll('img.avatar-lg').length).toBe(2);
+  });
+
+  it('hides avatars but keeps author and committer names when showAvatars is off', async () => {
+    avatarStore.setEnabled(false);
+    const { container } = render(CommitDetails, {
+      commit: commit({
+        committer: { name: 'Bob', email: 'b@x.com', date: '2024-01-15T11:00:00Z' },
+      }),
+    });
+    await waitFor(() => container.querySelector('.person-name'));
+    expect(container.querySelector('img.avatar-lg')).toBeFalsy();
+    const names = Array.from(container.querySelectorAll('.person-name')).map(el => el.textContent ?? '');
+    expect(names.some(n => n.includes('Alice'))).toBe(true);
+    expect(names.some(n => n.includes('Bob'))).toBe(true);
+    expect(
+      globalThis.__postedMessages.some(m => (m.data as { type?: string }).type === 'getAvatar')
+    ).toBe(false);
   });
 });

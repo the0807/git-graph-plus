@@ -5,7 +5,7 @@ import { GitService, GitError } from '../git/git-service';
 import { formatGitError, isAuthFailure, transportFromRemoteUrl } from '../git/git-error-formatter';
 import { splitUpstreamRef } from '../git/git-parser';
 import { samePath } from '../utils/path';
-import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readInteractiveRebaseMode } from '../utils/config';
+import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readInteractiveRebaseMode, readShowAvatars } from '../utils/config';
 import { buildClassicRebaseCommand } from '../git/classic-rebase';
 import { buildFullGraph } from '../git/git-graph-builder';
 import { compileBranchColorRules, makeBranchColorResolver } from '../git/branch-color-resolver';
@@ -226,6 +226,9 @@ export class MainPanel {
         if (e.affectsConfiguration('gitGraphPlus.loadMoreCommitCount')) {
           this.post({ type: 'setLoadMoreCount', payload: { count: readLoadMoreCommitCount() } });
         }
+        if (e.affectsConfiguration('gitGraphPlus.showAvatars')) {
+          this.post({ type: 'setShowAvatars', payload: { enabled: readShowAvatars() } });
+        }
         if (e.affectsConfiguration('gitGraphPlus.branchColors')) {
           this.refreshAll();
         }
@@ -256,6 +259,7 @@ export class MainPanel {
     this.post({ type: 'setGraphColors', payload: { colors: this.readGraphColors() } });
     this.post({ type: 'setLoadMoreCount', payload: { count: readLoadMoreCommitCount() } });
     this.post({ type: 'setInteractiveRebaseMode', payload: { mode: readInteractiveRebaseMode() } });
+    this.post({ type: 'setShowAvatars', payload: { enabled: readShowAvatars() } });
     void this.postCommitLinkRules();
 
     this.panel.webview.onDidReceiveMessage(

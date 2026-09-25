@@ -112,6 +112,9 @@ import AmendModal from './components/modals/AmendModal.svelte';
         case 'setBadgeBarThickness':
           uiStore.badgeBarWidth = msg.payload.width;
           break;
+        case 'setShowAvatars':
+          avatarStore.setEnabled(msg.payload.enabled);
+          break;
         case 'setLoadMoreCount':
           uiStore.loadMoreCount = msg.payload.count;
           break;
