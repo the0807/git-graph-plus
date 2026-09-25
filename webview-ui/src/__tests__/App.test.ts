@@ -30,6 +30,7 @@ function resetStores() {
   uiStore.activeRepo = '';
   uiStore.operating = null;
   uiStore.badgeBarWidth = 4;
+  uiStore.autoLoadHistory = false;
   uiStore.setError(null);
   // modalStore is a singleton across tests; one stuck open modal will render
   // through every subsequent App mount and break unrelated assertions.
@@ -100,6 +101,18 @@ describe('App — message handling', () => {
     await waitFor(() => {
       expect(uiStore.badgeBarWidth).toBe(6);
       expect(document.documentElement.style.getPropertyValue('--badge-bar-width')).toBe('6px');
+    });
+  });
+
+  it('setAutoLoadHistory updates uiStore.autoLoadHistory', async () => {
+    render(App);
+    postMsg('setAutoLoadHistory', { enabled: true });
+    await waitFor(() => {
+      expect(uiStore.autoLoadHistory).toBe(true);
+    });
+    postMsg('setAutoLoadHistory', { enabled: false });
+    await waitFor(() => {
+      expect(uiStore.autoLoadHistory).toBe(false);
     });
   });
 

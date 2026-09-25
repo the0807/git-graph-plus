@@ -409,6 +409,11 @@
           "minimum": 1,
           "markdownDescription": "Number of additional commits fetched each time the **Load more commits** button is clicked."
         },
+        "gitGraphPlus.autoLoadHistory": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Automatically load the next chunk of history when you scroll near the bottom of the graph, instead of clicking **Load more commits** each time. The button remains available."
+        },
         "gitGraphPlus.interactiveRebase.mode": {
           "type": "string",
           "enum": ["ui", "classic"],

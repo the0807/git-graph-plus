@@ -45,10 +45,15 @@ beforeEach(() => {
   commitStore.dots = [];
   commitStore.commitLeftMargin = [];
   commitStore.loading = false;
+  commitStore.loadingMore = false;
+  commitStore.hasMore = false;
+  commitStore.currentLimit = 0;
   commitStore.notGitRepo = false;
   branchStore.branches = [];
   branchStore.worktrees = [];
   uiStore.selectedCommitHash = null;
+  uiStore.autoLoadHistory = false;
+  uiStore.loadMoreCount = 50;
   modalStore.closeAll();
 });
 
@@ -416,5 +421,107 @@ describe('CommitGraph signature icon', () => {
     expect(item).toBeTruthy();
 
     uiStore.exitMultiSelect();
+  });
+});
+
+describe('CommitGraph auto-load history (issue #61)', () => {
+  function graphDataWithMore(): CommitGraphData {
+    const data = makeGraphData([
+      makeCommit('h1', 'first'),
+      makeCommit('h2', 'second', ['h1']),
+    ]);
+    data.hasMore = true;
+    data.currentLimit = 100;
+    return data;
+  }
+
+  // happy-dom reports 0 for layout metrics, so pin a realistic
+  // scrolled-to-the-bottom state before dispatching the scroll event.
+  function scrollToBottom(container: HTMLElement): HTMLElement {
+    const graph = container.querySelector<HTMLElement>('.commit-graph');
+    expect(graph).toBeTruthy();
+    Object.defineProperty(graph, 'clientHeight', { value: 300, configurable: true });
+    Object.defineProperty(graph, 'scrollHeight', { value: 3000, configurable: true });
+    Object.defineProperty(graph, 'scrollTop', { value: 2800, configurable: true });
+    return graph!;
+  }
+
+  function getLogMessages() {
+    return globalThis.__postedMessages
+      .map(m => m.data as { type?: string; payload?: { limit?: number } })
+      .filter(m => m.type === 'getLog');
+  }
+
+  it('posts the next getLog chunk on a scroll near the bottom when enabled', async () => {
+    commitStore.setData(graphDataWithMore());
+    uiStore.autoLoadHistory = true;
+    const { container } = render(CommitGraph, {});
+    await tick();
+
+    await fireEvent.scroll(scrollToBottom(container));
+    await tick();
+
+    expect(getLogMessages()).toHaveLength(1);
+    // Same payload as the "Load more" button: currentLimit + loadMoreCount.
+    expect(getLogMessages()[0].payload?.limit).toBe(150);
+    expect(commitStore.loadingMore).toBe(true);
+  });
+
+  it('does nothing on scroll when the setting is disabled', async () => {
+    commitStore.setData(graphDataWithMore());
+    uiStore.autoLoadHistory = false;
+    const { container } = render(CommitGraph, {});
+    await tick();
+
+    await fireEvent.scroll(scrollToBottom(container));
+    await tick();
+
+    expect(getLogMessages()).toHaveLength(0);
+    expect(commitStore.loadingMore).toBe(false);
+  });
+
+  it('does not auto-load while a load-more request is already in flight', async () => {
+    commitStore.setData(graphDataWithMore());
+    uiStore.autoLoadHistory = true;
+    const { container } = render(CommitGraph, {});
+    await tick();
+    const graph = scrollToBottom(container);
+
+    await fireEvent.scroll(graph);
+    await tick();
+    expect(getLogMessages()).toHaveLength(1);
+
+    await fireEvent.scroll(graph);
+    await tick();
+
+    expect(getLogMessages()).toHaveLength(1);
+  });
+
+  it('does not auto-load when there is no more history', async () => {
+    const data = graphDataWithMore();
+    data.hasMore = false;
+    commitStore.setData(data);
+    uiStore.autoLoadHistory = true;
+    const { container } = render(CommitGraph, {});
+    await tick();
+
+    await fireEvent.scroll(scrollToBottom(container));
+    await tick();
+
+    expect(getLogMessages()).toHaveLength(0);
+    expect(commitStore.loadingMore).toBe(false);
+  });
+
+  it('does not auto-load while a search is active', async () => {
+    commitStore.setData(graphDataWithMore());
+    uiStore.autoLoadHistory = true;
+    const { container } = render(CommitGraph, { searchMatchedHashes: new Set(['h1']) });
+    await tick();
+
+    await fireEvent.scroll(scrollToBottom(container));
+    await tick();
+
+    expect(getLogMessages()).toHaveLength(0);
+    expect(commitStore.loadingMore).toBe(false);
   });
 });

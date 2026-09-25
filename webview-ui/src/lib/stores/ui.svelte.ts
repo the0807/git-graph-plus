@@ -24,6 +24,9 @@ class UiStore {
   operating = $state<string | null>(null);
   badgeBarWidth = $state(4);
   loadMoreCount = $state(50);
+  // Issue #61: when true, scrolling near the bottom of the graph fetches the
+  // next chunk automatically. Off by default so "Load more" stays manual.
+  autoLoadHistory = $state(false);
   interactiveRebaseMode = $state<InteractiveRebaseMode>('ui');
   // True while a file is selected in the commit-details panel. Owned (synced)
   // by CommitDetails; read by the global Esc handler so the first Esc deselects

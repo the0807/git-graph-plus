@@ -148,6 +148,10 @@ describe('MainPanel construction', () => {
     expect(H.panel!.webview).toBeDefined();
     expect(postedOfType('setLocale').length).toBeGreaterThan(0);
   });
+
+  it('posts the auto-load-history setting on init (default off)', () => {
+    expect(postedOfType('setAutoLoadHistory').at(-1)?.payload).toEqual({ enabled: false });
+  });
 });
 
 describe('MainPanel message routing', () => {

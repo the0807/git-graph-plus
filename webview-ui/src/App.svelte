@@ -115,6 +115,9 @@ import AmendModal from './components/modals/AmendModal.svelte';
         case 'setLoadMoreCount':
           uiStore.loadMoreCount = msg.payload.count;
           break;
+        case 'setAutoLoadHistory':
+          uiStore.autoLoadHistory = msg.payload.enabled;
+          break;
         case 'setInteractiveRebaseMode':
           uiStore.interactiveRebaseMode = msg.payload.mode;
           break;

@@ -15,6 +15,8 @@ export function readTimeoutMs(): number {
 export const DEFAULT_INITIAL_COMMIT_COUNT = 200;
 /** Default number of extra commits fetched each time "Load more" is clicked. */
 export const DEFAULT_LOAD_MORE_COMMIT_COUNT = 50;
+/** Default for `gitGraphPlus.autoLoadHistory`: off, so "Load more" stays manual. */
+export const DEFAULT_AUTO_LOAD_HISTORY = false;
 
 function readPositiveIntSetting(key: string, fallback: number): number {
   const raw = vscode.workspace.getConfiguration('gitGraphPlus').get<number>(key, fallback);
@@ -35,6 +37,18 @@ export function readInitialCommitCount(): number {
  */
 export function readLoadMoreCommitCount(): number {
   return readPositiveIntSetting('loadMoreCommitCount', DEFAULT_LOAD_MORE_COMMIT_COUNT);
+}
+
+/**
+ * Reads `gitGraphPlus.autoLoadHistory` — whether scrolling near the bottom of
+ * the graph automatically fetches the next chunk (issue #61). Falls back to
+ * false when unset, so the default behaviour keeps the "Load more" button
+ * manual.
+ */
+export function readAutoLoadHistory(): boolean {
+  return vscode.workspace
+    .getConfiguration('gitGraphPlus')
+    .get<boolean>('autoLoadHistory', DEFAULT_AUTO_LOAD_HISTORY) === true;
 }
 
 /**

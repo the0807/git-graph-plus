@@ -32,6 +32,7 @@
   import type { DirtyPayload } from '../../lib/utils/dirty-payload';
   import { resolveDrop } from '../../lib/utils/dragDrop';
   import { computeNavigationTarget, computeScrollTop, computeJumpTarget, isRowOffscreen, type ScrollAlign } from '../../lib/graph-navigation';
+  import { isNearBottom } from '../../lib/utils/auto-load';
   import LinkifiedText from '../common/LinkifiedText.svelte';
   import { dispatchInteractiveRebase } from '../../lib/interactive-rebase';
 
@@ -541,6 +542,28 @@
     return col * X_SCALE;
   }
 
+  // Same action as the "Load more commits" button, shared so auto-load sends an
+  // identical request. The guards make it a no-op when there is nothing to load
+  // or a request is already in flight; `loadingMore` is cleared by `setData`
+  // when the response arrives, so it doubles as the in-flight flag.
+  function loadMore() {
+    if (!commitStore.hasMore || commitStore.loadingMore) return;
+    commitStore.setLoadingMore(true);
+    vscode.postMessage({ type: 'getLog', payload: { limit: commitStore.currentLimit + uiStore.loadMoreCount } });
+  }
+
+  // Issue #61: with the opt-in setting on, fetch the next chunk as soon as the
+  // user scrolls near the bottom. The check is O(1) per scroll event and always
+  // a no-op when the setting is off, so the default stays button-only. Skipped
+  // for search results (a fixed, non-paginated set) and while the graph is
+  // still loading its first page.
+  function maybeAutoLoadMore() {
+    if (!container || !uiStore.autoLoadHistory) return;
+    if (!commitStore.hasMore || commitStore.loadingMore || commitStore.loading) return;
+    if (isSearchActive) return;
+    if (isNearBottom(container.scrollTop, container.clientHeight, container.scrollHeight)) loadMore();
+  }
+
   // Coalesce scroll events into one update per animation frame. High-refresh
   // displays fire scroll 100+ times/sec; without this every event synchronously
   // pushed a new scrollTop, re-running the headOffscreen effect and the visible
@@ -548,6 +571,7 @@
   // screen can repaint.
   let scrollRaf: number | null = null;
   function handleScroll() {
+    maybeAutoLoadMore();
     if (scrollRaf !== null) return;
     scrollRaf = requestAnimationFrame(() => {
       scrollRaf = null;
@@ -1698,10 +1722,7 @@
         <button
           class="load-more-btn"
           disabled={commitStore.loadingMore}
-          onclick={() => {
-            commitStore.setLoadingMore(true);
-            vscode.postMessage({ type: 'getLog', payload: { limit: commitStore.currentLimit + uiStore.loadMoreCount } });
-          }}
+          onclick={loadMore}
         >
           {#if commitStore.loadingMore}
             <span class="spinner"></span>
