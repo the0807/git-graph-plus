@@ -22,6 +22,7 @@ function resetStores() {
   branchStore.worktrees = [];
   uiStore.viewMode = 'graph';
   uiStore.selectedCommitHash = null;
+  uiStore.pinnedHash = null;
   uiStore.comparing = false;
   uiStore.commitDetailFullscreen = false;
   uiStore.showBottomPanel = true;
@@ -447,6 +448,128 @@ describe('App — view mode rendering', () => {
     uiStore.viewMode = 'stats';
     await waitFor(() => {
       expect(container.querySelector('.stats-container')).not.toBeNull();
+    });
+  });
+});
+
+describe('App — reflog Show in Graph', () => {
+  function commitRow(hash: string) {
+    return {
+      hash, abbreviatedHash: hash.slice(0, 7), subject: 's', body: '', parents: [], refs: [],
+      author: { name: '', email: '', date: '' }, committer: { name: '', email: '', date: '' },
+    };
+  }
+
+  function deliverReflog(hash: string) {
+    postMsg('reflogData', {
+      entries: [{
+        hash,
+        shortHash: hash.slice(0, 7),
+        selector: 'HEAD@{0}',
+        message: 'commit: x',
+        date: new Date().toISOString(),
+        dangling: false,
+      }],
+      hasMore: false,
+    });
+  }
+
+  async function clickShowInGraph(container: HTMLElement) {
+    await waitFor(() => expect(container.querySelector('.reflog-row')).not.toBeNull());
+    await fireEvent.contextMenu(container.querySelector('.reflog-row')!, { clientX: 10, clientY: 10 });
+    const item = await waitFor(() => {
+      const el = Array.from(document.querySelectorAll<HTMLButtonElement>('button, [role="menuitem"]'))
+        .find(b => /show in graph/i.test(b.textContent ?? ''));
+      expect(el).toBeDefined();
+      return el!;
+    });
+    await fireEvent.click(item);
+  }
+
+  it('loaded commit: switches to graph and selects it without posting revealCommitInGraph', async () => {
+    const { container } = render(App);
+    commitStore.commits = [commitRow('aaaaaaa1')] as never;
+    uiStore.viewMode = 'log';
+    await waitFor(() => expect(container.querySelector('.log-container')).not.toBeNull());
+    deliverReflog('aaaaaaa1');
+
+    globalThis.__postedMessages = [];
+    await clickShowInGraph(container);
+
+    await waitFor(() => {
+      expect(uiStore.viewMode).toBe('graph');
+      expect(uiStore.selectedCommitHash).toBe('aaaaaaa1');
+    });
+    expect(globalThis.__postedMessages.some(
+      m => (m.data as { type?: string }).type === 'revealCommitInGraph'
+    )).toBe(false);
+  });
+
+  it('unloaded commit: switches to graph and posts revealCommitInGraph with the hash', async () => {
+    const { container } = render(App);
+    uiStore.viewMode = 'log';
+    await waitFor(() => expect(container.querySelector('.log-container')).not.toBeNull());
+    deliverReflog('deadbeef1234');
+
+    globalThis.__postedMessages = [];
+    await clickShowInGraph(container);
+
+    expect(uiStore.viewMode).toBe('graph');
+    const msg = globalThis.__postedMessages.find(
+      m => (m.data as { type?: string }).type === 'revealCommitInGraph'
+    ) as { data: { payload: { hash: string } } } | undefined;
+    expect(msg).toBeDefined();
+    expect(msg!.data.payload.hash).toBe('deadbeef1234');
+  });
+
+  it('logData with pinnedHash stores the pin, selects the commit, and shows the banner', async () => {
+    const { container } = render(App);
+    postMsg('logData', {
+      commits: [commitRow('aaaaaaa1')], graph: [], hasMore: false, currentLimit: 100,
+      pinnedHash: 'aaaaaaa1',
+    });
+    await waitFor(() => {
+      expect(uiStore.pinnedHash).toBe('aaaaaaa1');
+      expect(uiStore.selectedCommitHash).toBe('aaaaaaa1');
+      expect(container.querySelector('.pinned-banner')).not.toBeNull();
+    });
+    expect(container.querySelector('.pinned-banner')!.textContent ?? '').toContain('aaaaaaa');
+  });
+
+  it('a later logData without pinnedHash clears the pin', async () => {
+    render(App);
+    postMsg('logData', { commits: [], graph: [], hasMore: false, pinnedHash: 'aaaaaaa1' });
+    await waitFor(() => expect(uiStore.pinnedHash).toBe('aaaaaaa1'));
+    postMsg('logData', { commits: [], graph: [], hasMore: false });
+    await waitFor(() => expect(uiStore.pinnedHash).toBeNull());
+  });
+
+  it('a fullRefresh also clears the pin (refreshAll restores the normal graph)', async () => {
+    render(App);
+    postMsg('logData', { commits: [], graph: [], hasMore: false, pinnedHash: 'aaaaaaa1' });
+    await waitFor(() => expect(uiStore.pinnedHash).toBe('aaaaaaa1'));
+    postMsg('fullRefresh', {
+      logData: { commits: [], graph: [], hasMore: false, currentLimit: 50 },
+      branchData: { branches: [], tags: [], remotes: [], stashes: [], worktrees: [] },
+    });
+    await waitFor(() => expect(uiStore.pinnedHash).toBeNull());
+  });
+
+  it('Clear dismisses the banner and posts getLog to restore the normal graph', async () => {
+    const { container } = render(App);
+    postMsg('logData', {
+      commits: [], graph: [], hasMore: false, currentLimit: 100, pinnedHash: 'aaaaaaa1',
+    });
+    await waitFor(() => expect(container.querySelector('.pinned-banner')).not.toBeNull());
+
+    globalThis.__postedMessages = [];
+    await fireEvent.click(container.querySelector<HTMLButtonElement>('.pinned-banner .banner-btn')!);
+
+    expect(uiStore.pinnedHash).toBeNull();
+    await waitFor(() => {
+      expect(globalThis.__postedMessages.some(
+        m => (m.data as { type?: string }).type === 'getLog'
+      )).toBe(true);
     });
   });
 });

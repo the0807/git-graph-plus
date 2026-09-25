@@ -82,6 +82,10 @@ export interface CommitGraphData {
   currentLimit?: number;
   remoteFilter?: string[];
   branches?: string[];
+  /** Full hash of the commit the graph is pinned to (reflog "Show in Graph" on
+   *  a commit outside the loaded window). Absent on normal log payloads, which
+   *  tells the webview to clear any pin. */
+  pinnedHash?: string;
 }
 
 export interface BranchInfo {

@@ -500,3 +500,33 @@ describe('Reflog — dropdown backdrops and clear', () => {
     });
   });
 });
+
+describe('Reflog — Show in Graph', () => {
+  it('context menu contains "Show in Graph" and invokes onShowInGraph with the entry hash', async () => {
+    const onShowInGraph = vi.fn();
+    const { container } = render(Reflog, { active: true, onShowInGraph });
+    deliverReflog([entry({ hash: 'cafebabe1234', shortHash: 'cafebabe' })]);
+    await waitFor(() => container.querySelector('.reflog-row'));
+
+    await fireEvent.contextMenu(container.querySelector('.reflog-row')!, { clientX: 10, clientY: 10 });
+
+    const item = Array.from(document.querySelectorAll<HTMLButtonElement>('button, [role="menuitem"]'))
+      .find(b => /show in graph/i.test(b.textContent ?? ''));
+    expect(item).toBeDefined();
+
+    await fireEvent.click(item!);
+    expect(onShowInGraph).toHaveBeenCalledWith('cafebabe1234');
+  });
+
+  it('keeps the existing reset/checkout/copy actions in the menu', async () => {
+    const { container } = render(Reflog, { active: true });
+    deliverReflog([entry()]);
+    await waitFor(() => container.querySelector('.reflog-row'));
+    await fireEvent.contextMenu(container.querySelector('.reflog-row')!, { clientX: 10, clientY: 10 });
+    await waitFor(() => {
+      const text = document.body.textContent ?? '';
+      expect(text).toMatch(/reset|checkout|sha/i);
+      expect(text).toMatch(/show in graph/i);
+    });
+  });
+});

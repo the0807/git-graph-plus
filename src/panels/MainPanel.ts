@@ -446,6 +446,46 @@ export class MainPanel {
           });
           break;
         }
+        case 'revealCommitInGraph': {
+          // Reflog "Show in Graph" for a commit outside the loaded window
+          // (older or dangling). Resolve the hash first so an unknown/stale
+          // entry produces a clean error instead of a git failure, then walk
+          // history from that commit alone and pin the resulting slice.
+          const found = await this.gitService.searchByHash(message.payload.hash);
+          if (!found) {
+            this.post({ type: 'error', payload: { message: `Commit not found: ${message.payload.hash}` } });
+            break;
+          }
+          const pinnedLimit = readInitialCommitCount();
+          // Share the log sequence guard: a normal getLog/refresh arriving
+          // while this fetch is in flight supersedes the pinned response.
+          const pinnedSeq = ++this.logSequence;
+          const [pinnedCommits, pinnedBranches] = await Promise.all([
+            this.gitService.logPinnedCommit(found.hash, pinnedLimit),
+            this.gitService.branches(),
+          ]);
+          if (pinnedSeq !== this.logSequence) break;
+          const pinnedColorResolver = this.makeBranchColorResolver();
+          const pinnedGraph = pinnedCommits.length > 0
+            ? buildFullGraph(pinnedCommits, pinnedBranches, pinnedColorResolver)
+            : { paths: [], links: [], dots: [], commitLeftMargin: [] };
+          this.post({
+            type: 'logData',
+            payload: {
+              commits: pinnedCommits,
+              hasMore: false,
+              currentLimit: pinnedLimit,
+              // The webview renders from paths/links/dots; the legacy GraphNode[] is unused.
+              graph: [],
+              paths: pinnedGraph.paths,
+              links: pinnedGraph.links,
+              dots: pinnedGraph.dots,
+              commitLeftMargin: pinnedGraph.commitLeftMargin,
+              pinnedHash: found.hash,
+            },
+          });
+          break;
+        }
         case 'getBranches': {
           const [branches, tags, remotes, stashes, worktrees] = await Promise.all([
             this.gitService.branches(),

@@ -7,6 +7,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const H = vi.hoisted(() => {
   const git: Record<string, ReturnType<typeof vi.fn>> = {
     log: vi.fn(async () => []),
+    logPinnedCommit: vi.fn(async () => []),
+    searchByHash: vi.fn(async () => null),
     branches: vi.fn(async () => []),
     tags: vi.fn(async () => []),
     remotes: vi.fn(async () => []),
@@ -116,6 +118,8 @@ beforeEach(() => {
   // Reset default git behaviour after clearAllMocks wiped implementations.
   for (const k of Object.keys(H.git)) H.git[k].mockReset();
   H.git.log.mockResolvedValue([]);
+  H.git.logPinnedCommit.mockResolvedValue([]);
+  H.git.searchByHash.mockResolvedValue(null);
   H.git.branches.mockResolvedValue([]);
   H.git.tags.mockResolvedValue([]);
   H.git.remotes.mockResolvedValue([]);
@@ -435,5 +439,56 @@ describe('MainPanel orchestration logic', () => {
       M.savedRemoteFilter = prevRemote;
       M.savedBranchFilter = prevBranch;
     }
+  });
+});
+
+describe('MainPanel revealCommitInGraph (Show in Graph for unloaded commits)', () => {
+  it('fetches a pinned slice and posts logData with pinnedHash and those commits', async () => {
+    H.git.searchByHash.mockResolvedValue(commit('fullhash1') as never);
+    H.git.logPinnedCommit.mockResolvedValue([commit('fullhash1'), commit('parent111')] as never);
+
+    await dispatch({ type: 'revealCommitInGraph', payload: { hash: 'fullhash1' } });
+
+    expect(H.git.searchByHash).toHaveBeenCalledWith('fullhash1');
+    expect(H.git.logPinnedCommit).toHaveBeenCalledWith('fullhash1', expect.any(Number));
+    // The pinned view replaces the graph: no regular log fetch.
+    expect(H.git.log).not.toHaveBeenCalled();
+    const data = postedOfType('logData').at(-1)!;
+    expect(data.payload!.pinnedHash).toBe('fullhash1');
+    expect((data.payload!.commits as Array<{ hash: string }>).map(c => c.hash))
+      .toEqual(['fullhash1', 'parent111']);
+    expect(data.payload!.hasMore).toBe(false);
+  });
+
+  it('resolves short reflog hashes to the full hash via searchByHash', async () => {
+    H.git.searchByHash.mockResolvedValue(commit('abcdef1234567890abcdef1234567890abcdef12') as never);
+    H.git.logPinnedCommit.mockResolvedValue([commit('abcdef1234567890abcdef1234567890abcdef12')] as never);
+
+    await dispatch({ type: 'revealCommitInGraph', payload: { hash: 'abcdef1' } });
+
+    expect(H.git.logPinnedCommit).toHaveBeenCalledWith(
+      'abcdef1234567890abcdef1234567890abcdef12',
+      expect.any(Number),
+    );
+    const data = postedOfType('logData').at(-1)!;
+    expect(data.payload!.pinnedHash).toBe('abcdef1234567890abcdef1234567890abcdef12');
+  });
+
+  it('posts an error instead of logData when the hash is unknown', async () => {
+    H.git.searchByHash.mockResolvedValue(null);
+
+    await dispatch({ type: 'revealCommitInGraph', payload: { hash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef' } });
+
+    expect(postedOfType('logData').length).toBe(0);
+    expect(postedOfType('error').length).toBeGreaterThan(0);
+  });
+
+  it('a normal getLog posts no pinnedHash so the webview clears the pin', async () => {
+    H.git.log.mockResolvedValue([commit('aaaaaaa1')] as never);
+
+    await dispatch({ type: 'getLog', payload: {} });
+
+    const data = postedOfType('logData').at(-1)!;
+    expect('pinnedHash' in data.payload!).toBe(false);
   });
 });

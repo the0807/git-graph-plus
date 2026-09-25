@@ -14,6 +14,10 @@ class UiStore {
   compareRef1 = $state<string | null>(null);
   compareRef2 = $state<string | null>(null);
   viewMode = $state<'graph' | 'log' | 'stats'>('graph');
+  // Non-null while the graph shows a pinned slice fetched from a reflog entry
+  // outside the loaded window. Cleared by any normal logData payload or by the
+  // banner's Clear action.
+  pinnedHash = $state<string | null>(null);
   bottomPanelHeight = $state(250);
   showBottomPanel = $state(true);
   sidebarWidth = $state(220);

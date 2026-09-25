@@ -84,6 +84,7 @@ export type WebviewMessage =
   | { type: 'searchByFile'; payload: { file: string } }
   | { type: 'getActivityLog' }
   | { type: 'getReflog'; payload?: { ref?: string; limit?: number } }
+  | { type: 'revealCommitInGraph'; payload: { hash: string } }
   | { type: 'bisectStart'; payload: { bad?: string; good?: string } }
   | { type: 'bisectGood'; payload: { ref?: string } }
   | { type: 'bisectBad'; payload: { ref?: string } }

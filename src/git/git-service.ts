@@ -187,6 +187,12 @@ export class GitService {
 
   get rootPath(): string { return this.repoPath; }
 
+  /** Base `git log` pretty format shared by log() and logPinnedCommit() so a
+   *  pinned slice parses identically to a normal log. `%G?` is appended
+   *  per-call when signature verification is requested. */
+  private static readonly BASE_LOG_FORMAT =
+    '%x01%x02%x03%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b';
+
   // The empty tree object, keyed by the repo's hash algorithm. Used as the diff
   // base for root commits (no parent) so the diff renders the file as fully added.
   private static readonly EMPTY_TREE: Record<string, string> = {
@@ -478,7 +484,7 @@ export class GitService {
     // %G? is appended after %b only when signature verification is requested,
     // since it forces GPG verification of every commit in the log (slow on
     // large repos). %b never contains a NUL so the trailing column is unambiguous.
-    const format = '%x01%x02%x03%H%x00%h%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%s%x00%P%x00%D%x00%b'
+    const format = GitService.BASE_LOG_FORMAT
       + (options?.includeSignature ? '%x00%G?' : '');
     const args = [
       'log',
@@ -648,6 +654,28 @@ export class GitService {
     }
 
     return commits;
+  }
+
+  /**
+   * Fetches one pinned slice of history starting at `hash` — the commit the
+   * user asked to reveal from the reflog. The hash is the sole walk start
+   * point (no `--all`, no ref globs), so this also works for dangling or
+   * otherwise unreachable commits: `git log <hash>` walks the object's
+   * ancestry regardless of which refs (if any) point at it.
+   */
+  async logPinnedCommit(hash: string, limit?: number): Promise<Commit[]> {
+    this.assertSafeRef(hash, 'logPinnedCommit');
+    if (!/^[0-9a-f]{4,64}$/i.test(hash)) {
+      throw new GitError(`Invalid commit hash: ${hash}`, null, []);
+    }
+    const args = [
+      'log',
+      `--format=${GitService.BASE_LOG_FORMAT}`,
+      `--max-count=${limit ?? 200}`,
+      hash,
+    ];
+    const [raw, remoteNames] = await Promise.all([this.exec(args), this.getRemoteNames()]);
+    return parseLog(raw, remoteNames);
   }
 
   private async getRemoteNames(): Promise<string[]> {

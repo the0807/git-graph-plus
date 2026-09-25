@@ -92,6 +92,20 @@ import AmendModal from './components/modals/AmendModal.svelte';
           if (msg.payload.remoteFilter !== undefined) remoteFilter = msg.payload.remoteFilter;
           if (msg.payload.branches !== undefined) branchFilter = msg.payload.branches;
           commitStore.setData(msg.payload);
+          if (msg.payload.pinnedHash) {
+            // Reflog "Show in Graph" landed a pinned slice: select the commit
+            // and drive CommitGraph's scroll-to through the search-navigation prop.
+            uiStore.pinnedHash = msg.payload.pinnedHash;
+            uiStore.selectSingle(msg.payload.pinnedHash);
+            searchNavigateHash = msg.payload.pinnedHash;
+          } else {
+            // A normal payload ends any pinned view. Only drop the navigation
+            // target when we were actually pinned, so ordinary refreshes leave
+            // an active search navigation untouched.
+            const wasPinned = uiStore.pinnedHash !== null;
+            uiStore.pinnedHash = null;
+            if (wasPinned) searchNavigateHash = null;
+          }
           break;
         case 'branchData':
           branchStore.setData(msg.payload);
@@ -101,6 +115,12 @@ import AmendModal from './components/modals/AmendModal.svelte';
           branchFilter = msg.payload.logData.branches ?? [];
           branchStore.setData(msg.payload.branchData);
           commitStore.setData(msg.payload.logData);
+          // A full refresh carries a normal (unpinned) graph, so end any
+          // pinned view — otherwise the banner would outlive the pin.
+          if (uiStore.pinnedHash !== null) {
+            uiStore.pinnedHash = null;
+            searchNavigateHash = null;
+          }
           break;
         case 'setLocale':
           i18n.setLocale(msg.payload.locale);
@@ -297,6 +317,34 @@ import AmendModal from './components/modals/AmendModal.svelte';
     searchNavigateHash = hash;
   }
 
+  // Reflog context menu → "Show in Graph". v1: the commit is already in the
+  // loaded window, so switch views and select/scroll to it in place. v2: it is
+  // not loaded (older than the window, or dangling) — ask the extension for a
+  // pinned slice starting at that commit; the resulting logData carries
+  // pinnedHash and the logData handler above finishes the jump.
+  function handleShowInGraph(hash: string) {
+    uiStore.viewMode = 'graph';
+    const commit = commitStore.getCommit(hash);
+    if (commit) {
+      uiStore.selectSingle(commit.hash);
+      searchNavigateHash = commit.hash;
+    } else {
+      vscode.postMessage({ type: 'revealCommitInGraph', payload: { hash } });
+    }
+  }
+
+  // Banner Clear: drop the pin and reload the normal (unpinned) graph.
+  function clearPinnedGraph() {
+    uiStore.pinnedHash = null;
+    searchNavigateHash = null;
+    commitStore.setLoading(true);
+    vscode.postMessage({ type: 'getLog', payload: {
+      limit: commitStore.currentLimit || undefined,
+      branches: branchFilter.length > 0 ? [...branchFilter] : undefined,
+      remoteFilter: remoteFilter.length > 0 ? [...remoteFilter] : undefined,
+    }});
+  }
+
   function handleJumpToHead() {
     headJumpNonce++;
   }
@@ -460,6 +508,13 @@ import AmendModal from './components/modals/AmendModal.svelte';
 
   <div class="content-area">
     {#if uiStore.viewMode === 'graph'}
+      {#if uiStore.pinnedHash}
+        <div class="pinned-banner banner-card" transition:slide={{ duration: 150 }}>
+          <i class="codicon codicon-pin pinned-icon"></i>
+          <span class="pinned-text">{t('reflog.pinnedBanner', { hash: uiStore.pinnedHash.slice(0, 7) })}</span>
+          <button class="banner-btn pinned-clear" onclick={clearPinnedGraph}>{t('reflog.clearPinned')}</button>
+        </div>
+      {/if}
       {#if !bisectMessage && !conflict && !rebasePaused}
         <SearchBar
           onResults={handleSearchResults}
@@ -504,7 +559,7 @@ import AmendModal from './components/modals/AmendModal.svelte';
       {/if}
     {:else if uiStore.viewMode === 'log'}
       <div class="log-container">
-        <Reflog active={uiStore.viewMode === 'log'} />
+        <Reflog active={uiStore.viewMode === 'log'} onShowInGraph={handleShowInGraph} />
       </div>
     {:else if uiStore.viewMode === 'stats'}
       <div class="stats-container">
@@ -895,6 +950,35 @@ import AmendModal from './components/modals/AmendModal.svelte';
     background: rgba(123, 31, 162, 0.07);
     border-color: rgba(123, 31, 162, 0.3);
     color: #7b1fa2;
+  }
+
+  /* ---- Pinned-commit banner (reflog "Show in Graph") ---- */
+  .pinned-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 30%, transparent);
+    color: var(--text-primary);
+  }
+
+  .pinned-icon {
+    color: var(--vscode-focusBorder, #007fd4);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .pinned-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pinned-clear {
+    flex-shrink: 0;
   }
 
   /* ---- Conflict banner ---- */

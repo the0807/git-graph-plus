@@ -28,7 +28,10 @@
     separator?: boolean;
   }
 
-  let { active = false }: { active?: boolean } = $props();
+  let { active = false, onShowInGraph = (_hash: string) => {} }: {
+    active?: boolean;
+    onShowInGraph?: (hash: string) => void;
+  } = $props();
 
   // ── 데이터 ──────────────────────────────────────────────
   let entries       = $state<ReflogEntry[]>([]);
@@ -210,6 +213,8 @@
     const items: MenuItem[] = [];
 
     items.push(
+      { label: t('reflog.showInGraph'), action: () => { onShowInGraph(entry.hash); } },
+      sep,
       { label: t('reflog.resetTo', { selector: entry.selector }), action: () => { resetTarget = entry.hash; showResetModal = true; } },
       sep,
       { label: t('graph.checkoutCommit'), action: () => { checkoutTarget = entry.hash; showCheckoutModal = true; } },

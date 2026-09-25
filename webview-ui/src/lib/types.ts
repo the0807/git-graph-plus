@@ -81,6 +81,9 @@ export interface CommitGraphData {
   commitLeftMargin?: number[];
   hasMore?: boolean;
   currentLimit?: number;
+  /** Full hash the graph is pinned to (reflog "Show in Graph" on a commit
+   *  outside the loaded window). Absent on normal log payloads. */
+  pinnedHash?: string;
 }
 
 export interface BranchInfo {
