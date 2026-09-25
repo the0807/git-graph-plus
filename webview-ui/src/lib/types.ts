@@ -16,6 +16,9 @@ export interface Commit {
 /** Simplified 3-state mapping of git's `%G?` verification codes. */
 export type SignatureStatus = 'good' | 'none' | 'unverified';
 
+/** Line style used when drawing the commit graph (mirrors `gitGraphPlus.graphStyle`). */
+export type GraphStyle = 'rounded' | 'angular';
+
 /** On-demand signature details for a single commit (Details panel). */
 export interface CommitSignature {
   status: SignatureStatus;

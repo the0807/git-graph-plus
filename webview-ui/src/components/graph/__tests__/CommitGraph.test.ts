@@ -35,6 +35,36 @@ function makeGraphData(commits: Commit[]): CommitGraphData {
   };
 }
 
+// Multi-lane data: one path that moves right, back left (cubic), then straight,
+// plus one merge link. Exercises every branch of the geometry builder.
+function makeStyledGraphData(): CommitGraphData {
+  const commits = [
+    makeCommit('h1', 'first'),
+    makeCommit('h2', 'second', ['h1']),
+    makeCommit('h3', 'third', ['h2']),
+  ];
+  return {
+    commits,
+    graph: commits.map((c, i) => ({ commit: c.hash, column: i, color: '#63b0f4', parents: [] })),
+    paths: [
+      { points: [{ x: 0, y: 0 }, { x: 2, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }], color: 0 },
+    ],
+    links: [
+      { start: { x: 0, y: 0 }, control: { x: 1, y: 0 }, end: { x: 1, y: 1 }, color: 0 },
+    ],
+    dots: commits.map((_, i) => ({ center: { x: 0, y: i }, color: 0, type: 'default' as const, localOnly: false, remoteTip: false })),
+    commitLeftMargin: commits.map(() => 24),
+    hasMore: false,
+    currentLimit: 1000,
+  };
+}
+
+function renderedPathDs(container: HTMLElement): string[] {
+  return Array.from(container.querySelectorAll<SVGPathElement>('.graph-lines path')).map(
+    (p) => p.getAttribute('d') ?? '',
+  );
+}
+
 beforeEach(() => {
   i18n.setLocale('en');
   // Reset shared singletons between tests.
@@ -49,6 +79,7 @@ beforeEach(() => {
   branchStore.branches = [];
   branchStore.worktrees = [];
   uiStore.selectedCommitHash = null;
+  uiStore.graphStyle = 'rounded';
   modalStore.closeAll();
 });
 
@@ -242,6 +273,58 @@ describe('CommitGraph smoke', () => {
     const { container: c2 } = render(CommitGraph, {});
     await tick();
     expect(c2.querySelectorAll('.commit-row').length).toBe(2);
+  });
+});
+
+describe('CommitGraph graph line style', () => {
+  it('renders straight right-angled elbows (L only, no Q/C) when graphStyle is angular', async () => {
+    uiStore.graphStyle = 'angular';
+    commitStore.setData(makeStyledGraphData());
+    const { container } = render(CommitGraph, {});
+    await tick();
+
+    const ds = renderedPathDs(container);
+    expect(ds.length).toBeGreaterThan(0);
+    // Path elbows, then the merge link elbow.
+    expect(ds).toContain('M 0 0 L 2.1 0 L 2.1 30 L 0 30 L 0 60 L 0 90');
+    expect(ds).toContain('M 0 0 L 1.05 0 L 1.05 30');
+    for (const d of ds) {
+      expect(d).toContain('L');
+      expect(d).not.toContain('Q');
+      expect(d).not.toContain('C');
+    }
+    for (const p of container.querySelectorAll('.graph-lines path')) {
+      expect(p.getAttribute('stroke-linejoin')).toBe('miter');
+    }
+  });
+
+  it('renders rounded Q/C beziers by default', async () => {
+    commitStore.setData(makeStyledGraphData());
+    const { container } = render(CommitGraph, {});
+    await tick();
+
+    const ds = renderedPathDs(container);
+    expect(ds).toContain('M 0 0 Q 2.1 0, 2.1 30 C 2.1 49, 0 41, 0 60 L 0 90');
+    expect(ds).toContain('M 0 0 Q 1.05 0, 1.05 30');
+    expect(ds.some((d) => d.includes('Q'))).toBe(true);
+    expect(ds.some((d) => d.includes('C'))).toBe(true);
+    for (const p of container.querySelectorAll('.graph-lines path')) {
+      // Rounded mode keeps the previous DOM exactly: no explicit linejoin.
+      expect(p.getAttribute('stroke-linejoin')).toBeNull();
+    }
+  });
+
+  it('renders rounded Q/C beziers when graphStyle is explicitly rounded', async () => {
+    uiStore.graphStyle = 'rounded';
+    commitStore.setData(makeStyledGraphData());
+    const { container } = render(CommitGraph, {});
+    await tick();
+
+    const ds = renderedPathDs(container);
+    expect(ds).toContain('M 0 0 Q 2.1 0, 2.1 30 C 2.1 49, 0 41, 0 60 L 0 90');
+    expect(ds).toContain('M 0 0 Q 1.05 0, 1.05 30');
+    expect(ds.some((d) => d.includes('Q'))).toBe(true);
+    expect(ds.some((d) => d.includes('C'))).toBe(true);
   });
 });
 

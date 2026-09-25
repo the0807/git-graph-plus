@@ -23,7 +23,7 @@
   import SquashModal from '../modals/SquashModal.svelte';
   import MultiCherryPickModal from '../modals/MultiCherryPickModal.svelte';
   import { modalStore } from '../../lib/stores/modals.svelte';
-  import type { Commit, CommitGraphData } from '../../lib/types';
+  import type { Commit, CommitGraphData, GraphStyle } from '../../lib/types';
   import { tooltip } from '../../lib/actions/tooltip';
   import { getSquashChain } from '../../lib/utils/squash';
   import { chainBranches } from '../../lib/utils/branchChain';
@@ -38,9 +38,10 @@
 
   /**
    * Build SVG path `d` string from SourceGit Path points.
-   * Exactly mirrors SourceGit's DrawCurves rendering.
+   * Rounded (default) exactly mirrors SourceGit's DrawCurves rendering (Q/C
+   * beziers); angular draws straight lines with right-angled elbows.
    */
-  function buildPathD(points: Array<{ x: number; y: number }>): string {
+  function buildPathD(points: Array<{ x: number; y: number }>, style: GraphStyle): string {
     if (points.length < 2) return '';
 
     const parts: string[] = [];
@@ -50,7 +51,15 @@
     for (let i = 1; i < points.length; i++) {
       const cur = { x: laneX(points[i].x), y: points[i].y * ROW_HEIGHT };
 
-      if (cur.x > last.x) {
+      if (style === 'angular') {
+        if (cur.x !== last.x) {
+          // Elbow: horizontal to the target lane, then vertical to the row.
+          parts.push(`L ${cur.x} ${last.y} L ${cur.x} ${cur.y}`);
+        } else {
+          // Same X: straight line
+          parts.push(`L ${cur.x} ${cur.y}`);
+        }
+      } else if (cur.x > last.x) {
         // Going right: QuadraticBezier with control at (cur.x, last.y)
         parts.push(`Q ${cur.x} ${last.y}, ${cur.x} ${cur.y}`);
       } else if (cur.x < last.x) {
@@ -515,7 +524,7 @@
 
   // Path geometry never changes, only which paths are on screen does. Precompute the
   // SVG "d" string once per path (on data change) so scrolling never rebuilds them.
-  let pathDs = $derived(displayPaths.map(p => buildPathD(p.points)));
+  let pathDs = $derived(displayPaths.map(p => buildPathD(p.points, uiStore.graphStyle)));
 
   let visiblePaths = $derived.by(() => {
     const out: Array<{ color: number; colorOverride?: string; d: string }> = [];
@@ -1405,8 +1414,8 @@
         {#each visiblePaths as path}
           {@const pathColor = resolveGraphColor(graphColorsStore.palette, path.color, path.colorOverride)}
           {#if path.d}
-            <path d={path.d} fill="none" stroke={pathColor} stroke-width="5" opacity="0.07" stroke-linecap="round" />
-            <path d={path.d} fill="none" stroke={pathColor} stroke-width="2" opacity="0.85" stroke-linecap="round" />
+            <path d={path.d} fill="none" stroke={pathColor} stroke-width="5" opacity="0.07" stroke-linecap="round" stroke-linejoin={uiStore.graphStyle === 'angular' ? 'miter' : undefined} />
+            <path d={path.d} fill="none" stroke={pathColor} stroke-width="2" opacity="0.85" stroke-linecap="round" stroke-linejoin={uiStore.graphStyle === 'angular' ? 'miter' : undefined} />
           {/if}
         {/each}
 
@@ -1419,13 +1428,16 @@
           {@const cy = link.control.y * ROW_HEIGHT}
           {@const ex = laneX(link.end.x)}
           {@const ey = link.end.y * ROW_HEIGHT}
+          {@const linkD = uiStore.graphStyle === 'angular'
+            ? `M ${sx} ${sy} L ${cx} ${cy} L ${ex} ${ey}`
+            : `M ${sx} ${sy} Q ${cx} ${cy}, ${ex} ${ey}`}
           <path
-            d="M {sx} {sy} Q {cx} {cy}, {ex} {ey}"
-            fill="none" stroke={linkColor} stroke-width="5" opacity="0.07" stroke-linecap="round"
+            d={linkD}
+            fill="none" stroke={linkColor} stroke-width="5" opacity="0.07" stroke-linecap="round" stroke-linejoin={uiStore.graphStyle === 'angular' ? 'miter' : undefined}
           />
           <path
-            d="M {sx} {sy} Q {cx} {cy}, {ex} {ey}"
-            fill="none" stroke={linkColor} stroke-width="2" opacity="0.85" stroke-linecap="round"
+            d={linkD}
+            fill="none" stroke={linkColor} stroke-width="2" opacity="0.85" stroke-linecap="round" stroke-linejoin={uiStore.graphStyle === 'angular' ? 'miter' : undefined}
           />
         {/each}
 

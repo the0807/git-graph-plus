@@ -30,6 +30,7 @@ function resetStores() {
   uiStore.activeRepo = '';
   uiStore.operating = null;
   uiStore.badgeBarWidth = 4;
+  uiStore.graphStyle = 'rounded';
   uiStore.setError(null);
   // modalStore is a singleton across tests; one stuck open modal will render
   // through every subsequent App mount and break unrelated assertions.
@@ -100,6 +101,14 @@ describe('App — message handling', () => {
     await waitFor(() => {
       expect(uiStore.badgeBarWidth).toBe(6);
       expect(document.documentElement.style.getPropertyValue('--badge-bar-width')).toBe('6px');
+    });
+  });
+
+  it('setGraphStyle updates uiStore.graphStyle', async () => {
+    render(App);
+    postMsg('setGraphStyle', { style: 'angular' });
+    await waitFor(() => {
+      expect(uiStore.graphStyle).toBe('angular');
     });
   });
 

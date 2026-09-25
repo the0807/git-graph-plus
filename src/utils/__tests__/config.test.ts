@@ -13,7 +13,7 @@ vi.mock('vscode', () => ({
   },
 }));
 
-import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount } from '../config';
+import { readTimeoutMs, readInitialCommitCount, readLoadMoreCommitCount, readGraphStyle } from '../config';
 
 describe('readTimeoutMs', () => {
   // Back-compat alias so the existing timeout cases below read naturally.
@@ -99,5 +99,32 @@ describe('readLoadMoreCommitCount', () => {
     expect(readLoadMoreCommitCount()).toBe(50);
     h.values.loadMoreCommitCount = Infinity;
     expect(readLoadMoreCommitCount()).toBe(50);
+  });
+});
+
+describe('readGraphStyle', () => {
+  beforeEach(() => { h.values = {}; });
+
+  it('defaults to rounded when unset', () => {
+    expect(readGraphStyle()).toBe('rounded');
+  });
+
+  it('returns angular when configured', () => {
+    h.values.graphStyle = 'angular';
+    expect(readGraphStyle()).toBe('angular');
+  });
+
+  it('returns rounded when explicitly configured', () => {
+    h.values.graphStyle = 'rounded';
+    expect(readGraphStyle()).toBe('rounded');
+  });
+
+  it('falls back to rounded for unknown or non-string values', () => {
+    h.values.graphStyle = 'zigzag';
+    expect(readGraphStyle()).toBe('rounded');
+    h.values.graphStyle = 42;
+    expect(readGraphStyle()).toBe('rounded');
+    h.values.graphStyle = null;
+    expect(readGraphStyle()).toBe('rounded');
   });
 });

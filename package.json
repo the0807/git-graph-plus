@@ -434,6 +434,19 @@
           "default": "topological",
           "description": "Commit sort order in the graph"
         },
+        "gitGraphPlus.graphStyle": {
+          "type": "string",
+          "enum": [
+            "rounded",
+            "angular"
+          ],
+          "enumDescriptions": [
+            "Draw graph lines with smooth rounded curves (default)",
+            "Draw graph lines as straight lines with right-angled elbows"
+          ],
+          "default": "rounded",
+          "markdownDescription": "Line style of the commit graph: `rounded` draws smooth `Q`/`C` beziers, `angular` draws straight lines with right-angled elbows."
+        },
         "gitGraphPlus.showSignatureStatus": {
           "type": "boolean",
           "default": true,

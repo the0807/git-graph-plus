@@ -1,4 +1,4 @@
-import type { InteractiveRebaseMode } from '../types';
+import type { InteractiveRebaseMode, GraphStyle } from '../types';
 
 export const BOTTOM_PANEL_DEFAULT_RATIO = 0.35;
 export const BOTTOM_PANEL_MIN_RATIO = 0.2;
@@ -24,6 +24,7 @@ class UiStore {
   operating = $state<string | null>(null);
   badgeBarWidth = $state(4);
   loadMoreCount = $state(50);
+  graphStyle = $state<GraphStyle>('rounded');
   interactiveRebaseMode = $state<InteractiveRebaseMode>('ui');
   // True while a file is selected in the commit-details panel. Owned (synced)
   // by CommitDetails; read by the global Esc handler so the first Esc deselects

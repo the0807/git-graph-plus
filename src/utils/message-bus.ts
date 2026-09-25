@@ -158,6 +158,7 @@ export type ExtensionMessage =
   | { type: 'setInteractiveRebaseMode'; payload: { mode: 'ui' | 'classic' } }
   | { type: 'setDefaults'; payload: ModalDefaults }
   | { type: 'setLoadMoreCount'; payload: { count: number } }
+  | { type: 'setGraphStyle'; payload: { style: 'rounded' | 'angular' } }
   | { type: 'setBadgeBarThickness'; payload: { width: number } }
   | { type: 'setGraphColors'; payload: { colors: string[] } }
   | { type: 'setCommitLinkRules'; payload: { rules: LinkRule[] } }
