@@ -1431,11 +1431,19 @@ export class GitService {
   }
 
   /**
-   * Pushes the current branch, used by "push after rebase/merge/…" follow-up
-   * actions. Mirrors the PushModal convention: when the branch has an upstream
-   * we push with no remote/refspec (git resolves it from the upstream); when it
-   * doesn't, we set upstream (-u) on the default remote (origin if present, else
-   * the first remote). With no remotes configured the push is skipped.
+   * Pushes the current branch, used by the PushModal (which sends no
+   * remote/branch when it detects an upstream) and by "push after
+   * rebase/merge/…" follow-up actions. Mirrors the PushModal convention: when
+   * the branch has an upstream we push with no remote/refspec (git resolves it
+   * from the upstream); when it doesn't, we set upstream (-u) on the default
+   * remote (origin if present, else the first remote). With no remotes
+   * configured the push is skipped.
+   *
+   * `git branch -m old new` keeps the upstream config pointing at the old
+   * branch (`branch.new.merge = refs/heads/old`), so a bare `git push` fails
+   * with "The upstream branch of your current branch does not match". In that
+   * case publish the renamed branch under its real name and retarget the
+   * upstream (-u), which also makes later bare pushes work.
    */
   async pushCurrentBranch(options?: { force?: 'with-lease' | 'force' }): Promise<{ pushed: boolean; reason?: 'no-remote' }> {
     const current = (await this.branches()).find(b => b.current);
@@ -1443,6 +1451,15 @@ export class GitService {
       throw new GitError('No current branch to push (detached HEAD)', null, []);
     }
     if (current.upstream) {
+      const slash = current.upstream.indexOf('/');
+      if (slash > 0) {
+        const remote = current.upstream.substring(0, slash);
+        const upstreamBranch = current.upstream.substring(slash + 1);
+        if (upstreamBranch !== current.name) {
+          await this.push(remote, current.name, { force: options?.force, setUpstream: true });
+          return { pushed: true };
+        }
+      }
       await this.push(undefined, undefined, { force: options?.force });
       return { pushed: true };
     }

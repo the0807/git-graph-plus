@@ -834,7 +834,15 @@ export class MainPanel {
           break;
         }
         case 'push': {
-          await this.gitService.push(message.payload.remote, message.payload.branch, { force: message.payload.force, setUpstream: message.payload.setUpstream });
+          if (!message.payload.remote && !message.payload.branch) {
+            // The webview omits remote/branch when it detects an upstream.
+            // Route through the branch-aware helper so a branch renamed since
+            // the upstream was configured is published under its real name
+            // (a bare `git push` is rejected by git in that case, #97).
+            await this.gitService.pushCurrentBranch({ force: message.payload.force });
+          } else {
+            await this.gitService.push(message.payload.remote, message.payload.branch, { force: message.payload.force, setUpstream: message.payload.setUpstream });
+          }
           this.post({
             type: 'operationComplete',
             payload: { operation: 'push', success: true },

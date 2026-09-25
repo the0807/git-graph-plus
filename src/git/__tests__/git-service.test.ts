@@ -735,6 +735,23 @@ describe('GitService', () => {
       expect(calls[0].some(a => a.startsWith('refs/heads/'))).toBe(false);
     });
 
+    it('publishes the renamed branch and retargets upstream when the upstream ref name differs', async () => {
+      // `git branch -m old new` keeps branch.new.merge = refs/heads/old, so a
+      // bare `git push` fails with "The upstream branch of your current branch
+      // does not match". The renamed branch must be published under its new
+      // name, with -u retargeting the upstream so later pushes work.
+      (service as any).branches = async () => [
+        { name: 'feature-renamed', current: true, upstream: 'origin/feature', ahead: 1, behind: 0, hash: 'abc' },
+      ];
+      await service.pushCurrentBranch({ force: 'with-lease' });
+      expect(calls).toHaveLength(1);
+      expect(calls[0]).toContain('-u');
+      expect(calls[0]).toContain('origin');
+      expect(calls[0]).toContain('refs/heads/feature-renamed');
+      expect(calls[0]).toContain('--force-with-lease');
+      expect(calls[0]).not.toContain('refs/heads/feature');
+    });
+
     it('sets upstream and pushes to default remote when no upstream', async () => {
       (service as any).branches = async () => [
         { name: 'feature', current: true, ahead: 0, behind: 0, hash: 'abc' },

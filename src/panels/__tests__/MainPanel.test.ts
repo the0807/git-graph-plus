@@ -26,6 +26,8 @@ const H = vi.hoisted(() => {
     stashSave: vi.fn(async () => {}),
     checkout: vi.fn(async () => {}),
     pull: vi.fn(async () => {}),
+    push: vi.fn(async () => ''),
+    pushCurrentBranch: vi.fn(async () => ({ pushed: true })),
     clean: vi.fn(async () => {}),
     setWarningHandler: vi.fn(),
     setAuthRetryHandler: vi.fn(),
@@ -274,6 +276,19 @@ describe('MainPanel message routing', () => {
     expect(H.git.merge).toHaveBeenCalledWith('feature', expect.anything());
     expect(postedOfType('operationComplete').length).toBeGreaterThan(0);
     expect(postedOfType('fullRefresh').length).toBeGreaterThan(0);
+  });
+
+  it('push without remote/branch routes through pushCurrentBranch (upstream case, #97)', async () => {
+    await dispatch({ type: 'push', payload: {} });
+    expect(H.git.push).not.toHaveBeenCalled();
+    expect(H.git.pushCurrentBranch).toHaveBeenCalledWith({ force: undefined });
+    expect(postedOfType('operationComplete').some(m => m.payload?.operation === 'push')).toBe(true);
+  });
+
+  it('push with an explicit remote/branch calls push directly', async () => {
+    await dispatch({ type: 'push', payload: { remote: 'origin', branch: 'feature', setUpstream: true } });
+    expect(H.git.pushCurrentBranch).not.toHaveBeenCalled();
+    expect(H.git.push).toHaveBeenCalledWith('origin', 'feature', { force: undefined, setUpstream: true });
   });
 
   it('checkout with stash stashes before checking out', async () => {
