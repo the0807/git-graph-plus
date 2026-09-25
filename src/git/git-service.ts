@@ -1895,6 +1895,14 @@ export class GitService {
     if (options?.noCommit) {
       args.push('--no-commit');
     }
+    // `git revert` refuses merge commits unless a mainline is chosen. Undoing
+    // the merge relative to its first parent is the standard semantics (the
+    // same parent the conflict predictor and merge diffs use). Non-merge
+    // commits must not get -m: git rejects a mainline on them.
+    const parents = await this.commitParents(hash);
+    if (parents.length > 1) {
+      args.push('-m', '1');
+    }
     args.push(hash);
     await this.exec(args);
   }

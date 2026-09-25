@@ -401,6 +401,44 @@ describe('GitService', () => {
     });
   });
 
+  describe('revert command construction', () => {
+    function mockWithParents(parents: string) {
+      const calls: string[][] = [];
+      mockExec(service, async (args) => {
+        calls.push(args);
+        // commitParents: git log -1 --format=%P <hash>
+        if (args[0] === 'log' && args.includes('--format=%P')) return `${parents}\n`;
+        return '';
+      });
+      return calls;
+    }
+
+    it('reverts a non-merge commit without a mainline', async () => {
+      const calls = mockWithParents('parent1');
+
+      await service.revert('abc1234');
+      const revertCall = calls.find(c => c[0] === 'revert');
+      expect(revertCall).toEqual(['revert', 'abc1234']);
+    });
+
+    it('reverts a merge commit with mainline -m 1 (#99)', async () => {
+      const calls = mockWithParents('parent1 parent2');
+
+      await service.revert('47ad415');
+      const revertCall = calls.find(c => c[0] === 'revert');
+      // Without -m, git fails: "commit ... is a merge but no -m option was given."
+      expect(revertCall).toEqual(['revert', '-m', '1', '47ad415']);
+    });
+
+    it('keeps --no-commit and mainline -m 1 when reverting a merge', async () => {
+      const calls = mockWithParents('parent1 parent2 parent3');
+
+      await service.revert('47ad415', { noCommit: true });
+      const revertCall = calls.find(c => c[0] === 'revert');
+      expect(revertCall).toEqual(['revert', '--no-commit', '-m', '1', '47ad415']);
+    });
+  });
+
   describe('showCommitFiles merge-commit union', () => {
     it('unions files across parents, keeping the highest-priority status', async () => {
       const svc = new GitService('/tmp/test-repo');
