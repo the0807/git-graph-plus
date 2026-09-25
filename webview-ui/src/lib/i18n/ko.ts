@@ -634,6 +634,7 @@ export const ko: Record<string, string> = {
   'lfs.locked': '{owner}가 잠금',
   'file.open': '파일 열기',
   'file.openChanges': '변경 내용 열기',
+  'file.openExternalDiff': '외부 Diff 도구로 열기',
   'file.revealInExplorer': '파일 탐색기에 표시',
   'file.copyPath': '경로 복사',
   'file.copyRelativePath': '상대 경로 복사',

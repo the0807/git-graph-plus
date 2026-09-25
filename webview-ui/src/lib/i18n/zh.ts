@@ -634,6 +634,7 @@ export const zh: Record<string, string> = {
   'lfs.locked': '由 {owner} 锁定',
   'file.open': '打开文件',
   'file.openChanges': '打开更改',
+  'file.openExternalDiff': '使用外部 Diff 工具打开',
   'file.revealInExplorer': '在文件资源管理器中显示',
   'file.copyPath': '复制路径',
   'file.copyRelativePath': '复制相对路径',

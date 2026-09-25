@@ -1003,6 +1003,25 @@ describe('CommitDetails — file context menu actions', () => {
     });
   });
 
+  it('"Open with external diff tool" posts openExternalDiff with hash and file', async () => {
+    const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    deliverCommitDiff('h1', [{ path: 'assets/logo.bin', status: 'M' }]);
+    await openMenu(container);
+    const item = Array.from(document.querySelectorAll<HTMLButtonElement>('.context-menu button, .menu-item, [role="menuitem"]'))
+      .find(b => /external diff/i.test(b.textContent ?? ''))!;
+    expect(item).not.toBeUndefined();
+    globalThis.__postedMessages = [];
+    await fireEvent.click(item);
+    const req = globalThis.__postedMessages.find(
+      (m) => (m.data as { type?: string }).type === 'openExternalDiff'
+    );
+    expect(req).toBeDefined();
+    expect((req!.data as { payload: unknown }).payload).toMatchObject({
+      hash: 'h1',
+      file: 'assets/logo.bin',
+    });
+  });
+
   it('LFS unlocked file shows Lock action and posts lfsLock', async () => {
     const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
     deliverCommitDiff('h1', [{ path: 'a.bin', status: 'M' }]);

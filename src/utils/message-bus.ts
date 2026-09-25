@@ -67,6 +67,7 @@ export type WebviewMessage =
   | { type: 'addRemote'; payload: { name: string; url: string } }
   | { type: 'removeRemote'; payload: { name: string } }
   | { type: 'openDiff'; payload: { file: string; commitHash?: string; ref1?: string; ref2?: string; staged?: boolean } }
+  | { type: 'openExternalDiff'; payload: { hash: string; file: string } }
   | { type: 'openFile'; payload: { file: string } }
   | { type: 'revealInExplorer'; payload: { file: string } }
   | { type: 'copyFilePath'; payload: { file: string } }

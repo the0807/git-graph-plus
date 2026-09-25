@@ -736,6 +736,23 @@ export class MainPanel {
           }
           break;
         }
+        case 'openExternalDiff': {
+          // Hand one changed file to git's configured difftool (#83) — binary
+          // files in particular can't be shown in VS Code's text diff. The
+          // service spawns the GUI detached and returns once it has launched,
+          // so the only failure to report here is an invalid path or a failed
+          // launch (e.g. git missing).
+          try {
+            const file = this.assertSafeArgPath(message.payload.file, 'openExternalDiff');
+            this.resolveRepoRelativePath(file, 'openExternalDiff');
+            await this.gitService.openExternalDiff(message.payload.hash, file);
+          } catch (err) {
+            vscode.window.showErrorMessage(
+              vscode.l10n.t('externalDiffFailed', err instanceof Error ? err.message : String(err)),
+            );
+          }
+          break;
+        }
         case 'openFile': {
           const fullPath = this.resolveRepoRelativePath(message.payload.file, 'openFile');
           const fileUri = vscode.Uri.file(fullPath);

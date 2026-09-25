@@ -17,6 +17,7 @@ const H = vi.hoisted(() => {
     stashPop: vi.fn(async () => {}),
     showCommitDiff: vi.fn(async () => []),
     showCommitFiles: vi.fn(async () => []),
+    openExternalDiff: vi.fn(async () => {}),
     resolveDiffBaseRef: vi.fn(async () => 'parentsha'),
     getEmptyTreeRef: vi.fn(async () => '4b825dc642cb6eb9a060e54bf8d69288fbee4904'),
     fileExistsAtRef: vi.fn(async () => true),
@@ -125,6 +126,7 @@ beforeEach(() => {
   H.git.getConflictFiles.mockResolvedValue([]);
   H.git.getRemoteUrl.mockResolvedValue('');
   H.git.showCommitDiff.mockResolvedValue([]);
+  H.git.openExternalDiff.mockResolvedValue(undefined);
   H.git.fileExistsAtRef.mockResolvedValue(true);
   H.git.getEmptyTreeRef.mockResolvedValue('4b825dc642cb6eb9a060e54bf8d69288fbee4904');
   H.repos = [{ path: '/repo', name: 'repo', type: 'root' }];
@@ -231,6 +233,20 @@ describe('MainPanel message routing', () => {
     const rightRef = JSON.parse((diffCall[2] as { query: string }).query).ref;
     expect(leftRef).toBe('4b825dc642cb6eb9a060e54bf8d69288fbee4904'); // empty tree (parent has no file)
     expect(rightRef).toBe('2222222');
+  });
+
+  it('openExternalDiff launches the difftool for the commit file', async () => {
+    await dispatch({ type: 'openExternalDiff', payload: { hash: 'h1', file: 'assets/logo.bin' } });
+    expect(H.git.openExternalDiff).toHaveBeenCalledWith('h1', 'assets/logo.bin');
+  });
+
+  it('openExternalDiff shows an error notification when the launch fails', async () => {
+    const vscode = await import('vscode');
+    H.git.openExternalDiff.mockRejectedValueOnce(new Error('spawn git ENOENT'));
+
+    await dispatch({ type: 'openExternalDiff', payload: { hash: 'h1', file: 'logo.bin' } });
+
+    expect(vscode.window.showErrorMessage).toHaveBeenCalledWith('externalDiffFailed');
   });
 
   it('revealInExplorer resolves the repo path and runs revealFileInOS', async () => {

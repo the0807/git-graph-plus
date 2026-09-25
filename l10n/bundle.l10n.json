@@ -113,5 +113,6 @@
   "remoteBranchDeleted": "Remote branch '{0}/{1}' deleted",
   "remoteAdded": "Remote '{0}' added",
   "remoteRemoved": "Remote '{0}' removed",
+  "externalDiffFailed": "Failed to open external diff tool: {0}",
   "worktreeRemoved": "Worktree removed"
 }

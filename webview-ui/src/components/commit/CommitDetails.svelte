@@ -956,6 +956,17 @@
                       },
                     });
 
+                    // External diff tool — the escape hatch for binary files the
+                    // built-in text diff can't render (#83). Committed view only:
+                    // the action needs a commit hash to diff against its parent.
+                    if (commit) {
+                      const hash = commit.hash;
+                      items.push({
+                        label: t('file.openExternalDiff'),
+                        action: () => { vscode.postMessage({ type: 'openExternalDiff', payload: { hash, file: node.path } }); fileContextMenu = null; },
+                      });
+                    }
+
                     // Reverse this file's change against the working tree.
                     if (commit && canReverseInThisView) {
                       const hash = commit.hash;

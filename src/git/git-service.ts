@@ -226,6 +226,57 @@ export class GitService {
   }
 
   /**
+   * Hand a single file's change in a commit to git's configured external diff
+   * tool (#83) — the built-in editor can't render binary files. The base is the
+   * same one the built-in diff uses ({@link resolveDiffBaseRef}: first parent,
+   * empty tree for a root commit).
+   *
+   * `git difftool` opens a GUI and stays alive until the user closes it, so
+   * the process is spawned detached and this method resolves as soon as the
+   * launch succeeds — callers must not wait for the tool to exit. Spawn
+   * failures reject so the caller can report them.
+   */
+  async openExternalDiff(hash: string, file: string): Promise<void> {
+    this.assertSafeRef(hash, 'openExternalDiff');
+    this.assertSafePath(file, 'openExternalDiff');
+
+    const base = await this.resolveDiffBaseRef(hash);
+    this.assertSafeRef(base, 'openExternalDiff');
+
+    // `--no-prompt` keeps git from stopping to ask which tool to use; the
+    // user's diff.tool / GIT_EXTERNAL_DIFF configuration decides the tool. A
+    // user without a difftool configured gets git's own fallback.
+    const args = ['difftool', '--no-prompt', base, hash, '--', file];
+
+    const proc = spawn(getGitBinaryPath(), ['-c', 'core.quotePath=false', ...args], {
+      cwd: this.repoPath,
+      env: { ...process.env, ...this.extraEnv, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C', GIT_MERGE_AUTOEDIT: 'no', GIT_EDITOR: 'true', EDITOR: 'true' },
+      // Detach and discard stdio: neither the extension host nor VS Code's
+      // shutdown may be held open by a GUI the user leaves running, and an
+      // ignored stdio pipe means no data event can keep the loop alive.
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      let launched = false;
+      proc.once('spawn', () => { launched = true; resolve(); });
+      proc.on('error', (err: Error) => {
+        if (launched) {
+          // Nothing awaits the process after launch; surface late failures
+          // (git exiting non-zero once the tool closes) as a warning.
+          this.warn(`external difftool failed: ${err.message}`);
+          return;
+        }
+        reject(new GitError(err.message, null, args));
+      });
+    });
+
+    proc.unref();
+  }
+
+  /**
    * Whether `file` exists at `ref` (`ref === ''` checks the index, `:<path>`).
    * Used to pick a diff side's base: a file that's absent at a ref — added or
    * deleted across the diff — must fall back to the empty tree, the only ref

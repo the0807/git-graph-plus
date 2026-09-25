@@ -633,6 +633,7 @@ export const en: Record<string, string> = {
   // File context menu
   'file.open': 'Open File',
   'file.openChanges': 'Open Changes',
+  'file.openExternalDiff': 'Open with External Diff Tool',
   'file.revealInExplorer': 'Reveal in File Explorer',
   'file.copyPath': 'Copy Path',
   'file.copyRelativePath': 'Copy Relative Path',
