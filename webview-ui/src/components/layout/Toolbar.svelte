@@ -9,7 +9,7 @@
   import { tooltip } from '../../lib/actions/tooltip';
   import { modalStore } from '../../lib/stores/modals.svelte';
   import { commitStore } from '../../lib/stores/commits.svelte';
-  import { samePath } from '../../lib/utils/path';
+  import { samePath, repoNameFromPath } from '../../lib/utils/path';
   import type { FlowStatus, FlowBranches } from '../../lib/types';
 
   const vscode = getVsCodeApi();
@@ -96,7 +96,17 @@
   const hasUpstream = $derived(!!branchStore.currentBranch?.upstream && !branchStore.currentBranch?.upstreamGone);
   let ahead = $derived(branchStore.currentBranch?.ahead ?? 0);
   let behind = $derived(branchStore.currentBranch?.behind ?? 0);
-  let activeRepoInfo = $derived(uiStore.repos.find(r => samePath(r.path, uiStore.activeRepo)) ?? uiStore.repos[0]);
+  // The repo list can lag behind the active repo — e.g. VS Code's SCM switches
+  // focus to a repo the extension's discovery did not surface. Resolve the
+  // active path directly in that case: falling back to `repos[0]` would keep
+  // showing the previously active (main) repo while the graph already switched.
+  // See issue #96.
+  let activeRepoInfo = $derived(
+    uiStore.repos.find(r => samePath(r.path, uiStore.activeRepo))
+      ?? (uiStore.activeRepo
+        ? { path: uiStore.activeRepo, name: repoNameFromPath(uiStore.activeRepo), type: 'root' as const }
+        : uiStore.repos[0]),
+  );
 
   const currentBranchName = $derived(branchStore.currentBranch?.name ?? null);
   // git reports non-branch HEAD states as parenthesized pseudo-labels

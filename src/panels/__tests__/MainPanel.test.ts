@@ -287,6 +287,19 @@ describe('MainPanel message routing', () => {
     await dispatch({ type: 'switchRepo', payload: { path: '/somewhere/else' } });
     expect(postedOfType('error').length).toBeGreaterThan(0);
   });
+
+  it('posts a repoList that includes the active repo when SCM switches to one discovery missed (issue #96)', async () => {
+    await new Promise(r => setTimeout(r, 0)); // let sendRepoList populate cachedRepos
+    // The extension-driven switch (VS Code SCM focus change) bypasses the
+    // webview allow-list, so the target can be absent from the discovered list.
+    await MainPanel.currentPanel!.switchRepo('/deep/repo-b');
+
+    const list = postedOfType('repoList').at(-1)!;
+    const repos = list.payload!.repos as Array<{ path: string; name: string }>;
+    expect(list.payload!.active).toBe('/deep/repo-b');
+    expect(repos.some(r => r.path === '/deep/repo-b')).toBe(true);
+    expect(repos.find(r => r.path === '/deep/repo-b')!.name).toBe('repo-b');
+  });
 });
 
 describe('MainPanel error handling', () => {

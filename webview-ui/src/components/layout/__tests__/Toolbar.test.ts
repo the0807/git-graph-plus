@@ -236,6 +236,23 @@ describe('Toolbar — repo dropdown', () => {
     expect(container.querySelector('.repo-name')?.textContent?.trim()).toBe('main-repo');
   });
 
+  it('shows the active repo even when it is missing from the repo list (issue #96)', () => {
+    // VS Code's SCM can switch to a repo the extension's discovery missed, so
+    // the active path has no entry in the list. The header must follow the
+    // active repo instead of falling back to the first (previously active) one.
+    uiStore.repos = [{ path: 'C:\\repo\\alpha', name: 'alpha', type: 'root' }];
+    uiStore.activeRepo = 'C:\\repo\\beta';
+    const { container } = render(Toolbar);
+    expect(container.querySelector('.repo-name')?.textContent?.trim()).toBe('beta');
+  });
+
+  it('falls back to the first repo before an active repo is known', () => {
+    uiStore.repos = [{ path: '/repo/main', name: 'main-repo', type: 'root' }];
+    uiStore.activeRepo = '';
+    const { container } = render(Toolbar);
+    expect(container.querySelector('.repo-name')?.textContent?.trim()).toBe('main-repo');
+  });
+
   it('chevron and dropdown appear only with multiple repos', async () => {
     uiStore.repos = [
       { path: '/r/a', name: 'a', type: 'root' },

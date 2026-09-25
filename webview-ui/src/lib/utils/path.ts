@@ -15,3 +15,16 @@ export function samePath(a: string, b: string): boolean {
   if (!a || !b) { return false; }
   return normalize(a) === normalize(b);
 }
+
+/**
+ * Last segment of a filesystem path, used to label a repository whose entry is
+ * missing from the discovered repo list (e.g. VS Code's SCM switched focus to a
+ * repo the filesystem scan did not surface). Handles both separators so Windows
+ * backslash paths work. See issue #96.
+ */
+export function repoNameFromPath(p: string): string {
+  if (!p) { return ''; }
+  const trimmed = p.replace(/[\\/]+$/, '');
+  const idx = Math.max(trimmed.lastIndexOf('/'), trimmed.lastIndexOf('\\'));
+  return idx >= 0 ? trimmed.slice(idx + 1) : trimmed;
+}

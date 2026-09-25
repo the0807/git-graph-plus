@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { samePath } from '../path';
+import { samePath, repoNameFromPath } from '../path';
 
 describe('samePath', () => {
   it('matches identical paths', () => {
@@ -26,5 +26,28 @@ describe('samePath', () => {
   it('returns false when either path is empty', () => {
     expect(samePath('', '/Users/me/proj')).toBe(false);
     expect(samePath('/Users/me/proj', '')).toBe(false);
+  });
+});
+
+describe('repoNameFromPath', () => {
+  it('returns the last segment of a POSIX path', () => {
+    expect(repoNameFromPath('/Users/me/projB')).toBe('projB');
+  });
+
+  it('returns the last segment of a Windows path', () => {
+    expect(repoNameFromPath('C:\\Users\\me\\projB')).toBe('projB');
+  });
+
+  it('ignores trailing separators', () => {
+    expect(repoNameFromPath('C:\\Users\\me\\projB\\')).toBe('projB');
+    expect(repoNameFromPath('/Users/me/projB/')).toBe('projB');
+  });
+
+  it('returns the input when there is no separator', () => {
+    expect(repoNameFromPath('projB')).toBe('projB');
+  });
+
+  it('returns an empty string for an empty path', () => {
+    expect(repoNameFromPath('')).toBe('');
   });
 });

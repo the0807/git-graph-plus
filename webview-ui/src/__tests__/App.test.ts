@@ -115,6 +115,28 @@ describe('App — message handling', () => {
     });
   });
 
+  it('repoList keeps the header on the active repo when the list is stale (issue #96)', async () => {
+    // Reproduce the SCM repo-switch path: the extension posts repoList with the
+    // new active path while the discovered list still only holds the old repo.
+    const { container } = render(App);
+    postMsg('repoList', {
+      repos: [{ path: 'C:\\repo\\alpha', name: 'alpha', type: 'root' }],
+      active: 'C:\\repo\\alpha',
+    });
+    await waitFor(() => {
+      expect(container.querySelector('.repo-name')?.textContent?.trim()).toBe('alpha');
+    });
+
+    postMsg('repoList', {
+      repos: [{ path: 'C:\\repo\\alpha', name: 'alpha', type: 'root' }],
+      active: 'C:\\repo\\beta',
+    });
+    await waitFor(() => {
+      expect(uiStore.activeRepo).toBe('C:\\repo\\beta');
+      expect(container.querySelector('.repo-name')?.textContent?.trim()).toBe('beta');
+    });
+  });
+
   it('notGitRepo flips commitStore.notGitRepo', async () => {
     render(App);
     postMsg('notGitRepo');

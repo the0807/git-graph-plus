@@ -365,6 +365,14 @@ export class MainPanel {
     if (samePath(newPath, this.repoPath)) { return; }
     this.swapRepo(newPath);
 
+    // The discovered list can lag behind the repo VS Code's SCM switched to
+    // (e.g. it sits deeper than discovery scans). Add the active repo so the
+    // webview can resolve its header/dropdown entry instead of falling back to
+    // the first repo while the graph already shows the new one. See issue #96.
+    if (!this.cachedRepos.some(r => samePath(r.path, this.repoPath))) {
+      this.cachedRepos = [...this.cachedRepos, { path: this.repoPath, name: path.basename(this.repoPath), type: 'root' }];
+    }
+
     this.post({
       type: 'repoList',
       payload: { repos: this.cachedRepos, active: this.repoPath },
