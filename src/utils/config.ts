@@ -47,3 +47,18 @@ export function readInteractiveRebaseMode(): InteractiveRebaseMode {
     vscode.workspace.getConfiguration('gitGraphPlus').get<string>('interactiveRebase.mode', 'ui'),
   );
 }
+
+/** Which tab the commit details panel opens on when a commit is selected. */
+export type DefaultCommitTab = 'details' | 'changes';
+/** Default commit-details tab, preserving the pre-setting behavior. */
+export const DEFAULT_COMMIT_TAB: DefaultCommitTab = 'details';
+
+/**
+ * Reads `gitGraphPlus.defaultCommitTab` — whether the commit details panel
+ * opens on the Details (`details`, default) or Changes/diff (`changes`) tab
+ * when a commit is clicked. Falls back to `details` when unset/invalid.
+ */
+export function readDefaultCommitTab(): DefaultCommitTab {
+  const raw = vscode.workspace.getConfiguration('gitGraphPlus').get<string>('defaultCommitTab', DEFAULT_COMMIT_TAB);
+  return raw === 'changes' ? 'changes' : DEFAULT_COMMIT_TAB;
+}

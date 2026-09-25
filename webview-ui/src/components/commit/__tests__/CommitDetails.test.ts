@@ -60,6 +60,7 @@ beforeEach(() => {
   uiStore.comparing = false;
   uiStore.showBottomPanel = true;
   uiStore.commitFileSelected = false;
+  uiStore.defaultCommitTab = 'details';
 });
 
 afterEach(() => {
@@ -255,6 +256,61 @@ describe('CommitDetails — tabs', () => {
     const tabs = Array.from(container.querySelectorAll('.top-tab')).map(t => t.textContent?.toLowerCase() ?? '');
     expect(tabs.some(t => t.includes('staged'))).toBe(true);
     expect(tabs.some(t => t.includes('unstaged'))).toBe(true);
+  });
+});
+
+describe('CommitDetails — default commit tab setting', () => {
+  it('opens the Changes tab when gitGraphPlus.defaultCommitTab is changes', async () => {
+    uiStore.defaultCommitTab = 'changes';
+    const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    await waitFor(() => {
+      const active = container.querySelector('.top-tab.active')?.textContent ?? '';
+      expect(active.toLowerCase()).toContain('change');
+    });
+  });
+
+  it('opens the Details tab when gitGraphPlus.defaultCommitTab is details', async () => {
+    uiStore.defaultCommitTab = 'details';
+    const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    await waitFor(() => {
+      const active = container.querySelector('.top-tab.active')?.textContent ?? '';
+      expect(active.toLowerCase()).toContain('commit');
+    });
+  });
+
+  it('keeps the uncommitted view on its change list regardless of the setting', () => {
+    uiStore.defaultCommitTab = 'details';
+    const { container } = render(CommitDetails, { commit: commit({ hash: 'UNCOMMITTED' }) });
+    const tabs = Array.from(container.querySelectorAll('.top-tab')).map(t => t.textContent?.toLowerCase() ?? '');
+    expect(tabs.some(t => t.includes('staged'))).toBe(true);
+    expect(tabs.some(t => t.includes('unstaged'))).toBe(true);
+  });
+
+  it('does not switch the current tab when the setting changes mid-view', async () => {
+    uiStore.defaultCommitTab = 'details';
+    const { container } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    // The user is already on the Details tab; flipping the setting must not
+    // yank them to another tab for the commit they are currently viewing.
+    uiStore.defaultCommitTab = 'changes';
+    await Promise.resolve();
+    const active = container.querySelector('.top-tab.active')?.textContent ?? '';
+    expect(active.toLowerCase()).toContain('commit');
+  });
+
+  it('resets to the configured default when a different commit is selected', async () => {
+    uiStore.defaultCommitTab = 'changes';
+    const { container, rerender } = render(CommitDetails, { commit: commit({ hash: 'h1' }) });
+    // On h1 the user explicitly moves to the Details tab ...
+    const detailsTab = Array.from(container.querySelectorAll<HTMLButtonElement>('.top-tab'))
+      .find(t => /commit/i.test(t.textContent ?? ''))!;
+    await fireEvent.click(detailsTab);
+    expect(detailsTab.classList.contains('active')).toBe(true);
+    // ... but selecting another commit opens on the configured default again.
+    await rerender({ commit: commit({ hash: 'h2' }) });
+    await waitFor(() => {
+      const active = container.querySelector('.top-tab.active')?.textContent ?? '';
+      expect(active.toLowerCase()).toContain('change');
+    });
   });
 });
 

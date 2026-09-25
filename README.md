@@ -187,6 +187,7 @@ A modern, full-featured Git GUI for VS Code. Visualize your commit history, mana
 | `gitGraphPlus.timeout`                 | `60`          | Max time (seconds) to wait for a Git command before abort |
 | `gitGraphPlus.initialCommitCount`      | `200`         | Commits loaded on first render / refresh (lower = faster in huge repos) |
 | `gitGraphPlus.loadMoreCommitCount`     | `50`          | Extra commits fetched per **Load more commits** click    |
+| `gitGraphPlus.defaultCommitTab`        | `details`     | Tab opened when a commit is clicked (`details`, `changes`) |
 | `gitGraphPlus.locale`                  | `auto`        | UI language (`auto`, `en`, `ko`, `zh-cn`)                |
 | `gitGraphPlus.graphSortOrder`          | `topological` | Commit sort order (`topological`, `date`, `author-date`) |
 | `gitGraphPlus.interactiveRebase.mode`  | `ui`          | Interactive rebase mode (`ui` visual editor, `classic` `git rebase -i` in a terminal) |

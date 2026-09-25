@@ -182,8 +182,15 @@
   let isResizing = $state(false);
   let resizeStartX = 0;
   let resizeStartWidth = 0;
+  // Maps the `gitGraphPlus.defaultCommitTab` setting ('details' | 'changes') to
+  // this panel's tab ids ('commit' | 'changes').
+  function defaultTab(): 'commit' | 'changes' {
+    return uiStore.defaultCommitTab === 'changes' ? 'changes' : 'commit';
+  }
   // svelte-ignore state_referenced_locally
-  let activeTab = $state<'commit' | 'changes'>(commit ? 'commit' : 'changes');
+  let activeTab = $state<'commit' | 'changes'>(
+    commit && commit.hash !== 'UNCOMMITTED' ? defaultTab() : 'changes',
+  );
   let uncommittedTab = $state<'staged' | 'unstaged'>('staged');
 
   let activeHash = $state('');
@@ -264,6 +271,10 @@
         activeTab = 'changes';
         vscode.postMessage({ type: 'getUncommittedDiff' });
       } else if (hash) {
+        // A new commit selection opens on the configured default; a manual tab
+        // switch for the currently selected commit is left alone because this
+        // reset only runs when the hash changes.
+        activeTab = defaultTab();
         vscode.postMessage({ type: 'getCommitDiff', payload: { hash } });
         vscode.postMessage({ type: 'getLfsFiles' });
         vscode.postMessage({ type: 'getCommitSignature', payload: { hash } });

@@ -409,6 +409,16 @@
           "minimum": 1,
           "markdownDescription": "Number of additional commits fetched each time the **Load more commits** button is clicked."
         },
+        "gitGraphPlus.defaultCommitTab": {
+          "type": "string",
+          "enum": ["details", "changes"],
+          "enumDescriptions": [
+            "Open the commit Details tab first when a commit is clicked",
+            "Open the Changes (diff) tab first when a commit is clicked"
+          ],
+          "default": "details",
+          "markdownDescription": "Which tab the commit details panel opens on when a commit is clicked: **Details** (`details`) or **Changes** (`changes`, the file diff). The uncommitted-changes view always opens on Changes."
+        },
         "gitGraphPlus.interactiveRebase.mode": {
           "type": "string",
           "enum": ["ui", "classic"],

@@ -115,6 +115,9 @@ import AmendModal from './components/modals/AmendModal.svelte';
         case 'setLoadMoreCount':
           uiStore.loadMoreCount = msg.payload.count;
           break;
+        case 'setDefaultCommitTab':
+          uiStore.defaultCommitTab = msg.payload.tab;
+          break;
         case 'setInteractiveRebaseMode':
           uiStore.interactiveRebaseMode = msg.payload.mode;
           break;

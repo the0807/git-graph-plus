@@ -30,6 +30,7 @@ function resetStores() {
   uiStore.activeRepo = '';
   uiStore.operating = null;
   uiStore.badgeBarWidth = 4;
+  uiStore.defaultCommitTab = 'details';
   uiStore.setError(null);
   // modalStore is a singleton across tests; one stuck open modal will render
   // through every subsequent App mount and break unrelated assertions.
@@ -100,6 +101,14 @@ describe('App — message handling', () => {
     await waitFor(() => {
       expect(uiStore.badgeBarWidth).toBe(6);
       expect(document.documentElement.style.getPropertyValue('--badge-bar-width')).toBe('6px');
+    });
+  });
+
+  it('setDefaultCommitTab updates uiStore.defaultCommitTab', async () => {
+    render(App);
+    postMsg('setDefaultCommitTab', { tab: 'changes' });
+    await waitFor(() => {
+      expect(uiStore.defaultCommitTab).toBe('changes');
     });
   });
 

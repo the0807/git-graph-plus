@@ -1,4 +1,4 @@
-import type { InteractiveRebaseMode } from '../types';
+import type { InteractiveRebaseMode, DefaultCommitTab } from '../types';
 
 export const BOTTOM_PANEL_DEFAULT_RATIO = 0.35;
 export const BOTTOM_PANEL_MIN_RATIO = 0.2;
@@ -25,6 +25,10 @@ class UiStore {
   badgeBarWidth = $state(4);
   loadMoreCount = $state(50);
   interactiveRebaseMode = $state<InteractiveRebaseMode>('ui');
+  // Which tab the commit-details panel opens on when a commit is selected
+  // (`gitGraphPlus.defaultCommitTab`). The uncommitted view ignores this and
+  // always opens on its change list.
+  defaultCommitTab = $state<DefaultCommitTab>('details');
   // True while a file is selected in the commit-details panel. Owned (synced)
   // by CommitDetails; read by the global Esc handler so the first Esc deselects
   // the file instead of closing the whole panel.

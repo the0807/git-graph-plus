@@ -159,6 +159,7 @@ export type ExtensionMessage =
   | { type: 'setDefaults'; payload: ModalDefaults }
   | { type: 'setLoadMoreCount'; payload: { count: number } }
   | { type: 'setBadgeBarThickness'; payload: { width: number } }
+  | { type: 'setDefaultCommitTab'; payload: { tab: 'details' | 'changes' } }
   | { type: 'setGraphColors'; payload: { colors: string[] } }
   | { type: 'setCommitLinkRules'; payload: { rules: LinkRule[] } }
   | { type: 'repoList'; payload: { repos: Array<{ path: string; name: string; type: 'root' | 'submodule' | 'nested' }>; active: string } }

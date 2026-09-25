@@ -187,6 +187,7 @@ VS Code를 위한 모던 Git GUI. 커밋 히스토리를 시각화하고, 브랜
 | `gitGraphPlus.timeout`                 | `60`          | Git 명령 중단 전 최대 대기 시간 (초)                  |
 | `gitGraphPlus.initialCommitCount`      | `200`         | 첫 렌더링/새로고침 시 로드할 커밋 수 (큰 리포지토리는 낮추면 빨라짐) |
 | `gitGraphPlus.loadMoreCommitCount`     | `50`          | **Load more commits** 클릭당 추가로 가져올 커밋 수    |
+| `gitGraphPlus.defaultCommitTab`        | `details`     | 커밋 클릭 시 기본으로 열 탭 (`details`, `changes`)    |
 | `gitGraphPlus.locale`                  | `auto`        | UI 언어 (`auto`, `en`, `ko`, `zh-cn`)                 |
 | `gitGraphPlus.graphSortOrder`          | `topological` | 커밋 정렬 순서 (`topological`, `date`, `author-date`) |
 | `gitGraphPlus.interactiveRebase.mode`  | `ui`          | Interactive rebase 모드 (`ui` 시각적 편집기, `classic` 터미널에서 `git rebase -i`) |
