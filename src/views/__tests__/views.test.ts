@@ -53,6 +53,8 @@ function mockSvc(over: Partial<Record<keyof GitService, unknown>> & { rootPath?:
   return {
     rootPath: over.rootPath ?? '/repo',
     branches: vi.fn(async () => (over.branches as BranchInfo[]) ?? []),
+    defaultBranch: vi.fn(async () => over.defaultBranch === undefined ? 'main' : over.defaultBranch),
+    fullyMergedBranches: vi.fn(async () => new Set((over.fullyMergedBranches as string[]) ?? [])),
     remotes: vi.fn(async () => (over.remotes as RemoteInfo[]) ?? []),
     tags: vi.fn(async () => (over.tags as TagInfo[]) ?? []),
     stashList: vi.fn(async () => (over.stashList as StashEntry[]) ?? []),
@@ -94,6 +96,19 @@ describe('BranchesViewProvider', () => {
     expect(p.getCurrentItem()?.label).toBe('main');
     // setContext is pushed so the sidebar shows Push vs Publish correctly.
     expect(vscode.commands.executeCommand).toHaveBeenCalledWith('setContext', 'gitGraphPlus.currentBranchHasUpstream', true);
+  });
+
+  it('marks branches fully merged into the default branch', async () => {
+    const svc = mockSvc({
+      branches: [branch('main'), branch('feature/squashed')],
+      fullyMergedBranches: ['feature/squashed'],
+    });
+    const p = new BranchesViewProvider(svc);
+    await p.prefetch();
+    const folder = (await p.getChildren()).find(item => item.label === 'feature')!;
+    const [feature] = await p.getChildren(folder);
+    expect(feature.description).toBe('merged');
+    expect(feature.tooltip).toContain('Fully merged into main');
   });
 
   it('excludes remote branches and returns [] on error', async () => {

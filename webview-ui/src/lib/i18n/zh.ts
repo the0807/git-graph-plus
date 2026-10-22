@@ -144,6 +144,7 @@ export const zh: Record<string, string> = {
   'amend.pushAfterWarning': 'Amend 会重写提交，因此将以 force push <span class="modal-emph modal-emph--danger">覆盖远程分支</span>。使用 --force-with-lease，若远程有你尚未拉取的提交则会中止。',
   'amend.amend': 'Amend',
   'graph.dblClickCheckout': '双击 Checkout：{ref}',
+  'graph.fullyMergedInto': '已完全合并到 {branch}',
 
   // Graph context menu
   'graph.checkoutHash': '检出 {hash}',

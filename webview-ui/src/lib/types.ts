@@ -94,6 +94,7 @@ export interface BranchInfo {
   ahead: number;
   behind: number;
   hash: string;
+  fullyMergedInto?: string;
 }
 
 export interface RemoteInfo {

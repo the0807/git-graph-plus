@@ -8,6 +8,8 @@ const H = vi.hoisted(() => {
   const git: Record<string, ReturnType<typeof vi.fn>> = {
     log: vi.fn(async () => []),
     branches: vi.fn(async () => []),
+    defaultBranch: vi.fn(async () => null),
+    fullyMergedBranches: vi.fn(async () => new Set<string>()),
     tags: vi.fn(async () => []),
     remotes: vi.fn(async () => []),
     stashList: vi.fn(async () => []),
@@ -117,6 +119,8 @@ beforeEach(() => {
   for (const k of Object.keys(H.git)) H.git[k].mockReset();
   H.git.log.mockResolvedValue([]);
   H.git.branches.mockResolvedValue([]);
+  H.git.defaultBranch.mockResolvedValue(null);
+  H.git.fullyMergedBranches.mockResolvedValue(new Set());
   H.git.tags.mockResolvedValue([]);
   H.git.remotes.mockResolvedValue([]);
   H.git.stashList.mockResolvedValue([]);
@@ -254,11 +258,18 @@ describe('MainPanel message routing', () => {
   });
 
   it('getBranches posts branchData with all the sidebar collections', async () => {
+    H.git.branches.mockResolvedValue([
+      { name: 'origin/feature/squashed', remote: 'origin', current: false, ahead: 0, behind: 0, hash: 'h1' },
+    ]);
+    H.git.defaultBranch.mockResolvedValue('main');
+    H.git.fullyMergedBranches.mockResolvedValue(new Set(['origin/feature/squashed']));
     await dispatch({ type: 'getBranches' });
     const data = postedOfType('branchData').at(-1)!;
     expect(data.payload).toHaveProperty('branches');
     expect(data.payload).toHaveProperty('tags');
     expect(data.payload).toHaveProperty('worktrees');
+    expect((data.payload!.branches as Array<{ fullyMergedInto?: string }>)[0].fullyMergedInto).toBe('main');
+    expect(H.git.fullyMergedBranches).toHaveBeenCalledWith(['origin/feature/squashed'], 'main');
   });
 
   it('getCommitDiff posts the file list for the commit', async () => {

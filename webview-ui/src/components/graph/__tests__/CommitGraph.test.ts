@@ -73,6 +73,36 @@ describe('CommitGraph smoke', () => {
     expect(container.querySelectorAll('.commit-row').length).toBe(3);
   });
 
+  it('shows a fully merged indicator on the graph branch badge', async () => {
+    const feature = makeCommit('h1', 'feature');
+    feature.refs = [{ type: 'branch', name: 'feature/squashed' }];
+    branchStore.branches = [
+      { name: 'feature/squashed', current: false, ahead: 0, behind: 0, hash: 'h1', fullyMergedInto: 'main' },
+    ];
+    commitStore.setData(makeGraphData([feature]));
+
+    const { container } = render(CommitGraph, {});
+    await tick();
+    const badge = Array.from(container.querySelectorAll<HTMLElement>('.ref-badge'))
+      .find(element => element.textContent?.includes('feature/squashed'));
+    expect(badge?.querySelector('.codicon-check-all')).toBeTruthy();
+  });
+
+  it('shows a fully merged indicator on a remote branch badge', async () => {
+    const remoteFeature = makeCommit('h1', 'feature');
+    remoteFeature.refs = [{ type: 'remote-branch', remote: 'origin', name: 'topic/squashed' }];
+    branchStore.branches = [
+      { name: 'origin/topic/squashed', remote: 'origin', current: false, ahead: 0, behind: 0, hash: 'h1', fullyMergedInto: 'main' },
+    ];
+    commitStore.setData(makeGraphData([remoteFeature]));
+
+    const { container } = render(CommitGraph, {});
+    await tick();
+    const badge = Array.from(container.querySelectorAll<HTMLElement>('.ref-badge'))
+      .find(element => element.textContent?.includes('origin/topic/squashed'));
+    expect(badge?.querySelector('.codicon-check-all')).toBeTruthy();
+  });
+
   it('clicking a commit row sets selectedCommitHash after the dbl-click timeout fires', async () => {
     commitStore.setData(makeGraphData([
       makeCommit('h1', 'first'),

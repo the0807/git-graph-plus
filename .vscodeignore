@@ -19,6 +19,7 @@ tsconfig.json
 vitest.config.mts
 coverage/**
 test-results.xml
+chat_gitgraph.json
 CLAUDE.md
 .gitignore
 **/*.map

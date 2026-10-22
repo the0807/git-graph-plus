@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.5 (2026-10-21)
+
+### Bug Fixes
+- **Fully Merged Branch Detection** - Stream patches directly into `git patch-id` instead of buffering complete history and diffs, avoiding the 256 MiB output-limit warning on large repositories while preserving squash-merge and cherry-pick detection.
+
 ## 0.7.3 (2026-06-30)
 
 ### Bug Fixes

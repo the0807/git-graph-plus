@@ -40,9 +40,8 @@ export class BranchesViewProvider implements vscode.TreeDataProvider<BranchTreeI
   private async doFetch(): Promise<void> {
     const id = ++this.fetchId;
     try {
-      const branches = await this.gitService.branches();
+      const { branches, items, currentItem } = await this.fetchBranchTree();
       if (id !== this.fetchId) return; // superseded by newer request
-      const { items, currentItem } = buildBranchTree(branches.filter(b => !b.remote));
       this.cache = items;
       this.currentItem = currentItem;
       const current = branches.find(b => b.current && !b.remote);
@@ -77,19 +76,29 @@ export class BranchesViewProvider implements vscode.TreeDataProvider<BranchTreeI
 
     // Direct fetch as fallback - always returns data
     try {
-      const branches = await this.gitService.branches();
-      const { items, currentItem } = buildBranchTree(branches.filter(b => !b.remote));
+      const { items, currentItem } = await this.fetchBranchTree();
       this.cache = items;
       this.currentItem = currentItem;
     } catch { /* ignore */ }
     return this.cache ?? [];
+  }
+
+  private async fetchBranchTree(): Promise<{ branches: BranchInfo[]; items: BranchTreeItem[]; currentItem: BranchLeafItem | null }> {
+    const branches = await this.gitService.branches();
+    const localBranches = branches.filter(b => !b.remote);
+    const defaultBranch = await this.gitService.defaultBranch();
+    const fullyMerged = defaultBranch
+      ? await this.gitService.fullyMergedBranches(localBranches.map(b => b.name), defaultBranch)
+      : new Set<string>();
+    const { items, currentItem } = buildBranchTree(localBranches, fullyMerged, defaultBranch);
+    return { branches, items, currentItem };
   }
 }
 
 /**
  * Builds a hierarchical folder tree from flat branch names.
  */
-function buildBranchTree(branches: BranchInfo[]): { items: BranchTreeItem[]; currentItem: BranchLeafItem | null } {
+function buildBranchTree(branches: BranchInfo[], fullyMerged: Set<string>, defaultBranch: string | null): { items: BranchTreeItem[]; currentItem: BranchLeafItem | null } {
   interface FolderNode {
     branches: BranchInfo[];
     subfolders: Map<string, FolderNode>;
@@ -133,7 +142,7 @@ function buildBranchTree(branches: BranchInfo[]): { items: BranchTreeItem[]; cur
 
     for (const branch of sortedBranches) {
       const displayName = branch.name.includes('/') ? branch.name.split('/').pop()! : branch.name;
-      const item = new BranchLeafItem(branch, displayName, parent);
+      const item = new BranchLeafItem(branch, displayName, parent, fullyMerged.has(branch.name), defaultBranch);
       if (branch.current) { currentItem = item; }
       items.push(item);
     }
@@ -175,7 +184,9 @@ class BranchLeafItem extends vscode.TreeItem {
   constructor(
     public readonly branch: BranchInfo,
     displayName: string,
-    public readonly parent?: BranchFolderItem
+    public readonly parent: BranchFolderItem | undefined,
+    fullyMerged: boolean,
+    defaultBranch: string | null,
   ) {
     super(displayName, vscode.TreeItemCollapsibleState.None);
 
@@ -190,11 +201,12 @@ class BranchLeafItem extends vscode.TreeItem {
     const badges: string[] = [];
     if (branch.ahead > 0) { badges.push(`↑${branch.ahead}`); }
     if (branch.behind > 0) { badges.push(`↓${branch.behind}`); }
+    if (fullyMerged) { badges.push('merged'); }
     if (badges.length > 0) {
       this.description = (this.description ? this.description + ' ' : '') + badges.join(' ');
     }
 
-    this.tooltip = `${branch.name}${branch.upstream ? ` → ${branch.upstream}` : ''}`;
+    this.tooltip = `${branch.name}${branch.upstream ? ` → ${branch.upstream}` : ''}${fullyMerged && defaultBranch ? `\nFully merged into ${defaultBranch}` : ''}`;
 
     this.command = {
       command: 'gitGraphPlus.showBranchMenu',

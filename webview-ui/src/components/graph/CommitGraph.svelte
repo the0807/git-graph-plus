@@ -95,6 +95,7 @@
 
   // Maps for O(1) local branch lookup (replaces repeated branches.find())
   const localBranchMap = $derived(new Map(branchStore.branches.filter(b => !b.remote).map(b => [b.name, b])));
+  const remoteBranchMap = $derived(new Map(branchStore.branches.filter(b => b.remote).map(b => [b.name, b])));
   const upstreamBranchMap = $derived(new Map(branchStore.branches.filter(b => !b.remote && b.upstream).map(b => [b.upstream!, b])));
 
   // Cache key fingerprint avoids rerunning BFS when commits array is recreated
@@ -1529,6 +1530,10 @@
                     return commit.refs.some(r => r.type === 'remote-branch' && `${r.remote}/${r.name}` === localInfo.upstream);
                   })()}
                   {@const trackedUpstream = (ref.type === 'branch' || ref.type === 'head') ? (localBranchMap.get(ref.name)?.upstream ?? null) : null}
+                  {@const fullyMergedInto = (ref.type === 'branch' || ref.type === 'head')
+                    ? localBranchMap.get(ref.name)?.fullyMergedInto
+                    : ref.type === 'remote-branch' ? remoteBranchMap.get(`${ref.remote}/${ref.name}`)?.fullyMergedInto : undefined}
+                  {@const refTooltip = `${t('graph.dblClickCheckout', { ref: ref.type === 'remote-branch' ? ref.remote + '/' + ref.name : ref.name })}${fullyMergedInto ? `\n${t('graph.fullyMergedInto', { branch: fullyMergedInto })}` : ''}`}
                   {@const isWtBranch = (ref.type === 'branch' || ref.type === 'head') && worktreeBranches.has(ref.name)}
                   {@const badgeColor = ref.type === 'tag' ? '#f0c040' : ref.type === 'stash' ? 'var(--text-secondary, #888)' : isWtBranch ? '#4caf50' : nodeColor}
                   {@const showCloudOnly = hasRemote && trackedUpstream && (remoteFilter.length === 0 || (remoteFilter.includes('local') && remoteFilter.includes(trackedUpstream.split('/')[0])))}
@@ -1576,7 +1581,7 @@
                     ondragleave={() => { if (dragOverBranch === ref.name) dragOverBranch = null; }}
                     ondrop={(e) => { if (ref.type === 'branch' || ref.type === 'head') onBranchDrop(e, ref.name); }}
                     ondragend={() => { dragSourceBranch = null; dragOverBranch = null; }}
-                    use:tooltip={t('graph.dblClickCheckout', { ref: ref.type === 'remote-branch' ? ref.remote + '/' + ref.name : ref.name })}
+                    use:tooltip={refTooltip}
                     ondblclick={(e) => {
                       e.stopPropagation();
                       if (ref.type === 'remote-branch') {
@@ -1616,11 +1621,12 @@
                     }}
                   >
                     {#if ref.type === 'head'}
-                      <i class="codicon codicon-check ref-icon"></i>
+                      <i class="codicon {fullyMergedInto ? 'codicon-check-all' : 'codicon-check'} ref-icon"></i>
                       {#if worktreeBranches.has(ref.name)}<i class="codicon codicon-worktree ref-icon"></i>{/if}
                       {ref.name}
                     {:else if ref.type === 'remote-branch'}
                       <i class="codicon codicon-cloud ref-icon"></i>
+                      {#if fullyMergedInto}<i class="codicon codicon-check-all ref-icon"></i>{/if}
                       {ref.remote}/{ref.name}
                     {:else if ref.type === 'tag'}
                       <i class="codicon codicon-tag ref-icon"></i>
@@ -1630,6 +1636,7 @@
                       {ref.name}
                     {:else}
                       {#if (ref.type === 'branch') && worktreeBranches.has(ref.name)}<i class="codicon codicon-worktree ref-icon"></i>{/if}
+                      {#if ref.type === 'branch' && fullyMergedInto}<i class="codicon codicon-check-all ref-icon"></i>{/if}
                       {ref.name}
                     {/if}
                   </span>

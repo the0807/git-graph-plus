@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { readFile, access } from 'fs/promises';
 import { GitService, GitError } from '../git/git-service';
+import type { BranchInfo } from '../git/types';
 import { formatGitError, isAuthFailure, transportFromRemoteUrl } from '../git/git-error-formatter';
 import { splitUpstreamRef } from '../git/git-parser';
 import { samePath } from '../utils/path';
@@ -454,9 +455,10 @@ export class MainPanel {
             this.gitService.stashList(),
             this.gitService.worktreeList(),
           ]);
+          const branchesWithMergeStatus = await this.addFullyMergedStatus(branches);
           this.post({
             type: 'branchData',
-            payload: { branches, tags, remotes, stashes, worktrees },
+            payload: { branches: branchesWithMergeStatus, tags, remotes, stashes, worktrees },
           });
           this.processPendingModal();
           break;
@@ -1818,12 +1820,13 @@ export class MainPanel {
           this.gitService.stashList(),
           this.gitService.worktreeList(),
         ]);
+        const branchesWithMergeStatus = await this.addFullyMergedStatus(branches);
         // Send as single combined message to ensure atomic update
         this.post({
           type: 'fullRefresh',
           payload: {
             logData: buildLogData(allFetched, branches),
-            branchData: { branches, tags, remotes, stashes, worktrees },
+            branchData: { branches: branchesWithMergeStatus, tags, remotes, stashes, worktrees },
           },
         });
         MainPanel.onSidebarRefresh?.();
@@ -1841,6 +1844,23 @@ export class MainPanel {
         this.queuedScope = 'status';
         this.refreshAll(next);
       }
+    }
+  }
+
+  private async addFullyMergedStatus(branches: BranchInfo[]): Promise<BranchInfo[]> {
+    try {
+      const targetBranch = await this.gitService.defaultBranch();
+      if (!targetBranch) return branches;
+      const fullyMerged = await this.gitService.fullyMergedBranches(
+        branches.filter(branch => branch.name !== targetBranch).map(branch => branch.name),
+        targetBranch,
+      );
+      return branches.map(branch => ({
+        ...branch,
+        fullyMergedInto: fullyMerged.has(branch.name) ? targetBranch : undefined,
+      }));
+    } catch {
+      return branches;
     }
   }
 

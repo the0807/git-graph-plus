@@ -144,6 +144,7 @@ export const ko: Record<string, string> = {
   'amend.pushAfterWarning': 'Amend는 commit을 재작성하므로 force push로 <span class="modal-emph modal-emph--danger">원격 브랜치를 덮어씁니다</span>. --force-with-lease라 fetch하지 않은 커밋이 원격에 있으면 중단됩니다.',
   'amend.amend': 'Amend',
   'graph.dblClickCheckout': '더블클릭으로 Checkout: {ref}',
+  'graph.fullyMergedInto': '{branch}에 완전히 병합됨',
 
   // Graph context menu
   'graph.checkoutHash': '{hash} Checkout',

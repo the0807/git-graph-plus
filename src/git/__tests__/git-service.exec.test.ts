@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { EventEmitter } from 'events';
+import { EventEmitter, once } from 'events';
+import { PassThrough } from 'stream';
 import { GitService, GitError } from '../git-service';
 
 // Mock child_process so we can drive the spawned process by hand: emit stdout
@@ -34,6 +35,15 @@ function fakeProc() {
 }
 
 const spawnMock = vi.mocked(childProcess.spawn);
+
+function streamingProc() {
+  return Object.assign(new EventEmitter(), {
+    stdout: new PassThrough(),
+    stderr: new PassThrough(),
+    stdin: new PassThrough(),
+    kill: vi.fn(),
+  });
+}
 
 describe('GitService.exec safety guards', () => {
   let service: GitService;
@@ -112,5 +122,88 @@ describe('GitService.exec safety guards', () => {
     proc.stderr.emit('end');
     proc.emit('close', 0);
     await expect(p).resolves.toBe('git version 2.40.0');
+  });
+
+  it('streams patches exceeding 256 MiB without buffering the patch history', async () => {
+    const source = streamingProc();
+    const sink = streamingProc();
+    spawnMock
+      .mockReturnValueOnce(source as unknown as ReturnType<typeof childProcess.spawn>)
+      .mockReturnValueOnce(sink as unknown as ReturnType<typeof childProcess.spawn>);
+    let bytes = 0;
+    sink.stdin.on('data', (chunk: Buffer) => { bytes += chunk.length; });
+    sink.stdin.on('finish', () => {
+      sink.stdout.end('patch-id commit-id\n');
+      sink.stderr.end();
+      sink.emit('close', 0);
+    });
+
+    const result = service['patchIds'](['log', '-p', 'main']);
+    const chunk = Buffer.alloc(1024 * 1024, 'x');
+    for (let i = 0; i < 257; i++) {
+      if (!source.stdout.write(chunk)) await once(source.stdout, 'drain');
+    }
+    source.stdout.end();
+    source.stderr.end();
+    source.emit('close', 0);
+
+    await expect(result).resolves.toEqual(new Set(['patch-id']));
+    expect(bytes).toBe(257 * 1024 * 1024);
+    expect(source.kill).not.toHaveBeenCalled();
+    expect(sink.kill).not.toHaveBeenCalled();
+  });
+
+  it('rejects partial patch IDs when the patch producer fails', async () => {
+    const source = streamingProc();
+    const sink = streamingProc();
+    spawnMock
+      .mockReturnValueOnce(source as unknown as ReturnType<typeof childProcess.spawn>)
+      .mockReturnValueOnce(sink as unknown as ReturnType<typeof childProcess.spawn>);
+    sink.stdin.resume();
+    sink.stdin.on('finish', () => {
+      sink.stdout.end('partial-patch-id commit-id\n');
+      sink.stderr.end();
+      sink.emit('close', 0);
+    });
+
+    const result = service['patchIds'](['log', '-p', 'missing']);
+    source.stdout.end();
+    source.stderr.end('fatal: bad revision');
+    source.emit('close', 128);
+
+    await expect(result).rejects.toThrow('fatal: bad revision');
+  });
+
+  it('terminates the patch producer if patch-id fails', async () => {
+    const source = streamingProc();
+    const sink = streamingProc();
+    spawnMock
+      .mockReturnValueOnce(source as unknown as ReturnType<typeof childProcess.spawn>)
+      .mockReturnValueOnce(sink as unknown as ReturnType<typeof childProcess.spawn>);
+
+    const result = service['patchIds'](['log', '-p', 'main']);
+    sink.stdout.end();
+    sink.stderr.end('patch-id failed');
+    sink.emit('close', 128);
+
+    await expect(result).rejects.toThrow('patch-id failed');
+    expect(source.kill).toHaveBeenCalledWith('SIGTERM');
+  });
+
+  it('terminates both pipeline processes on timeout', async () => {
+    const source = streamingProc();
+    const sink = streamingProc();
+    spawnMock
+      .mockReturnValueOnce(source as unknown as ReturnType<typeof childProcess.spawn>)
+      .mockReturnValueOnce(sink as unknown as ReturnType<typeof childProcess.spawn>);
+    service.setDefaultTimeout(20);
+
+    const result = service['patchIds'](['log', '-p', 'main']);
+    const assertion = expect(result).rejects.toThrow('timed out after 20ms');
+    await vi.advanceTimersByTimeAsync(20);
+
+    await assertion;
+    expect(source.kill).toHaveBeenCalledWith('SIGTERM');
+    expect(sink.kill).toHaveBeenCalledWith('SIGTERM');
   });
 });
